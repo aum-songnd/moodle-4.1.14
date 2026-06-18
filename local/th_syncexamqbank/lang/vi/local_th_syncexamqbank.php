@@ -1,0 +1,43 @@
+<?php
+$string['pluginname'] = 'TH Chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['th_syncexamqbank:manage'] = 'Có thể quản lý chức năng chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['syncquestions'] = 'Chia đề';
+$string['selectadate'] = 'Chọn ngày thi';
+$string['selectexamdate'] = 'Đợt thi';
+$string['manage'] = 'Quản lý chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['synccompleted'] = 'Đã hoàn tất chia đề từ kho ngân hàng khảo thí về phòng thi thành công.';
+$string['cancelled'] = 'Đã hủy';
+$string['syncexamqbank_progress'] = 'Tiến trình chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['heading'] = 'Chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['viewhistory'] = 'Xem lịch sử chia đề';
+$string['historytitle'] = 'Lịch sử chia đề từ kho ngân hàng khảo thí về phòng thi';
+$string['backtosyncpage'] = 'Quay lại';
+$string['syncinprogress'] = 'Đang chuẩn bị chia đề...';
+$string['categorynotfound'] = 'Không tìm thấy danh mục có idnumber = "THI".';
+$string['nocoursestartdate'] = 'Không có khóa học nào có ngày bắt đầu trong danh mục "THI".';
+$string['syncresultfor'] = 'Kết quả chia đề từ kho ngân hàng khảo thí về phòng thi cho đợt mở môn: {$a}';
+$string['synclogsnotfound'] = 'Không có bản ghi nào cho đợt này.';
+$string['pleaseselectstartdate'] = 'Vui lòng chọn đợt mở môn để xem lịch sử.';
+$string['time'] = 'Thời gian';
+$string['coursestartdate'] = 'Ngày mở môn';
+$string['user'] = 'Người thực hiện';
+$string['sourcecourse'] = 'Khóa nguồn';
+$string['targetcourse'] = 'Khóa đích';
+$string['questioncount'] = 'Số câu hỏi';
+$string['details'] = 'Chi tiết';
+$string['viewdetails'] = 'Xem chi tiết';
+
+$string['taskname'] = 'Chạy nền chia đề từ kho ngân hàng khảo thí về phòng thi theo ngày startdate';
+$string['setting_category_thi'] = 'IDNumber danh mục bài thi (THI)';
+$string['setting_category_thi_desc'] = 'Nhập idnumber của danh mục chứa các khóa học thi (ví dụ: THI).';
+$string['setting_category_nhkt'] = 'IDNumber danh mục ngân hàng câu hỏi (NHKT)';
+$string['setting_category_nhkt_desc'] = 'Nhập idnumber của danh mục chứa các khóa học ngân hàng câu hỏi (ví dụ: NHKT).';
+
+$string['setting_category_easy'] = 'ID number danh mục câu hỏi Dễ';
+$string['setting_category_easy_desc'] = 'Nhập idnumber của danh mục câu hỏi mức độ Dễ để dùng cho đồng bộ.';
+$string['setting_category_medium'] = 'ID number danh mục câu hỏi Trung bình';
+$string['setting_category_medium_desc'] = 'Nhập idnumber của danh mục câu hỏi mức độ Trung bình để dùng cho đồng bộ.';
+$string['setting_category_hard'] = 'ID number danh mục câu hỏi Khó';
+$string['setting_category_hard_desc'] = 'Nhập idnumber của danh mục câu hỏi mức độ Khó để dùng cho đồng bộ.';
+$string['sync_running_notice'] = '⏳ Quá trình chia đề đang chạy nền. Bạn có thể đóng trang này.';
+$string['view_sync_log'] = 'Xem lịch sử chia đề';

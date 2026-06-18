@@ -1,0 +1,83 @@
+{{! // Array
+// (
+//     [cmid] => 438
+//     [courseid] => 17
+//     [qaap] => stdClass Object
+//         (
+//             [id] => 2
+//             [parentid] =>
+//             [qaaid] => 1
+//             [question] => Cau hoi thu 2 Cau hoi thu 2 Cau hoi thu 2 Cau hoi thu 2 Cau hoi thu 2 Cau hoi thu 2
+//             [studentid] => 2
+//             [answer] => tra loi cau hoi thu 2 tra loi cau hoi thu 2 tra loi cau hoi thu 2 tra loi cau hoi thu 2 tra loi cau hoi thu 2 tra loi cau hoi thu 2
+//             [teacherid] => 2
+//             [teacheridmodified] =>
+//             [timecreatedquestion] => 1623032295
+//             [timemodifiedquestion] => 1623032295
+//             [timecreatedanswer] => 1623032310
+//             [timemodifiedanswer] => 1623032310
+//             [timecreatedquestion_human] => Monday, 7 June 2021, 9:18 AM
+//             [studentname] => Admin User
+//             [teachername] => Admin User
+//             [timecreatedanswer_human] => Monday, 7 June 2021, 9:18 AM
+//         )
+// ) }}
+{{=
+<% %>=}}
+<!-- Add options to the context menu. -->
+<core-navbar-buttons slot="end">
+<core-context-menu>
+<core-context-menu-item *ngIf="loaded && !hasOffline && isOnline" [priority]="700" [content]="'core.refresh' | translate" (action)="doRefresh($event)" [iconAction]="refreshIcon" [closeOnClick]="false"></core-context-menu-item>
+<core-context-menu-item *ngIf="loaded && hasOffline && isOnline" [priority]="650" [content]="'core.settings.synchronizenow' | translate" (action)="synchronize(true, $event)" [iconAction]="syncIcon" [closeOnClick]="false"></core-context-menu-item>
+</core-context-menu>
+</core-navbar-buttons>
+<core-course-module-description description="<% qaa.intro %>" component="mod_qaa" componentId="<% cmid %>"></core-course-module-description>
+
+<%#qaap%>
+	<b>{{ 'plugin.mod_qaa.questiondetail' | translate: {$a: { student: "<% studentname %>", datetime: "<% timecreatedquestion_human %>"} } }}</b>
+	<div><% question %></div>
+	<%# answer %>
+		<b>{{ 'plugin.mod_qaa.answerdetail' | translate: {$a: { teacher: "<% teachername %>", datetime: "<% timecreatedanswer_human %>"} } }}</b>
+		<div><% answer %></div>
+	<%/answer%>
+<%/qaap%>
+
+<br>
+<br>
+<%# show_editquestion_btn %>
+	<button ion-button block type="submit" color="light" core-site-plugins-new-content title="<% certificate.name %>" component="mod_qaa" method="mobile_single_question_view" [args]="{cmid: <% cmid %>, courseid: <% courseid %>, questionid: '<% questionid %>', action:'edit_question' }" samePage="true">
+		{{ 'plugin.mod_qaa.editquestion' | translate }}
+	</button>
+<%/ show_editquestion_btn %>
+
+
+<%# show_answerquest_btn %>
+	<button ion-button block type="submit" color="light" core-site-plugins-new-content title="<% certificate.name %>" component="mod_qaa" method="mobile_single_question_view" [args]="{cmid: <% cmid %>, courseid: <% courseid %>, questionid: '<% questionid %>', action:'add_answer' }" samePage="true" >
+		{{ 'plugin.mod_qaa.addanswer' | translate }}
+	</button>
+<%/ show_answerquest_btn %>
+
+<%# show_editanswer_btn %>
+	<button ion-button block type="submit" color="light" core-site-plugins-new-content title="<% certificate.name %>" component="mod_qaa" method="mobile_single_question_view" [args]="{cmid: <% cmid %>, courseid: <% courseid %>, questionid: '<% questionid %>', action:'add_answer' }" samePage="true" >
+		{{ 'plugin.mod_qaa.editanswer' | translate }}
+	</button>
+<%/ show_editanswer_btn %>
+<br>
+<br>
+<%# show_editquestionform %>
+	<ion-item>
+		<ion-textarea [(ngModel)]="question" name="question" placeholder="{{ 'plugin.mod_qaa.placeholderquestion' | translate }}" ></ion-textarea>		
+	</ion-item>
+	<button ion-button block type="submit" color="light" core-site-plugins-call-ws title="<% certificate.name %>"  name="mod_qaa_updatequestion" [params]="{cmid: <% cmid %>, courseid: <% courseid %>, questionid: '<% questionid %>', action:'edit_question', newquestion: question }" confirmMessage successMessage (onSuccess)="callDone($event)" [preSets]="{getFromCache: 0, saveToCache: 0}">
+		{{ 'plugin.mod_qaa.submitnewquestion' | translate }}
+	</button>
+<%/ show_editquestionform %>
+
+<%# show_answerform %>
+	<ion-item>
+		<ion-textarea [(ngModel)]="answer" name="answer" placeholder="{{ 'plugin.mod_qaa.placeholderanswer' | translate }}" ></ion-textarea>
+	</ion-item>
+	<button ion-button block type="submit" color="light" core-site-plugins-call-ws title="<% certificate.name %>" name="mod_qaa_updatequestion" [params]="{cmid: <% cmid %>, courseid: <% courseid %>, questionid: '<% questionid %>', action:'add_answer',  newanswer:answer }" confirmMessage successMessage refreshOnSuccess="true" >
+		{{ 'plugin.mod_qaa.submitnewanswer' | translate }}
+	</button>
+<%/ show_answerform %>

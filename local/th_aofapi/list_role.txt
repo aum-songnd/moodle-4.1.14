@@ -1,0 +1,11 @@
+webservice/restful:use
+moodle/course:view
+moodle/course:viewhiddencourses
+gradereport/user:view
+moodle/grade:viewall
+moodle/course:viewsuspendedusers
+moodle/grade:view
+mod/quiz:view
+
+
+

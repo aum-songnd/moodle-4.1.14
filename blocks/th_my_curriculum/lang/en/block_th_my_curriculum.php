@@ -1,0 +1,19 @@
+<?php
+    $string['pluginname'] = 'th_my_curriculum';
+    $string['title'] = 'Curriculum Framework';
+    $string['th_curriculum_title'] = 'Curriculum Framework';
+    $string['no_curriculum'] = 'No curriculum available';
+    $string['th_my_curriculum'] = 'th_my_curriculum';
+    $string['th_my_curriculum:addinstance'] = 'th_my_curriculum';
+    $string['th_my_curriculum:myaddinstance'] = 'th_my_curriculum';
+    $string['th_my_curriculum:view'] = 'th_my_curriculum';
+    $string['th_my_curriculum:managepages'] = 'th_my_curriculum';
+    $string['th_my_curriculumsettings'] = 'th_my_curriculum';
+    $string['breadcrumb'] = 'th_my_curriculum';
+    $string['combo'] = 'Combo';
+    $string['stage'] = 'Stage';
+    $string['slotname'] = 'Slot Name';
+    $string['course'] = 'Course';
+    $string['studytime'] = 'Study Time';
+    $string['dateassigned'] = 'Date Assigned';
+    $string['completionpercent'] = 'Completion %';

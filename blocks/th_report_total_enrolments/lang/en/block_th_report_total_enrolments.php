@@ -1,0 +1,22 @@
+<?php
+$string['pluginname'] = 'TH Report Total Enrolments';
+$string['th_report_total_enrolments:myaddinstance'] = 'Add a new TH Total enrolments report block to Dashboard';
+$string['th_report_total_enrolments:addinstance'] = 'Add a new TH Total enrolments report block';
+$string['th_report_total_enrolments:view'] = 'View TH Total enrolments report block';
+$string['namereport'] = 'Report Total Enrolments';
+$string['day'] = 'Day';
+$string['week'] = 'Week';
+$string['month'] = 'Month';
+$string['reportlink'] = 'View Total enrolments report';
+$string['content'] = 'Click the link below to view report';
+$string['textfields'] = 'Filter';
+$string['find'] = 'Find';
+$string['id'] = 'STT';
+$string['namestudents'] = 'Student name';
+$string['username'] = 'Username';
+$string['timecreate'] = 'Enrollments date';
+$string['time'] = 'Time';
+$string['role'] = 'Role';
+$string['coursename'] = 'Course name';
+$string['total'] = 'Total';
+$string['expired'] = 'Expired';

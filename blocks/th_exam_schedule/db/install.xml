@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="blocks/th_exam_schedule/db" VERSION="2025123100" COMMENT="th_exam_schedule tables"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+  <TABLES>
+
+    <TABLE NAME="block_thexamschedule_course" COMMENT="Course code/name mapping">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="coursecode" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="coursename" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_coursecode" UNIQUE="true" FIELDS="coursecode"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="block_thexamschedule_exam" COMMENT="Exam schedules per student">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="studentcode" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="coursecode" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="examdate" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="examslot" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_studentcode" UNIQUE="false" FIELDS="studentcode"/>
+        <INDEX NAME="idx_coursecode" UNIQUE="false" FIELDS="coursecode"/>
+        <INDEX NAME="idx_examdate" UNIQUE="false" FIELDS="examdate"/>
+        <INDEX NAME="idx_sc_cd_date_slot" UNIQUE="false" FIELDS="studentcode, coursecode, examdate, examslot"/>
+      </INDEXES>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>

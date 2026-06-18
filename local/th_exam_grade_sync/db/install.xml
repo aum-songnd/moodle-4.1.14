@@ -1,0 +1,32 @@
+<XMLDB PATH="local/th_exam_grade_sync/db"
+       VERSION="2026012001"
+       COMMENT="Logs for exam grade synchronization"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+
+  <TABLES>
+    <TABLE NAME="local_gradesync_log" COMMENT="Exam grade sync logs">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="examcourseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="learncourseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="examscore" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+
+      <INDEXES>
+        <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="examcourseid_idx" UNIQUE="false" FIELDS="examcourseid"/>
+        <INDEX NAME="learncourseid_idx" UNIQUE="false" FIELDS="learncourseid"/>
+        <INDEX NAME="status_idx" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

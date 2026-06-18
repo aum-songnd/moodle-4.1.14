@@ -1,0 +1,43 @@
+<div class="qaa-list-wrapper">
+  <table class="generaltable qaa-list w-100">
+    <thead>
+      <tr class="qaa-list-head">
+        <th>{{#str}} discussion, mod_qaa {{/str}}</th>
+        <th>{{#str}} creator, mod_qaa {{/str}}</th>          {{! NEW }}
+        <th>{{#str}} latestpost, mod_qaa {{/str}}</th>
+        <th style="text-align:right">{{#str}} replies, mod_qaa {{/str}}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{#rows}}
+      <tr class="qaa-list-row">
+        <td>
+          <a href="{{viewurl}}" class="qaa-topic">{{{title}}}</a>
+        </td>
+        <td>
+          <div class="qaa-meta">
+            {{#creator.avatarhtml}}<span class="qaa-avatar">{{{creator.avatarhtml}}}</span>{{/creator.avatarhtml}}
+            <div class="qaa-latestuser">
+              <span class="qaa-name">{{creator.fullname}}</span>
+              <span class="qaa-date">{{creator.date}}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="qaa-meta">
+            {{#latest.avatarhtml}}<span class="qaa-avatar">{{{latest.avatarhtml}}}</span>{{/latest.avatarhtml}}
+            <div class="qaa-latestuser">
+              <span class="qaa-name">{{latest.fullname}}</span>
+              <span class="qaa-date">{{latest.date}}</span>
+            </div>
+          </div>
+        </td>
+        <td style="text-align:right"><strong>{{replycount}}</strong></td>
+      </tr>
+    {{/rows}}
+    {{^rows}}
+      <tr><td colspan="4">{{#str}} nothingtodisplay, moodle {{/str}}</td></tr>
+    {{/rows}}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,43 @@
+<?php
+$string['pluginname'] = 'TH Distribute from Question Bank to Exam Rooms';
+$string['th_syncexamqbank:manage'] = 'Can manage distributing from the question bank to exam rooms';
+$string['syncquestions'] = 'Distribute';
+$string['selectadate'] = 'Select exam date';
+$string['selectexamdate'] = 'Exam session';
+$string['manage'] = 'Manage distribution from the question bank to exam rooms';
+$string['synccompleted'] = 'Successfully completed distribution from the question bank to exam rooms.';
+$string['cancelled'] = 'Cancelled';
+$string['syncexamqbank_progress'] = 'Distribution progress from the question bank to exam rooms';
+$string['heading'] = 'Distribute from Question Bank to Exam Rooms';
+$string['viewhistory'] = 'View distribution history';
+$string['historytitle'] = 'Distribution history from the question bank to exam rooms';
+$string['backtosyncpage'] = 'Back';
+$string['syncinprogress'] = 'Preparing to distribute...';
+$string['categorynotfound'] = 'No category found with idnumber = "THI".';
+$string['nocoursestartdate'] = 'No courses with a start date in the "THI" category.';
+$string['syncresultfor'] = 'Distribution result to exam rooms for opening cycle: {$a}';
+$string['synclogsnotfound'] = 'No records for this cycle.';
+$string['pleaseselectstartdate'] = 'Please select an opening cycle to view history.';
+$string['time'] = 'Time';
+$string['coursestartdate'] = 'Course start date';
+$string['user'] = 'Performed by';
+$string['sourcecourse'] = 'Source course';
+$string['targetcourse'] = 'Target course';
+$string['questioncount'] = 'Number of questions';
+$string['details'] = 'Details';
+$string['viewdetails'] = 'View details';
+
+$string['taskname'] = 'Background task: distribute from question bank to exam rooms by course start date';
+$string['setting_category_thi'] = 'IDNumber of the exam courses category (THI)';
+$string['setting_category_thi_desc'] = 'Enter the idnumber of the category that contains exam courses (e.g., THI).';
+$string['setting_category_nhkt'] = 'IDNumber of the Question Bank category (NHKT)';
+$string['setting_category_nhkt_desc'] = 'Enter the idnumber of the category that contains question-bank courses (e.g., NHKT).';
+
+$string['setting_category_easy'] = 'ID number for Easy question category';
+$string['setting_category_easy_desc'] = 'Enter the idnumber of the question category for Easy level questions used in synchronization.';
+$string['setting_category_medium'] = 'ID number for Medium question category';
+$string['setting_category_medium_desc'] = 'Enter the idnumber of the question category for Medium level questions used in synchronization.';
+$string['setting_category_hard'] = 'ID number for Hard question category';
+$string['setting_category_hard_desc'] = 'Enter the idnumber of the question category for Hard level questions used in synchronization.';
+$string['sync_running_notice'] = '⏳ The exam distribution process is running in the background. You can close this page.';
+$string['view_sync_log'] = 'View distribution history';

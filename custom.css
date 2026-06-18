@@ -1,0 +1,15 @@
+ion-toolbar {
+    --background: #f5f!important;
+}
+
+body {
+    background: #f5f5f5;
+}
+
+ion-label {
+    --background: blue !important;
+}
+.ispractice-review {
+    border-radius: 10px;
+    background: rgb(26, 129, 12) !important;
+}

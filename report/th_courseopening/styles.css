@@ -1,0 +1,26 @@
+/* styles.css - CSS cho báo cáo mở môn */
+.report_th_courseopening div.dt-container {
+  margin: 0 auto;
+  width: 80%;
+}
+
+.report_th_courseopening #mydatatable,
+.report_th_courseopening #detailtable {
+  border-collapse: collapse;
+  width: 100%;
+  border: 2px solid #000;
+}
+
+.report_th_courseopening #mydatatable th,
+.report_th_courseopening #mydatatable td,
+.report_th_courseopening #detailtable th,
+.report_th_courseopening #detailtable td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: center;
+}
+
+.report_th_courseopening #mydatatable th,
+.report_th_courseopening #detailtable th {
+  background-color: #f2f2f2;
+}

@@ -1,0 +1,82 @@
+<?php
+
+defined('MOODLE_INTERNAL') || die();
+
+$string['th_feedback_report:view'] = 'Có thể xem';
+$string['pluginname'] = 'TH Báo Lỗi';
+$string['title_log_feedback_report'] = 'Báo Lỗi';
+$string['notification_success'] = '<h3>Báo lỗi thành công</h3>Cảm ơn đã liên hệ với chúng tôi. Nếu cần, chúng tôi sẽ liên hệ lại sớm nhất có thể.';
+$string['notification_error'] = '<h3>Báo lỗi thất bại</h3>Vui lòng thử.';
+$string['all_statuses'] = 'Tất cả trạng thái';
+$string['not_processed'] = 'Chưa xử lý';
+$string['processing'] = 'Đang xử lý';
+$string['processed'] = 'Đã xử lý';
+$string['all_times'] = 'Tất cả thời gian';
+$string['today'] = 'Hôm nay';
+$string['yesterday'] = 'Hôm qua';
+$string['this_week'] = 'Tuần này';
+$string['last_week'] = 'Tuần trước';
+$string['this_month'] = 'Tháng này';
+$string['last_month'] = 'Tháng trước';
+$string['export_excel'] = 'Xuất tệp tin Excel';
+$string['index'] = 'STT';
+$string['sender'] = 'Người gửi';
+$string['description'] = 'Mô tả';
+$string['attached_image'] = 'Ảnh đính kèm';
+$string['view_image'] = 'Xem ảnh';
+$string['sent_time'] = 'Thời gian gửi';
+$string['status'] = 'Trạng thái';
+$string['processing_time'] = 'Thời gian phản hồi';
+$string['update_status_success'] = 'Cập nhật trạng thái thành công!';
+$string['update_status_error'] = 'Lỗi cập nhật trạng thái.';
+$string['select_feedback_type'] = 'Chọn loại báo lỗi';
+$string['error_classification'] = 'Phân loại báo lỗi';
+$string['manageerrorcategories'] = 'Quản Lý Loại Báo Lỗi';
+$string['parentid'] = 'Loại báo lỗi cha';
+$string['name'] = 'Tên loại báo lỗi';
+$string['code'] = 'Mã loại báo lỗi';
+$string['description'] = 'Mô tả';
+$string['actions'] = 'Thao tác';
+$string['edit'] = 'Chỉnh sửa';
+$string['delete'] = 'Xóa';
+$string['add'] = 'Thêm';
+$string['update'] = 'Cập nhật';
+$string['recordadded'] = 'Thêm loại báo lỗi thành công.';
+$string['recordupdated'] = 'Cập nhật loại báo lỗi thành công.';
+$string['recorddeleted'] = 'Xóa loại báo lỗi thành công.';
+$string['noparent'] = 'Không cha';
+$string['codealreadyexists'] = 'Mã loại báo lỗi đã tồn tại.';
+
+$string['action'] = 'Thao tác';
+$string['type'] = 'Loại báo lỗi ';
+$string['email'] = 'Địa chỉ thư điện tử';
+$string['url'] = 'URL';
+$string['browser'] = 'Trình duyệt';
+$string['os'] = 'Hệ điều hành';
+$string['deletecategoryconfirm'] = 'Bạn có chắc chắn muốn xóa loại báo lỗi: {$a->name}';
+$string['email_address'] = 'Địa chỉ thư điện tử';
+$string['email_address_description'] = 'Nhập địa chỉ thư điện tử nơi sẽ nhận các báo lỗi';
+
+$string['response_content'] = 'Nội dung phản hồi';
+$string['update_response'] = 'Cập nhật';
+$string['update_response_success'] = 'Cập nhật phản hồi thành công';
+$string['my_feedback_reports'] = 'Danh sách báo lỗi';
+$string['no_feedback_reports'] = 'Bạn chưa gửi báo lỗi nào';
+$string['received'] = 'Đã tiếp nhận';
+$string['unknown'] = 'Không xác định';
+
+$string['feedback_response_email_subject'] = '[{$a}] Thông báo phản hồi báo lỗi';
+$string['feedback_response_email_greeting'] = 'Xin chào {$a->fullname},';
+$string['feedback_response_email_intro'] = 'Quản trị hệ thống đã phản hồi báo lỗi bạn đã gửi.';
+$string['response_required'] = 'Vui lòng nhập nội dung phản hồi trước khi cập nhật.';
+$string['response_required_placeholder'] = 'Nhập nội dung phản hồi...';
+$string['view_my_feedback_reports'] = 'Xem phản hồi';
+$string['click_to_view'] = 'Bấm để xem';
+
+$string['view_response_history'] = 'Xem lịch sử';
+$string['response_history'] = 'Lịch sử phản hồi';
+$string['no_response_history'] = 'Chưa có lịch sử phản hồi.';
+$string['responder'] = 'Người phản hồi';
+$string['response_time'] = 'Thời gian phản hồi';
+$string['response_not_changed'] = 'Nội dung phản hồi không thay đổi.';
+$string['error_history'] = 'Lịch sử báo lỗi';

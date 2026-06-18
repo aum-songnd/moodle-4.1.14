@@ -1,0 +1,25 @@
+<?php
+
+class block_th_ccoring_collaborators extends block_base {
+	public function init() {
+		$this->title = get_string('title', 'block_th_ccoring_collaborators');
+	}
+
+	public function get_content() {
+		global $CFG;
+		if ($this->content !== null) {
+			return $this->content;
+		}
+		$this->content = new stdClass;
+		global $COURSE;
+		$context = context_course::instance($COURSE->id);
+		if (has_capability('block/th_ccoring_collaborators:managepages', $context)) {
+			$url = new moodle_url('/blocks/th_ccoring_collaborators/view.php');
+			$this->content->footer = html_writer::link($url, 'Danh sách các bài kiểm tra cần chấm');
+		} else {
+			$this->content->footer = 'No Permission!';
+		}
+		return $this->content;
+	}
+}
+?>

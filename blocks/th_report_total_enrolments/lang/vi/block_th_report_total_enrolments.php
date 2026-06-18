@@ -1,0 +1,22 @@
+<?php
+$string['pluginname'] = 'Báo cáo ghi danh tổng';
+$string['th_report_total_enrolments:myaddinstance'] = 'Thêm khối Báo cáo ghi danh tổng vào Trang cá nhân';
+$string['th_report_total_enrolments:addinstance'] = 'Thêm khối Báo cáo ghi danh tổng';
+$string['th_report_total_enrolments:view'] = 'Xem khối Báo cáo ghi danh tổng';
+$string['namereport'] = 'Báo cáo ghi danh tổng';
+$string['day'] = 'Ngày';
+$string['week'] = 'Tuần';
+$string['month'] = 'Tháng';
+$string['reportlink'] = 'Xem báo cáo ghi danh tổng';
+$string['content'] = 'Bấm vào liên kết dưới đây để xem báo cáo ghi danh tổng';
+$string['textfields'] = 'Lọc';
+$string['find'] = 'Tra cứu';
+$string['id'] = 'STT';
+$string['namestudents'] = 'Họ và tên đệm/Tên';
+$string['username'] = 'Username';
+$string['timecreate'] = 'Ngày ghi danh';
+$string['time'] = 'Thời gian';
+$string['role'] = 'Vai trò';
+$string['coursename'] = 'Khóa học';
+$string['total'] = 'Tổng số';
+$string['expired'] = 'Hết hạn';

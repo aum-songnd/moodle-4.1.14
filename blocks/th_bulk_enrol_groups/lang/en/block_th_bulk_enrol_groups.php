@@ -1,0 +1,41 @@
+<?php
+    $string['pluginname'] = 'TH Bulk Enrol User into Groups';
+    $string['title'] = 'Bulk Enrol User into Groups';
+    $string['th_bulk_enrol_groups'] = 'TH Bulk Enrol User into Groups';
+    $string['th_bulk_enrol_groups:addinstance'] = 'Add a new TH Bulk Enrol User into Groups block';
+    $string['th_bulk_enrol_groups:myaddinstance'] = 'Add a new TH Bulk Enrol User into Groups block to My Moodle page';
+    $string['th_bulk_enrol_groups:view'] = 'View TH Bulk Enrol User into Groups page';
+    $string['th_bulk_enrol_groups:managepages'] = 'Manage TH Bulk Enrol User into Groups pages';
+    $string['th_bulk_enrol_groupssettings'] = 'TH Bulk Enrol User into Groups settings';
+    $string['content'] = 'Click the link below to bulk add User into groups';
+    $string['reportlink'] = 'Add User';
+    $string['textfields'] = 'Filter';
+    $string['breadcrumb'] = 'TH Bulk Enrol User into Groups';
+    $string['invalidcourse'] = 'Invalid course or course does not exist';
+    $string['submit'] = 'Submit';
+    $string['error_no_valid_groups_in_list'] = 'No valid values found.<br />Please <a href=\'{$a->url}\'>go back and check your input</a>.';
+
+    $string['assign_success'] = 'User have been successfully added to the group. Do you want to {$a->link} or return to {$a->home}?';
+    $string['continue_add_User'] = 'Continue adding User to groups';
+    $string['homepage'] = 'Homepage';
+    $string['add_renewal_group'] = 'User will be added to the group';
+    $string['suggest'] = 'Suggestions';
+    $string['fileattachment'] = 'samplecsv';
+    $string['filename'] = 'example.csv';
+    $string['permission'] = 'No permission!';
+    $string['assign_student'] = 'Assign User';
+    $string['error_no_course_found'] = 'No course found with shortname (<strong>{$a->shortname}</strong>). Please check line {$a->line}.';
+    $string['error_no_group_found'] = 'No group found with name (<strong>{$a->groupname}</strong>) in course (<strong>{$a->link}</strong>). Please check line {$a->line}.';
+    $string['error_no_user_found'] = 'No user found with email (<strong>{$a->email}</strong>). Please check line {$a->line}.';
+    $string['error_no_user_found_by_code'] = 'No user found with student code (<strong>{$a->code}</strong>). Please check line {$a->line}.';
+    $string['error_no_user_in_course'] = 'No user with email (<strong>{$a->email}</strong>) found in course (<strong>{$a->link}</strong>). Please check line {$a->line}.';
+    $string['error_no_user_in_course_code'] = 'No user with student code (<strong>{$a->code}</strong>) found in course (<strong>{$a->link}</strong>). Please check line {$a->line}.';
+    $string['error_user_already_in_group'] = 'User with email (<strong>{$a->email}</strong>) is already in group (<strong>{$a->group_name}</strong>) in course (<strong>{$a->link}</strong>). Please check line {$a->line}.';
+    $string['error_user_already_in_group_code'] = 'User with student code (<strong>{$a->code}</strong>) is already in group (<strong>{$a->group_name}</strong>) in course (<strong>{$a->link}</strong>). Please check line {$a->line}.';
+    $string['will_be_added'] = 'User will be added to the group';
+    $string['stt'] = 'No.';
+    $string['coursename'] = 'Course name';
+    $string['group'] = 'Group';
+    $string['studentname'] = 'Student name';
+    $string['status'] = 'Status';
+?>

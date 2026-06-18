@@ -1,0 +1,1 @@
+setnew_password_and_mail() function at lib/moodlelib.php line 6448

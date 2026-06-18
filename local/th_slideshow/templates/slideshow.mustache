@@ -1,0 +1,50 @@
+{{!
+    Template: local_th_slideshow/slideshow
+    Renders the TH Slideshow on the front page.
+    Context keys:
+        has_slides     (bool)
+        slides[]       (array of slide objects)
+            .image     (string)  absolute URL
+            .title     (string)
+            .caption   (string)  HTML
+            .url       (string)
+        height         (string)  CSS value e.g. '475px' or 'responsive'
+        hide_captions  (bool)
+        pattern        (string)  '0'–'4'
+        auto_advance   (bool)
+        show_nav       (bool)
+        loader         (string)  'bar'|'pie'|'none'
+        imgfx          (string)
+        txtfx          (string)
+}}
+{{#has_slides}}
+<div id="th-slideshow-wrapper"
+     class="th-slideshow-wrapper{{#hide_captions}} hide-captions-mobile{{/hide_captions}}{{^hide_captions}}{{/hide_captions}}"
+     data-height="{{height}}"
+     data-auto-advance="{{#auto_advance}}1{{/auto_advance}}{{^auto_advance}}0{{/auto_advance}}"
+     data-show-nav="{{#show_nav}}1{{/show_nav}}{{^show_nav}}0{{/show_nav}}"
+     data-loader="{{loader}}"
+     data-imgfx="{{imgfx}}"
+     data-txtfx="{{txtfx}}">
+
+    {{! Pattern overlay }}
+    {{^pattern}}{{/pattern}}
+    {{#pattern}}
+    <div class="th-slideshow-pattern th-slideshow-pattern-{{pattern}}"></div>
+    {{/pattern}}
+
+    <ul class="th-slideshow-slides">
+        {{#slides}}
+        <li>
+            {{#url}}<a href="{{url}}">{{/url}}
+                <img src="{{image}}" alt="{{title}}" />
+                <div class="th-slideshow-caption">
+                    {{#title}}<h2 class="th-slideshow-title">{{title}}</h2>{{/title}}
+                    {{#caption}}<div class="th-slideshow-text">{{{caption}}}</div>{{/caption}}
+                </div>
+            {{#url}}</a>{{/url}}
+        </li>
+        {{/slides}}
+    </ul>
+</div>
+{{/has_slides}}

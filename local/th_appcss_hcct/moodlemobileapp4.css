@@ -1,0 +1,55 @@
+
+
+ion-fab-button {
+    --background: #1e73be;
+}
+
+ion-toggle {
+    --background-checked:  #1e73be;
+    --handle-background-checked: #1e73be;
+}
+
+ion-tab-button {
+    --color-focused:  #1e73be;
+    --color-selected: #1e73be;
+}
+
+ion-item {
+    --selected-item-color: #1e73be;
+}
+
+
+:root core-tabs ion-slide, :root core-tabs-outlet ion-slide {
+    --border-color-active: #1e73be;
+}
+
+ion-chip.ion-color {
+    color: #1e73be; 
+}
+
+:root {    
+    --ion-color-primary-rgb: #1e73be22;
+    --ion-color-primary-tint: #1e73be44;
+    --primary-tint: #1e73be44;
+    --ion-color-primary: #1e73be;
+    --border-color-active: #1e73be;
+    --a11y-focus-color: #1e73be;
+    --core-bottom-tabs-color-selected: #1e73be;
+    --core-bottom-tabs-badge-color: #1e73be;
+    --core-bottom-tabs-badge-text-color: var(--primary-contrast);
+    ion-toast {
+        --button-color: #1e73be;
+    } 
+    --core-tab-border-color-active: #1e73be;
+    --core-loading-spinner: #1e73be;
+    --core-progressbar-color: #1e73be;
+    --selected-item-color: #1e73be;
+    --core-star-color: #1e73be;
+    --addon-calendar-today-border-color: #1e73be;
+    --addon-messages-discussion-badge: #1e73be;  
+}
+
+ion-button.core-login-login-button {
+    color: #fff;
+}
+

@@ -1,0 +1,50 @@
+
+
+ion-fab-button {
+    --background: #2E92CE;
+}
+
+ion-toggle {
+    --background-checked:  #2E92CE;
+    --handle-background-checked: #2E92CE;
+}
+
+ion-tab-button {
+    --color-focused:  #2E92CE;
+    --color-selected: #2E92CE;
+}
+
+ion-item {
+    --selected-item-color: #2E92CE;
+}
+
+
+:root core-tabs ion-slide, :root core-tabs-outlet ion-slide {
+    --border-color-active: #2E92CE;
+}
+
+ion-chip.ion-color {
+    color: #2E92CE; 
+}
+
+:root {    
+    --ion-color-primary-rgb: #2E92CE22;
+    --ion-color-primary-tint: #2E92CE44;
+    --primary-tint: #2E92CE44;
+    --ion-color-primary: #2E92CE;
+    --border-color-active: #2E92CE;
+    --a11y-focus-color: #2E92CE;
+    --core-bottom-tabs-color-selected: #2E92CE;
+    --core-bottom-tabs-badge-color: #2E92CE;
+    --core-bottom-tabs-badge-text-color: var(--primary-contrast);
+    ion-toast {
+        --button-color: #2E92CE;
+    }
+    --core-tab-border-color-active: #2E92CE;
+    --core-loading-spinner: #2E92CE;
+    --core-progressbar-color: #2E92CE;
+    --selected-item-color: #2E92CE;
+    --core-star-color: #2E92CE;
+    --addon-calendar-today-border-color: #2E92CE;
+    --addon-messages-discussion-badge: #2E92CE;    
+}

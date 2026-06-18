@@ -1,0 +1,27 @@
+<li class="qaa-comment{{#ispending}} qaa-pending{{/ispending}}" data-comment-id="{{id}}">
+  <div class="qaa-avatar">{{{avatarhtml}}}</div>
+  <div class="qaa-body">
+    <div class="qaa-header">
+      <a class="qaa-author-name" href="{{authorurl}}">{{authorname}}</a>
+      {{#badge}}<span class="qaa-badge {{#badge_class}}{{.}}{{/badge_class}}">{{.}}</span>{{/badge}}
+      <span class="qaa-date">{{datestr}}</span>
+    </div>
+    <div class="qaa-bubble">
+      {{#ispending}}
+        <span class="qaa-tag qaa-tag-pending">{{#str}}tag_pending, mod_qaa{{/str}}</span>
+      {{/ispending}}
+      {{{contenthtml}}}
+    </div>
+    <div class="qaa-under qaa-actions-line">
+      {{#replyurl}}<a class="qaa-reply-action js-open-reply" href="{{replyurl}}" role="button" aria-label="Trả lời">{{#str}}reply, mod_qaa{{/str}}</a>{{/replyurl}}
+      {{#editurl}}<a class="qaa-edit-link" href="{{editurl}}">{{#str}}edit, mod_qaa{{/str}}</a>{{/editurl}}
+      {{#deleteurl}}<a class="qaa-delete-link" href="{{deleteurl}}">{{#str}}delete, mod_qaa{{/str}}</a>{{/deleteurl}}
+    </div>
+    <div class="qaa-reply-target" data-reply-target="{{id}}"></div>
+    {{#children}}
+      <ul class="qaa-thread">
+        {{> mod_qaa/comment}}
+      </ul>
+    {{/children}}
+  </div>
+</li>

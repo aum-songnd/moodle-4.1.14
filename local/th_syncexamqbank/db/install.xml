@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/th_syncexamqbank/db" VERSION="2025101501" COMMENT="Install XML for th_syncexamqbank" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+
+    <TABLES>
+        <TABLE NAME="local_th_syncexamqbank_log" COMMENT="Logs for Sync Exam Qbank">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" SEQUENCE="true" COMMENT="Primary key"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="User ID"/>
+                <FIELD NAME="sourcecourseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Source course ID"/>
+                <FIELD NAME="targetcourseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Target course ID"/>
+                <FIELD NAME="coursestartdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Course start date timestamp"/>
+                <FIELD NAME="syncedcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Number of items synced"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp"/>
+                <FIELD NAME="logdetail" TYPE="text" NOTNULL="false" COMMENT="Detailed log message"/>
+            </FIELDS>
+
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+
+</XMLDB>

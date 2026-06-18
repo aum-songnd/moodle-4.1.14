@@ -1,0 +1,82 @@
+<?php
+
+defined('MOODLE_INTERNAL') || die();
+
+$string['th_feedback_report:view'] = 'Can view this local';
+$string['pluginname'] = 'TH Error Report';
+$string['title_log_feedback_report'] = 'Error Report';
+$string['notification_success'] = '<h3>Report has been sent successful</h3>Thank you for contacting us. If required, we will contact you soon.';
+$string['notification_error'] = '<h3>Report failed</h3>Please try again.';
+$string['all_statuses'] = 'All status';
+$string['not_processed'] = 'Not processed';
+$string['processing'] = 'Processing';
+$string['processed'] = 'Processed';
+$string['all_times'] = 'All time';
+$string['today'] = 'Today';
+$string['yesterday'] = 'Yesterday';
+$string['this_week'] = 'This week';
+$string['last_week'] = 'Last week';
+$string['this_month'] = 'This month';
+$string['last_month'] = 'Last month';
+$string['export_excel'] = 'Export to Excel';
+$string['index'] = 'No';
+$string['sender'] = 'Reporter';
+$string['description'] = 'Description';
+$string['attached_image'] = 'Screenshot';
+$string['view_image'] = 'View screenshot';
+$string['sent_time'] = 'Reported time';
+$string['status'] = 'Status';
+$string['processing_time'] = 'Response time';
+$string['update_status_success'] = 'Status updated successfully!';
+$string['update_status_error'] = 'Updating the status failed.';
+$string['select_feedback_type'] = 'Select error report type';
+$string['error_classification'] = 'Error report classification';
+$string['manageerrorcategories'] = 'Manage Error Report Type';
+$string['parentid'] = 'Parent error report type';
+$string['name'] = 'Error report type name';
+$string['code'] = 'Error report type code';
+$string['description'] = 'Description';
+$string['actions'] = 'Actions';
+$string['edit'] = 'Edit';
+$string['delete'] = 'Delete';
+$string['add'] = 'Add';
+$string['update'] = 'Update';
+$string['recordadded'] = 'Record added successfully.';
+$string['recordupdated'] = 'Record updated successfully.';
+$string['recorddeleted'] = 'Record deleted successfully.';
+$string['noparent'] = 'No parent';
+$string['codealreadyexists'] = 'The error report type code already exists.';
+
+$string['action'] = 'Action';
+$string['type'] = 'Error report type';
+$string['email'] = 'Email';
+$string['url'] = 'URL';
+$string['browser'] = 'Browser';
+$string['os'] = 'OS';
+$string['deletecategoryconfirm'] = 'Are you sure you want to delete the error report type: {$a->name}';
+$string['email_address'] = 'Email';
+$string['email_address_description'] = 'Enter the email address to receive error report';
+
+$string['response_content'] = 'Response content';
+$string['update_response'] = 'Update';
+$string['update_response_success'] = 'Response updated successfully';
+$string['my_feedback_reports'] = 'Submitted feedback reports';
+$string['no_feedback_reports'] = 'You have not submitted any feedback reports yet';
+$string['received'] = 'Received';
+$string['unknown'] = 'Unknown';
+
+$string['feedback_response_email_subject'] = '[{$a}] Error feedback notification';
+$string['feedback_response_email_greeting'] = 'Hello {$a->fullname},';
+$string['feedback_response_email_intro'] = 'The system administrator has responded to your submitted feedback report.';
+$string['response_required'] = 'Please enter a response before updating.';
+$string['response_required_placeholder'] = 'Enter response content...';
+$string['view_my_feedback_reports'] = 'See feedback';
+$string['click_to_view'] = 'Click to view';
+
+$string['view_response_history'] = 'View history';
+$string['response_history'] = 'Response history';
+$string['no_response_history'] = 'No response history yet.';
+$string['responder'] = 'Responder';
+$string['response_time'] = 'Response time';
+$string['response_not_changed'] = 'Response content has not changed.';
+$string['error_history'] = 'Error report history';

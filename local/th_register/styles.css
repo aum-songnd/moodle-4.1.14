@@ -1,0 +1,13 @@
+#copyButton { 
+	background: #EFEFEF;
+	padding: 0px 4px !important;
+	color: #000 !important;
+	font-weight: 500;
+	font-size: 13px !important;
+	border: 1px solid !important;
+	border-radius: 5px !important;
+	position: relative;
+	top: 4px;
+	font-family: sans-serif;
+	opacity: 0.8 !important;
+}

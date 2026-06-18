@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/faceattend/db" VERSION="20250101" COMMENT="Face Attendance module database schema">
+  <TABLES>
+
+    <!--
+      Bảng chính: lưu thông tin mỗi activity điểm danh
+      Tương ứng với 1 buổi học giảng viên tạo trong Moodle
+    -->
+    <TABLE NAME="faceattend" COMMENT="Each record = one face attendance activity instance">
+      <FIELDS>
+        <FIELD NAME="id"                  TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course"              TYPE="int"    LENGTH="10" NOTNULL="true" COMMENT="FK to course.id"/>
+        <FIELD NAME="name"                TYPE="char"   LENGTH="255" NOTNULL="true" COMMENT="Activity name"/>
+        <FIELD NAME="intro"               TYPE="text"   NOTNULL="false" COMMENT="Activity description"/>
+        <FIELD NAME="introformat"         TYPE="int"    LENGTH="4"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="session_date"        TYPE="int"    LENGTH="10" NOTNULL="true" COMMENT="Unix timestamp of the session"/>
+        <FIELD NAME="confidence_threshold" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="true" DEFAULT="80.00" COMMENT="Min confidence % to accept"/>
+        <FIELD NAME="api_url"             TYPE="char"   LENGTH="500" NOTNULL="false" DEFAULT="http://localhost:8000" COMMENT="Face API endpoint"/>
+        <FIELD NAME="max_attempts"        TYPE="int"    LENGTH="3"  NOTNULL="true" DEFAULT="3" COMMENT="Max retry attempts"/>
+        <FIELD NAME="is_open"             TYPE="int"    LENGTH="1"  NOTNULL="true" DEFAULT="1" COMMENT="1=open, 0=closed"/>
+        <FIELD NAME="timecreated"         TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified"        TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_course" UNIQUE="false" FIELDS="course"/>
+        <INDEX NAME="idx_session_date" UNIQUE="false" FIELDS="session_date"/>
+      </INDEXES>
+    </TABLE>
+
+    <!--
+      Bảng log: ghi lại kết quả mỗi lần điểm danh của sinh viên
+    -->
+    <TABLE NAME="faceattend_log" COMMENT="Attendance records for each student per session">
+      <FIELDS>
+        <FIELD NAME="id"              TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="faceattendid"    TYPE="int"    LENGTH="10" NOTNULL="true" COMMENT="FK to faceattend.id"/>
+        <FIELD NAME="userid"          TYPE="int"    LENGTH="10" NOTNULL="true" COMMENT="FK to user.id"/>
+        <FIELD NAME="status"          TYPE="char"   LENGTH="20" NOTNULL="true" DEFAULT="absent" COMMENT="present | absent | failed"/>
+        <FIELD NAME="confidence"      TYPE="number" LENGTH="5"  DECIMALS="2"  NOTNULL="false" COMMENT="Confidence score from Face API"/>
+        <FIELD NAME="attempt_count"   TYPE="int"    LENGTH="3"  NOTNULL="true" DEFAULT="0" COMMENT="How many attempts used"/>
+        <FIELD NAME="face_image_hash" TYPE="char"   LENGTH="64" NOTNULL="false" COMMENT="SHA256 hash of captured image (not the image itself)"/>
+        <FIELD NAME="timecreated"     TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="First attempt timestamp"/>
+        <FIELD NAME="timeattended"    TYPE="int"    LENGTH="10" NOTNULL="false" COMMENT="Successful attendance timestamp"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_faceattend" TYPE="foreign" FIELDS="faceattendid" REFTABLE="faceattend" REFFIELDS="id"/>
+        <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_faceattend_user" UNIQUE="true" FIELDS="faceattendid, userid" COMMENT="One record per student per session"/>
+        <INDEX NAME="idx_userid" UNIQUE="false" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!--
+      Bảng đăng ký khuôn mặt: lưu embedding vector cho mỗi sinh viên
+      Lưu ý: KHÔNG lưu ảnh gốc, chỉ lưu vector đặc trưng đã mã hóa
+    -->
+    <TABLE NAME="faceattend_enrollment" COMMENT="Face enrollment data per user (stores embedding, NOT raw image)">
+      <FIELDS>
+        <FIELD NAME="id"              TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"          TYPE="int"    LENGTH="10" NOTNULL="true" COMMENT="FK to user.id"/>
+        <FIELD NAME="face_token"      TYPE="char"   LENGTH="255" NOTNULL="false" COMMENT="Token từ Face API để tra cứu embedding"/>
+        <FIELD NAME="enrolled_by"     TYPE="int"    LENGTH="10" NOTNULL="false" COMMENT="Admin/teacher who enrolled this face"/>
+        <FIELD NAME="is_active"       TYPE="int"    LENGTH="1"  NOTNULL="true" DEFAULT="1" COMMENT="1=active, 0=revoked"/>
+        <FIELD NAME="timecreated"     TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified"    TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_userid" UNIQUE="true" FIELDS="userid" COMMENT="One enrollment per user"/>
+      </INDEXES>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>

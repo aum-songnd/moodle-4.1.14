@@ -1,0 +1,358 @@
+/**
+ * Container.
+ */
+.path-report-th_gradereport .gradeparent {
+  position: relative;
+}
+
+/**
+ * Tooltip and overlay.
+ */
+.path-report-th_gradereport .gradeparent .grader-information-tooltip {
+  min-width: 200px;
+}
+
+.path-report-th_gradereport .gradeparent .graderreportoverlay {
+  background-color: white;
+  width: auto;
+  padding: 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/**
+ * The table.
+ */
+.path-report-th_gradereport .gradeparent table {
+  border: 1px solid #ccc;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-bottom-width: 0;
+  border-right-width: 0;
+  margin-bottom: 2em;
+}
+
+/**
+ * All the cells.
+ */
+.path-report-th_gradereport .gradeparent .cell {
+  border: 1px solid #ccc;
+  border-top-width: 0;
+  border-left-width: 0;
+  padding: 4px 5px;
+  vertical-align: middle;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/**
+ * Stripped table.
+ */
+.path-report-th_gradereport .gradeparent tr:nth-of-type(even) .cell {
+  background-color: #f9f9f9;
+}
+
+/**
+ * All the floating divs.
+ */
+.path-report-th_gradereport .gradeparent .floater {
+  display: none;
+}
+
+.path-report-th_gradereport .gradeparent .floating {
+  display: block;
+}
+
+/**
+ * All the headers + floating cells.
+ */
+.path-report-th_gradereport .gradeparent .heading .cell,
+.path-report-th_gradereport .gradeparent .avg .cell,
+.path-report-th_gradereport .gradeparent .user.cell {
+  font-size: 14px;
+  font-weight: normal;
+  text-align: left;
+}
+
+.path-report-th_gradereport .gradeparent .heading .cell,
+.path-report-th_gradereport .gradeparent th {
+  font-weight: bold;
+}
+
+/**
+ * All the floating cells.
+ */
+.path-report-th_gradereport .gradeparent .floater .cell {
+  background-color: #f9f9f9;
+}
+
+/**
+ * The user cells.
+ */
+.path-report-th_gradereport .gradeparent .user.cell {
+  /*min-width: 200px;*/
+  /*width: 200px;*/
+  width: auto;
+  white-space: normal;
+  vertical-align: top;
+}
+
+.path-report-th_gradereport .gradeparent .user.cell .userpicture {
+  margin: 0 4px;
+  border: none;
+  vertical-align: middle;
+}
+
+.path-report-th_gradereport .gradeitemheader {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  vertical-align: bottom;
+}
+
+/**
+ * The additional user fields.
+ */
+.path-report-th_gradereport .gradeparent .userfield {
+  font-weight: normal;
+  text-align: left;
+}
+
+/**
+ * The footer's header.
+ */
+.path-report-th_gradereport .gradeparent .range .header,
+.path-report-th_gradereport .gradeparent .avg .header {
+  font-weight: bold;
+}
+
+/**
+ * The footer's floating cells.
+ */
+.path-report-th_gradereport .gradeparent .avg.floating .cell {
+  border-top-width: 1px;
+}
+
+/**
+ * The footer's cells.
+ */
+.path-report-th_gradereport .gradeparent .avg .cell {
+  text-align: right;
+}
+/**
+ * Content styling.
+ */
+.path-report-th_gradereport .gradeparent .heading .cell .iconsmall {
+  /* Fixes inconsistencies in cell height on IE. */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.path-report-th_gradereport .gradeparent .sorticon {
+  margin-left: 3px;
+}
+
+.path-report-th_gradereport .gradeparent .gradevalue {
+  display: inline-block;
+}
+
+.path-report-th_gradereport span.gradepass {
+  color: #298721;
+}
+
+.path-report-th_gradereport span.gradefail {
+  color: #890d0d;
+}
+
+.path-report-th_gradereport
+  .gradeparent
+  tr:nth-child(n)
+  td.overridden:nth-child(n) {
+  /* Made very specific to override the default stripped style of the table. */
+  background-color: #efd9a4;
+}
+
+.path-report-th_gradereport
+  .gradeparent
+  tr:nth-child(n)
+  td.ajaxoverridden:nth-child(n) {
+  /* Made very specific to override the default stripped style of the table. */
+  background-color: #ffe3a0;
+}
+
+.path-report-th_gradereport .gradeparent .excludedfloater {
+  font-weight: bold;
+  color: red;
+  font-size: 9px;
+  float: left;
+}
+
+.grade-report .gradeparent .floater .controls.cell,
+.path-report-th_gradereport .gradeparent .controls {
+  background-color: #f3ead8;
+}
+
+.path-report-th_gradereport .gradeparent .category {
+  text-align: left;
+}
+
+/**
+ * Editing fields.
+ */
+.path-report-th_gradereport .gradeparent select {
+  margin: 0;
+  padding: 0;
+}
+
+.path-report-th_gradereport .gradeparent .text {
+  border: 1px solid #666;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.path-report-th_gradereport .gradeparent .quickfeedback {
+  border: 1px dashed #000;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  margin-left: 10px;
+}
+
+.path-report-th_gradereport .yui3-overlay {
+  border: 0;
+  background: none;
+  background-color: inherit;
+  min-width: 200px;
+}
+
+.path-report-th_gradereport .yui3-overlay {
+  background-color: white;
+  width: auto;
+  padding: 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.path-report-th_gradereport .gradeparent .headingcell {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  padding-right: 17px;
+}
+
+/* css  */
+.block_th_rating {
+  overflow-x: auto;
+  width: 100%;
+  margin: 20px 0;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+}
+
+/* Giữ nguyên config chung */
+#mydatatable {
+  min-width: max-content;
+  table-layout: auto; /* Đổi từ fixed -> auto để cột 11 và 13 tự giãn */
+  white-space: nowrap;
+  margin: 0;
+  border-collapse: collapse;
+  width: auto;
+}
+
+#mydatatable th,
+#mydatatable td {
+  white-space: nowrap;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-right: 1px solid #dee2e6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Giữ width cứng cho các cột khác (1–10,12) */
+#mydatatable th:nth-child(1),
+#mydatatable td:nth-child(1) {
+  width: 50px;
+}
+#mydatatable th:nth-child(2),
+#mydatatable td:nth-child(2) {
+  width: 180px;
+}
+#mydatatable th:nth-child(3),
+#mydatatable td:nth-child(3) {
+  width: 120px;
+}
+#mydatatable th:nth-child(4),
+#mydatatable td:nth-child(4) {
+  width: 100px;
+}
+#mydatatable th:nth-child(5),
+#mydatatable td:nth-child(5) {
+  width: 100px;
+}
+#mydatatable th:nth-child(6),
+#mydatatable td:nth-child(6) {
+  width: 100px;
+}
+#mydatatable th:nth-child(7),
+#mydatatable td:nth-child(7) {
+  width: 100px;
+}
+#mydatatable th:nth-child(8),
+#mydatatable td:nth-child(8) {
+  width: 100px;
+}
+#mydatatable th:nth-child(9),
+#mydatatable td:nth-child(9) {
+  width: 80px;
+}
+#mydatatable th:nth-child(10),
+#mydatatable td:nth-child(10) {
+  width: 80px;
+}
+#mydatatable th:nth-child(12),
+#mydatatable td:nth-child(12) {
+  width: 120px;
+}
+
+#mydatatable {
+  min-width: max-content;
+  table-layout: auto !important; /* ĐỔI từ fixed -> auto */
+  margin: 0;
+  border-collapse: collapse;
+  width: auto;
+}
+
+/* Override cho Ngành học (11) và Tên khóa học (13) */
+#mydatatable th:nth-child(11),
+#mydatatable td:nth-child(11),
+#mydatatable th:nth-child(13),
+#mydatatable td:nth-child(13) {
+  white-space: nowrap !important; /* Luôn trên 1 dòng */
+  overflow: visible !important; /* Không ẩn text */
+  text-overflow: clip !important; /* Bỏ dấu ... */
+  max-width: none !important; /* Không giới hạn */
+  width: auto !important; /* Tự giãn */
+}
+#mydatatable {
+  border-collapse: collapse; /* gộp viền liền mạch */
+  border: 1px solid #b4b3b3; /* viền ngoài */
+}
+
+#mydatatable th,
+#mydatatable td {
+  border: 1px solid #b4b3b3; /* viền trong */
+  padding: 6px 10px;
+  text-align: left;
+  background-clip: padding-box; /* giữ viền không bị đè */
+}
+
+#mydatatable td:nth-child(n + 14) {
+  text-align: center;
+}

@@ -1,0 +1,208 @@
+.path-mod-qaa #my_delete_icon {
+    float: right!important;
+}
+
+.qaa-feed { display:flex; flex-direction:column; gap:14px; }
+.qaa-card { border:1px solid rgba(0,0,0,.08); border-radius:2px; padding:12px; background:#fff; }
+.qaa-card-title { font-weight:600; font-size:14px; margin-bottom:8px; color:#65676b; }
+@media (prefers-color-scheme: dark) { .qaa-card-title{ color:#aeb3b7; } }
+
+.qaa-thread { list-style:none; margin:0; padding:0; }
+.qaa-comment { display:flex; align-items:flex-start; gap:8px; margin:8px 0; }
+.qaa-avatar-img, .qaa-avatar img { border-radius:50%; width:28px; height:28px; }
+.qaa-body { flex:1; }
+.qaa-header { font-weight:600; margin-left:4px; margin-bottom:2px; font-size:13px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+.qaa-bubble-wrap { max-width: 860px; }
+.qaa-bubble { display:inline-block; padding:8px 12px; border-radius:10px; background:#f0f2f5; color:#050505; overflow-wrap: anywhere;}
+
+.qaa-bubble img,
+.qaa-bubble video,
+.qaa-bubble iframe {
+  display: block;
+  max-width: 100%;
+  height: auto !important;     /* ghi đè width/height gắn trong HTML */
+  border-radius: 6px;
+}
+
+/* 3) Giới hạn chiều cao ảnh theo viewport để ảnh cực cao không “đè” trang */
+.qaa-bubble img {
+  max-height: min(70vh, 900px); /* bạn có thể chỉnh 70vh/900px tùy UI */
+  object-fit: contain;          /* nếu có khung cố định thì ảnh vẫn vừa */
+}
+
+.qaa-under { margin:4px 4px 0 4px; display:flex; gap:10px; align-items:center; }
+.qaa-actions-line a { text-decoration:none; font-size:12.5px; }
+.qaa-reply-action, .qaa-edit-link, .qaa-approve-link { color:#1877f2; }
+.qaa-delete-link { color:#e03131; }
+.qaa-actions-line a:hover { text-decoration:underline; }
+.qaa-date { color:#65676b; font-size:12px; }
+
+.qaa-children { margin-left:36px; position:relative; }
+.qaa-children:before { content:''; position:absolute; left:-18px; top:0; bottom:0; width:2px; background:#e5e7eb; }
+@media (prefers-color-scheme: dark) { .qaa-children:before { background:#404247; } }
+
+.qaa-badge { font-size:11px; padding:2px 6px; border-radius:999px; }
+.qaa-badge-author { background:#eaf3ff; color:#1877f2; }
+.qaa-badge-teacher { background:#eafaf1; color:#1f8b4c; }
+@media (prefers-color-scheme: dark) {
+  .qaa-badge-author { background:#263b55; color:#9ec5ff; }
+  .qaa-badge-teacher { background:#1e3b2c; color:#91e3b5; }
+}
+
+.qaa-reply-target { margin-left:4px; margin-top:2px; }
+#qaa-reply-box { margin-left:4px; margin-top:6px; }
+
+.qaa-pending .qaa-bubble {
+  opacity: 0.95;
+  box-shadow: inset 0 0 0 1px #ffe08a;
+  background: #fff7db;
+  position: relative;
+  border-radius: 6px;
+}
+
+.qaa-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+
+.qaa-tag-pending {
+  color: #a67c00;
+  background: #fff3cd;
+  border: 1px solid #ffe08a;
+}
+
+.qaa-tag-approved {
+  color: #2e7d32;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+}
+
+.qaa-tag-rejected {
+  color: #c62828;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+}
+
+.qaa-add-question-top {
+  margin-bottom: 10px;
+}
+
+/*list*/
+
+.qaa-list th, .qaa-list td { padding: 10px 12px; vertical-align: middle; }
+.qaa-topic { font-weight: 600; display:block; margin-bottom: 4px; }
+.qaa-meta { display:flex; gap:8px; align-items:center; font-size: 12px; color:#6b7280; }
+.qaa-avatar img { border-radius: 50%; width:35px; height:35px; }
+.qaa-list tbody tr:nth-child(odd) { background:#fafafa; }
+.qaa-latestuser { display: grid; }
+
+.qaa-list-wrapper {
+  width: 100%;
+  overflow-x: auto; /* Cho phép cuộn ngang */
+  -webkit-overflow-scrolling: touch;
+}
+
+.qaa-list {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.qaa-list th,
+.qaa-list td {
+  padding: 8px;
+  vertical-align: middle;
+  word-wrap: break-word;
+}
+
+.qaa-list th:first-child,
+.qaa-list td:first-child {
+  width: 40%;
+  max-width: 40%;
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+/* ⚙️ Tablet: giảm nhẹ */
+@media (max-width: 992px) {
+  .qaa-list th:first-child,
+  .qaa-list td:first-child {
+    width: 35%;
+    max-width: 35%;
+  }
+}
+
+/* 📱 Điện thoại: giảm nhiều hơn */
+@media (max-width: 768px) {
+  .qaa-list {
+    min-width: 500px; /* bảng vẫn đủ để cuộn ngang */
+  }
+
+  .qaa-list th:first-child,
+  .qaa-list td:first-child {
+    width: 30%;
+    max-width: 30%;
+  }
+}
+
+/* 📱 Rất nhỏ (điện thoại mini) */
+@media (max-width: 480px) {
+  .qaa-list {
+    min-width: 420px;
+  }
+
+  .qaa-list th:first-child,
+  .qaa-list td:first-child {
+    width: 25%;
+    max-width: 25%;
+  }
+}
+
+.qaa-add-question-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* Responsive dưới 768px (tablet + mobile) */
+@media (max-width: 768px) {
+  .qaa-add-question-top {
+    flex-direction: column;   /* Xếp theo cột */
+    align-items: stretch;     /* Nút full chiều ngang */
+  }
+
+  .qaa-add-question-top a.btn {
+    width: 100%;              /* Full màn hình */
+    min-width: unset;
+  }
+}
+
+.qaa-edit-box #id_questioneditable {
+  overflow-wrap: anywhere;
+}
+
+.qaa-add-question-top #id_questioneditable {
+  overflow-wrap: anywhere;
+}
+
+.qaa-reply-box #id_answereditable {
+  overflow-wrap: anywhere;
+}
+
+.qaa-add-question-form {
+  width: 100%;
+}
+
+
+
+
+

@@ -1,0 +1,21 @@
+/* Hide the first dropdown-divider if no filter option element is listed before it.
+   This can happen for some subset configurations of the block_th_activatecourses course filter. */
+.block_th_activatecourses button#groupingdropdown + .dropdown-menu li:first-of-type.dropdown-divider:first-of-type {
+    display: none;
+}
+
+.th_success {
+    display: inline-block;
+    padding: 7px 10px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.th_success:hover {
+    color: #fff;
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/th_submission_notify/db" VERSION="2025020300" COMMENT="Install XML for Submission Notify"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="th_submission_notify_courses" COMMENT="Danh sách các khóa học sẽ gửi thông báo">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="course_unique" TYPE="unique" FIELDS="courseid"/>
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="th_submission_notify_logs" COMMENT="Lưu log gửi thông báo bài nộp quiz">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="attemptid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="timesent" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="attempt_unique" TYPE="unique" FIELDS="attemptid"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>

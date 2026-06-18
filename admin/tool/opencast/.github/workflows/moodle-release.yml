@@ -1,0 +1,16 @@
+name: Moodle Plugin Release
+
+########################################################################################################################
+
+on:
+  release:
+    types: [published]
+
+########################################################################################################################
+
+jobs:
+  call-moodle-release-workflow:
+    uses: Opencast-Moodle/moodle-workflows-opencast/.github/workflows/moodle-release.yml@master
+    with:
+      plugin-name: 'tool_opencast'
+    secrets: inherit

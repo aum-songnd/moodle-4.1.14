@@ -1,0 +1,8 @@
+<?php
+
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->component = 'local_th_activatequiz';
+$plugin->version = 2025070700;
+$plugin->maturity = MATURITY_ALPHA;
+$plugin->release = '0.1';

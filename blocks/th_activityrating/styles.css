@@ -1,0 +1,539 @@
+table#th_activityrating, 
+table#th_activityrating > thead > tr > th,
+table#th_activityrating > tbody > tr > td {
+  border: 1px solid;
+}
+
+/* styles.css - CSS cho báo cáo mở môn */
+.block_th_activityrating div.dt-container {
+  margin: 0 auto;
+  width: 80%;
+}
+ul.aii_rive_list.mb0 {
+  margin-left: 0px !important;
+}
+
+.block_th_activityrating #mydatatable {
+  border-collapse: collapse;
+  width: 100%;
+  border: 2px solid #000;
+}
+
+.block_th_activityrating #mydatatable th,
+.block_th_activityrating #mydatatable td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: center;
+}
+
+.block_th_activityrating #mydatatable th {
+  background-color: #f2f2f2;
+}
+
+/* END REPORT */
+
+
+
+
+.student_feedback_container {
+    border-color: transparent !important;
+}
+
+/*button.btn {
+  font-size: -0.92em !important;
+}*/
+
+.mb0 {
+  margin-bottom: 0px !important;
+}
+.list-inline-item {
+  display: inline-block;
+}
+
+.sonny_progressbar {
+  margin-bottom: 20px;
+}
+.sonny_progressbar p.title {
+  margin-bottom: 15px;
+}
+.sonny_progressbar .bar-container {
+  position: relative;
+  height: 6px !important;
+}
+.sonny_progressbar .bar-container.shadow {
+  -moz-box-shadow: 0px 5px 7px -3px rgba(0,0,0,.5);
+  -webkit-box-shadow: 0px 5px 7px -3px rgba(0,0,0,.5);
+  box-shadow: 0px 5px 7px -3px rgba(0,0,0,.5);
+}
+.sonny_progressbar .backgroundBar {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.sonny_progressbar .bar {
+  border-radius: 3px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.sonny_progressbar .targetBar {
+  background-color: transparent !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  -webkit-animation: Animation 2s infinite ease-in-out;
+  -moz-animation: Animation 2s infinite ease-in-out;
+  animation: Animation 2s infinite ease-in-out;
+}
+.sonny_progressbar .targetBar.loader {
+  -webkit-animation: AnimationB 4s infinite ease-in-out;
+  -moz-animation: AnimationB 4s infinite ease-in-out;
+  animation: AnimationB 4s infinite ease-in-out;
+}
+.sonny_progressbar .bar-container.border .bar, .sonny_progressbar .bar-container.border .targetBar, .sonny_progressbar .bar-container.border .backgroundBar {
+  border-bottom: 3px solid rgba(0,0,0,.2);
+}
+.sonny_progressbar .progress-percent {
+  font-size: 16px;
+  position: absolute;
+  right: 15px;
+}
+@keyframes Animation {
+  0%   { opacity:.4; }
+  50%   { opacity:1; }
+  100% { opacity:.4; }
+}
+@-moz-keyframes Animation{
+  0%   { opacity:.4; }
+  50%   { opacity:1; }
+  100% { opacity:.4; }
+}
+@-webkit-keyframes Animation{
+  0%   { opacity:.4; }
+  50%   { opacity:1; }
+  100% { opacity:.4; }
+}
+@keyframes AnimationB {
+  0%   { opacity:.01; }
+  50%   { opacity:.1; }
+  100% { opacity:.01; }
+}
+@-moz-keyframes AnimationB {
+  0%   { opacity:.01; }
+  50%   { opacity:.1; }
+  100% { opacity:.01; }
+}
+@-webkit-keyframes AnimationB {
+  0%   { opacity:.01; }
+  50%   { opacity:.1; }
+  100% { opacity:.01; }
+}
+/* DashBoard Chart */
+/**
+ * Inspiration for this project found at:
+ * https://markus.oberlehner.net/blog/pure-css-animated-svg-circle-chart
+ * 1. The `reverse` animation direction plays the animation backwards
+ *    which makes it start at the stroke offset 100 which means displaying
+ *    no stroke at all and animating it to the value defined in the SVG
+ *    via the inline `stroke-dashoffset` attribute.
+ * 2. Rotate by -90 degree to make the starting point of the
+ *    stroke the top of the circle.
+ * 3. Using CSS transforms on SVG elements is not supported by Internet Explorer
+ *    and Edge, use the transform attribute directly on the SVG element as a
+ * .  workaround.
+ */
+
+.circle-chart {
+  margin-bottom: 35px;
+  height: 150px;
+  width: 150px;
+}
+.circle-chart__circle {
+  stroke: #00acc1;
+  stroke-width: 2;
+  stroke-linecap: square;
+  fill: none;
+  animation: circle-chart-fill 2s reverse; /* 1 */
+  transform: rotate(20deg); /* 2, 3 */
+  transform-origin: center; /* 4 */
+}
+/**
+ * 1. Rotate by -90 degree to make the starting point of the
+ *    stroke the top of the circle.
+ * 2. Scaling mirrors the circle to make the stroke move right
+ *    to mark a positive chart value.
+ * 3. Using CSS transforms on SVG elements is not supported by Internet Explorer
+ *    and Edge, use the transform attribute directly on the SVG element as a
+ * .  workaround.
+ */
+.circle-chart__circle--negative {
+  transform: rotate(-90deg) scale(1,-1); /* 1, 2, 3 */
+}
+.circle-chart__background {
+  stroke: #0e4cfb;
+  stroke-width: 2;
+  fill: none;
+}
+.circle-chart__info {
+  animation: circle-chart-appear 2s forwards;
+  opacity: 0;
+  transform: translateY(0.3em);
+}
+.circle-chart__percent {
+  alignment-baseline: central;
+  text-anchor: middle;
+  font-size: 8px;
+  display: none;
+}
+.circle-chart__subline {
+  alignment-baseline: central;
+  text-anchor: middle;
+  font-size: 5px;
+}
+.success-stroke {
+  stroke: #e94f85;
+}
+.warning-stroke {
+  stroke: #ffbb33;
+}
+.danger-stroke {
+  stroke: #ff4444;
+}
+@keyframes circle-chart-fill {
+  to { stroke-dasharray: 0 100; }
+}
+@keyframes circle-chart-appear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Begin Rating */
+#ccn-star-rate {
+  display: inline-block;
+  position: relative;
+  line-height: 20px;
+  font-size: 50px;
+}
+#ccn-star-rate .ccn-star-rate-inner {
+  position: relative;
+  font-size: 20px;
+  margin: 10px 0;
+  display: inline-block;
+}
+.ccn-star-rate-inner:not(:checked)>input {
+  position: absolute;
+  clip: rect(0, 0, 0, 0);
+  opacity: 0.
+}
+.ccn-star-rate-inner:not(:checked)>label {
+  float: right;
+  padding: 0 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  line-height: 1.2;
+  color: [[setting:color_primary]];
+}
+.ccn-star-rate-inner:not(:checked)>label:before {
+  content: '\f005';
+  font-family: "Font Awesome 5 Free";
+}
+.ccn-star-rate-inner>input:checked~label {
+  color: #d0d23c;
+}
+.ccn-star-rate-inner:not(:checked)>label:hover,
+.ccn-star-rate-inner:not(:checked)>label:hover~label {
+  color: #d0d23c;
+}
+.ccn-star-rate-inner:not(:checked)>label:hover:before,
+.ccn-star-rate-inner:not(:checked)>label:hover~label:before {
+  content: "\f005";
+  font-family: "Font Awesome 5 Free";
+}
+.ccn-star-rate-inner>input:checked+label:hover,
+.ccn-star-rate-inner>input:checked+label:hover~label,
+.ccn-star-rate-inner>input:checked~label:hover,
+.ccn-star-rate-inner>input:checked~label:hover~label,
+.ccn-star-rate-inner>label:hover~input:checked~label {
+  color: #d0d23c;
+}
+.ccn-star-rate-inner>label:active {
+  position: relative;
+}
+.ccn-cannot-rate .av_content {
+  margin: 45px 0 25px;
+}
+.ccn-cannot-rate {
+  top: 75px;
+}
+.ccn-can-rate {
+  top: 32px;
+}
+.ccn-can-rate .av_content {
+  margin: 35px 0 5px;
+}
+.ccn-external-stars {
+  color: #d0d23c;
+}
+.ccn-external-stars .list-inline-item:not(:last-child) {
+  margin-right: .5rem !important;
+}
+.ccn-external-stars span {
+  color: #555555;
+  font-size: 14px;
+}
+
+.student_feedback_container .aii_average_review {
+  height: auto !important;
+  padding: 0 20px 20px !important;
+}
+
+.ccn-sidebar-region .block_cocoon_course_rating .aii_average_review {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  padding-top: 1px !important;
+  width: 100% !important;
+  margin: 30px 0 0 !important;
+}
+
+
+.cs_row_five .student_feedback_container {
+    border-style: solid;
+  border-width: 2px;
+  border-color: rgb(237, 239, 247);
+  border-radius: 5px;
+  background-color: rgba(42, 53, 59, 0);
+  margin-bottom: 30px;
+  /*padding: 30px;*/
+  position: relative;
+}
+
+.cs_row_five .student_feedback_container .aii_title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0a0a0a;
+  margin-bottom: 25px;
+  line-height: 1.2;
+}
+
+.cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+  border-radius: 5px;
+  max-width: 470px;
+  /*padding-left: 100px;*/
+  padding-left: 70px;
+}
+.cs_row_five .student_feedback_container .s_feeback_content ul.skills {
+  margin-bottom: 30px;
+  margin-left: 0px;
+}
+.cs_row_five .student_feedback_container .s_feeback_content ul.skills li {
+  color: rgb(79, 79, 79);
+  font-size: 14px;
+  font-family: "[[setting:secondary_font]]";
+  float: left;
+  line-height: 1.2;
+}
+.cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar .bar {
+  background-color: #d0d23c !important;
+}
+.cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar .bar-container {
+  border-radius: 5px;
+  height: 10px !important;
+  overflow: hidden;
+}
+.cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar p.title {
+  float: right;
+  /*margin-right: -50px;*/
+  margin-top: 0px;
+}
+.my_course_content_list .mc_content_list .s_feeback_content .sonny_progressbar {
+  border-radius: 5px;
+  max-width: 170px;
+  padding-left: 100px;
+}
+.my_course_content_list .mc_content_list .sonny_progressbar .bar-container {
+  margin-left: -190px;
+  margin-right: 130px;
+  margin-top: 10px;
+}
+.my_course_content_list .mc_content_list .sonny_progressbar p.title {
+  float: right;
+  margin-bottom: 0;
+  margin-right: 0;
+  margin-top: -10px;
+}
+.cs_row_five .student_feedback_container .aii_average_review {
+  border-radius: 5px;
+  background-color: rgb(237, 239, 247);
+  height: 180px;
+  /*position: absolute;*/
+  /*right: 30px;*/
+  margin: 30px;
+   top: 45px; 
+  width: 230px;
+  /*width: 100%;*/
+}
+.cs_row_five .student_feedback_container .aii_average_review .av_content {
+  /* margin-top: 45px; */
+}
+.cs_row_five .student_feedback_container .aii_average_review .av_content h2 {
+  font-size: 50px;
+  font-family: "[[setting:primary_font]]";
+  color: #0a0a0a;
+  line-height: -0.4;
+  padding-top: 10px;
+}
+.cs_row_five .student_feedback_container .aii_average_review .av_content .aii_rive_list li {
+  font-size: 13px;
+  font-family: "FontAwesome5FreeSolid";
+  color: rgb(208, 210, 60);
+  margin-right: 3px;
+  line-height: 1.2;
+}
+
+.cs_row_five .student_feedback_container .aii_average_review .av_content .aii_rive_list li.fa-star-o {
+  font-size: 13px;
+  font-family: "FontAwesome5FreeSolid";
+  /*color: rgb(208, 210, 60);*/
+  margin-right: 3px;
+  line-height: 1.2;
+}
+.cs_row_five .student_feedback_container .aii_average_review .av_content p {
+  font-size: 15px;
+  font-family: "[[setting:secondary_font]]";
+  color: rgb(79, 79, 79);
+  line-height: 1.2;
+}
+
+
+
+
+#ccn-star-rate .btn-primary {
+  width: auto;
+  height: auto;
+  padding: 11px 24px;
+  line-height: 17px;
+  font-size: 12px !important;
+}
+.student_feedback_container .aii_average_review {
+  height: auto !important;
+  padding: 0 20px 20px !important;
+}
+.ccn-cannot-rate .av_content {
+  margin: 45px 0 25px;
+}
+.ccn-cannot-rate {
+  top: 75px;
+}
+.ccn-can-rate {
+  top: 32px;
+}
+.ccn-can-rate .av_content {
+  margin: 35px 0 5px;
+}
+.ccn-external-stars {
+  color: #d0d23c;
+}
+.ccn-external-stars .list-inline-item:not(:last-child) {
+  margin-right: .5rem !important;
+}
+.ccn-external-stars span {
+  color: #555555;
+  font-size: 14px;
+}
+
+
+  .courses_single_container .cs_row_five .student_feedback_container .aii_average_review {
+    display: inline-block;
+    left: 0;
+    /*position: relative;*/
+    top: auto;
+  }
+  
+  
+  @media only screen and (max-width:1560px) {
+  
+    .cs_row_five .student_feedback_container .aii_average_review {
+        position: static;
+        width: 100%;
+        padding: 0 0 5px !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0px;
+    }
+}
+
+
+/*  (min-width:1280px)+++ */
+@media only screen and (max-width:1280px) {
+    .courses_single_container .cs_row_five .student_feedback_container .aii_average_review {
+        right: 15px;
+    }
+    .cs_row_five .student_feedback_container .aii_average_review {
+        position: static;
+        width: 100%;
+        padding: 0 0 5px !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0px;
+    }
+    .courses_single_container .cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+    padding-left: 70px;
+  }
+}
+
+@media only screen and (max-width: 1199.98px) {
+
+    .courses_single_container .cs_row_five .student_feedback_container .aii_average_review {
+        display: inline-block;
+        left: 0;
+        /*position: relative;*/
+        top: auto;
+    }
+}
+
+@media only screen and (max-width:768px) {
+  .cs_row_five .student_feedback_container .s_feeback_content ul.skills {
+    padding-right: 50px;
+  }
+}
+
+/* Small devices (min-width: 576px) (max-width: 767.98px) // (landscape phones, less than 768px) */
+@media only screen and (max-width: 767.98px) {
+    .courses_single_container .cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+    max-width: 390px;
+    padding-left: 60px;
+  }
+}
+
+@media only screen and (max-width:520px) {
+    .courses_single_container .cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+    max-width: 350px;
+  }
+
+}
+
+@media only screen and (max-width:414px) {
+     .courses_single_container .cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+    max-width: 290px;
+  }
+
+}
+
+@media only screen and (max-width:400px) {
+    .courses_single_container .cs_row_five .student_feedback_container .s_feeback_content .sonny_progressbar {
+    max-width: 200px;
+  }
+
+}

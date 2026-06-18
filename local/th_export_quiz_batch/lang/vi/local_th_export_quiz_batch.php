@@ -1,0 +1,32 @@
+<?php
+$string['pluginname'] = 'TH Xuất bài thi hàng loạt';
+$string['th_export_quiz_batch:view'] = 'Xem trang xuất bài kiểm tra hàng loạt';
+$string['heading'] = 'Xuất bài thi hàng loạt';
+$string['tab_notexported'] = 'Chưa xuất';
+$string['tab_processing'] = 'Chờ xuất';
+$string['tab_exported'] = 'Đã xuất';
+$string['noprocessing'] = 'Hiện không có phiên xử lý nào.';
+$string['nodataexported'] = 'Chưa có dữ liệu nào được xuất.';
+$string['downloadzip'] = 'Tải file .zip';
+$string['delete'] = 'Xóa';
+$string['status_processing'] = 'Đang xử lý...';
+$string['selectquizzes'] = 'Chọn các bài kiểm tra cần xuất';
+$string['export'] = 'Xuất';
+$string['course'] = 'Khóa học';
+$string['requester'] = 'Người yêu cầu';
+$string['time'] = 'Thời gian';
+$string['status'] = 'Trạng thái';
+$string['creator'] = 'Người tạo';
+$string['createdate'] = 'Ngày tạo';
+$string['zipfile'] = 'Tệp ZIP';
+$string['action'] = 'Thao tác';
+$string['confirmdeletefile'] = 'Bạn có chắc chắn muốn xóa file này không?';
+$string['categoryidnumber'] = 'ID number danh mục phòng thi';
+$string['categoryidnumber_desc'] = 'Nhập idnumber của danh mục chứa các phòng thi';
+$string['categorynotfound'] = 'Không tìm thấy danh mục có idnumber: {$a}';
+$string['nocategoryconfigured'] = 'Chưa cấu hình danh mục khóa học trong phần thiết lập plugin.';
+$string['noquizavailable'] = 'Không có phòng thi nào khả dụng.';
+$string['selectcourses'] = 'Chọn phòng thi';
+$string['selectcourses_required'] = 'Bạn phải chọn ít nhất một phòng thi.';
+$string['filenotfound'] = 'Không tìm thấy file';
+

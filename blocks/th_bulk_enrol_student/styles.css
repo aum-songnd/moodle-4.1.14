@@ -1,0 +1,38 @@
+#option_ma_ghi_danh {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#option_status {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#itemsperpage {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+@media (min-width: 1175px) {
+    #th_search_advanced {
+        display: flex; 
+    }
+
+    #option_ma_ghi_danh{
+        margin-right: 10px
+    }
+
+    #option_status{
+        margin-right: 10px
+    }
+}
+
+@media (max-width: 1175px) {
+  #option_status {
+    margin-left: 15px;
+  }
+}
+
+#th_itemsperpage{
+    margin-top: 10px;
+}

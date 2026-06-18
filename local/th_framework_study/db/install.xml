@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="local/th_framework_study/db" VERSION="0.2" COMMENT="Install file for local_th_framework_study" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <TABLES>
+
+        <!-- Bảng th_framework_study -->
+        <TABLE NAME="th_framework_study" COMMENT="Framework study table">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" />
+                <FIELD NAME="subject_name" TYPE="char" LENGTH="255" NOTNULL="true" />
+                <FIELD NAME="subject_code" TYPE="char" LENGTH="100" NOTNULL="true" />
+                <FIELD NAME="credit" TYPE="int" LENGTH="10" NOTNULL="false" />
+                <FIELD NAME="major_code" TYPE="char" LENGTH="100" NOTNULL="false" />
+                <FIELD NAME="target_code" TYPE="char" LENGTH="100" NOTNULL="false" />
+                <FIELD NAME="training_type_code" TYPE="char" LENGTH="100" NOTNULL="false" />
+                <FIELD NAME="created_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who created the record" />
+                <FIELD NAME="updated_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who last updated the record" />
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" />
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+        </TABLE>
+
+        <!-- Bảng th_subject_exemption -->
+        <TABLE NAME="th_subject_exemption" COMMENT="Subject exemptions per user">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" />
+                <FIELD NAME="subject_code" TYPE="char" LENGTH="100" NOTNULL="true" />
+                <FIELD NAME="major_code" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="0" COMMENT="Major code (profile category)" />
+                <FIELD NAME="created_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who created the record" />
+                <FIELD NAME="updated_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who last updated the record" />
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" />
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+                <KEY NAME="userid_subject" TYPE="unique" FIELDS="userid, subject_code" />
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="th_subject_code_mapping" COMMENT="Mapping subject code">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="current_code" TYPE="char" LENGTH="50" NOTNULL="true"/>
+                <FIELD NAME="old_code" TYPE="char" LENGTH="50" NOTNULL="true"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="uq_subject_code" TYPE="unique" FIELDS="current_code,old_code"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
