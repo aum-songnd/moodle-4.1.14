@@ -1035,15 +1035,10 @@ class core_backup_renderer extends plugin_renderer_base {
         $tabledata = array();
 
         // Get all in progress course copies for this user.
-        $copies = \copy_helper::get_copies($userid);
-        print_object($copies);
-        exit();
+        $copies = \copy_helper::get_copies($userid, $courseid);
 
         foreach ($copies as $copy) {
             $sourceurl = new \moodle_url('/course/view.php', array('id' => $copy->sourceid));
-
-             
-             
 
             $tablerow = array(
                 html_writer::link($sourceurl, $copy->source),

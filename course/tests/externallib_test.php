@@ -3494,7 +3494,7 @@ final class externallib_test extends externallib_advanced_testcase {
     /**
      * Test the get_enrolled_courses_by_timeline_classification function.
      *
-     * @dataProvider get_get_enrolled_courses_by_timeline_classification_test_cases()
+     * @dataProvider get_get_enrolled_courses_by_timeline_classification_test_cases
      * @param array $coursedata Courses to create
      * @param string $classification Timeline classification
      * @param int $limit Maximum number of results
@@ -3639,6 +3639,12 @@ final class externallib_test extends externallib_advanced_testcase {
         $this->assignUserCapability('moodle/user:viewdetails', $usercontext, $teacherroleid);
 
         // Sorted by course id DESC.
+        // User without moodle/user:viewalldetails capability will not be able to see the course details.
+        $result = core_course_external::get_recent_courses($student->id);
+        $this->assertCount(0, $result);
+
+        // User with moodle/user:viewalldetails capability will be able to see the course details.
+        $this->assignUserCapability('moodle/user:viewalldetails', $usercontext, $teacherroleid);
         $result = core_course_external::get_recent_courses($student->id);
         $this->assertCount(1, $result);
         $this->assertEquals($courses[0]->id, array_shift($result)->id);
@@ -3742,6 +3748,12 @@ final class externallib_test extends externallib_advanced_testcase {
 
         $this->assertEquals(2, count($users['users']));
         $this->assertEquals($expectedusers, $users);
+
+        // Prohibit the capability for viewing course participants.
+        $this->unassignUserCapability('moodle/course:viewparticipants', null, null, $course1->id);
+        $this->expectException(required_capability_exception::class);
+        $this->expectExceptionMessage('Sorry, but you do not currently have permissions to do that (View participants)');
+        core_course_external::get_enrolled_users_by_cmid($forum1->cmid);
     }
 
     /**

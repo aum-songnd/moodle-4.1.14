@@ -33,7 +33,7 @@ require_once($CFG->libdir . '/tests/fixtures/testable_flexible_table.php');
  * @copyright  2013 Damyon Wiese <damyon@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class tablelib_test extends \advanced_testcase {
+final class tablelib_test extends \advanced_testcase {
     protected function generate_columns($cols) {
         $columns = array();
         foreach (range(0, $cols - 1) as $j) {
@@ -363,7 +363,7 @@ class tablelib_test extends \advanced_testcase {
      *
      * @return array
      */
-    public function fullname_column_provider() {
+    public static function fullname_column_provider(): array {
         return [
             ['language'],
             ['alternatename lastname'],
@@ -782,7 +782,7 @@ class tablelib_test extends \advanced_testcase {
      *
      * @return array
      */
-    public function initials_provider(): array {
+    public static function initials_provider(): array {
         return [
             [null, null, null],
             ['A', null, 'A'],
@@ -829,4 +829,33 @@ class tablelib_test extends \advanced_testcase {
         $this->expectOutputRegex('/' . '<caption class="inline">' . $caption . '<\/caption>' . '/');
     }
 
+    /**
+     * Test formulas are escaped in exported tables.
+     */
+    public function test_table_exports_escaped_formulas(): void {
+        $table = new flexible_table('tablelib_test_export');
+        $table->define_baseurl('/invalid.php');
+        $table->define_columns(['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6']);
+
+        ob_start();
+        $table->is_downloadable(true);
+        $table->is_downloading('csv');
+
+        $table->setup();
+        $table->add_data([
+            'column0' => "  =SUM(1+1)", // With spaces.
+            'column1' => "=SUM(1+1)",
+            'column2' => "=1+1",
+            'column3' => "+1+1",
+            'column4' => "-1+1",
+            'column5' => "@A1",
+            'column6' => "-", // Single dash (should not be escaped).
+        ]);
+
+        $output = ob_get_contents();
+        ob_end_clean();
+
+        $matchregex = "/\"?'  =SUM\(1\+1\)\"?,'=SUM\(1\+1\),'=1\+1,'\+1\+1,'-1\+1,'@A1,-/";
+        $this->assertMatchesRegularExpression($matchregex, $output);
+    }
 }

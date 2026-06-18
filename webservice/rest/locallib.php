@@ -128,152 +128,150 @@ class webservice_rest_server extends webservice_base_server {
                 $response = json_encode($validatedvalues);
             } else {
                 $response = '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
-$response .= '<RESPONSE>'."\n";
-    $response .= self::xmlize_result($validatedvalues, $this->function->returns_desc);
-    $response .= '</RESPONSE>'."\n";
-}
-}
+                $response .= '<RESPONSE>'."\n";
+                $response .= self::xmlize_result($validatedvalues, $this->function->returns_desc);
+                $response .= '</RESPONSE>'."\n";
+            }
+        }
 
-$this->send_headers();
-echo $response;
-}
-
-/**
-* Send the error information to the WS client
-* formatted as XML document.
-* Note: the exception is never passed as null,
-* it only matches the abstract function declaration.
-* @param exception $ex the exception that we are sending
-*/
-protected function send_error($ex=null) {
-// Unless debugging is completely off, log the error to server error log.
-if (debugging('', DEBUG_MINIMAL)) {
-$info = get_exception_info($ex);
-// This format is the same as default_exception_handler() in setuplib.php but with the
-// word 'REST' instead of 'Default', to make it easy to reuse any existing processing.
-error_log('REST exception handler: ' . $info->message . ' Debug: ' .
-$info->debuginfo . "\n" . format_backtrace($info->backtrace, true));
-}
-
-$this->send_headers();
-echo $this->generate_error($ex);
-}
-
-/**
-* Build the error information matching the REST returned value format (JSON or XML)
-* @param exception $ex the exception we are converting in the server rest format
-* @return string the error in the requested REST format
-*/
-protected function generate_error($ex) {
-if ($this->restformat == 'json') {
-$errorobject = new stdClass;
-$errorobject->exception = get_class($ex);
-if (isset($ex->errorcode)) {
-$errorobject->errorcode = $ex->errorcode;
-}
-$errorobject->message = $ex->getMessage();
-if (debugging() and isset($ex->debuginfo)) {
-$errorobject->debuginfo = $ex->debuginfo;
-}
-$error = json_encode($errorobject);
-} else {
-$error = '
-<?xml version="1.0" encoding="UTF-8" ?>'."\n";
-$error .= '<EXCEPTION class="'.get_class($ex).'">'."\n";
-    if (isset($ex->errorcode)) {
-    $error .= '<ERRORCODE>' . htmlspecialchars($ex->errorcode, ENT_COMPAT, 'UTF-8')
-        . '</ERRORCODE>' . "\n";
+        $this->send_headers();
+        echo $response;
     }
-    $error .= '<MESSAGE>'.htmlspecialchars($ex->getMessage(), ENT_COMPAT, 'UTF-8').'</MESSAGE>'."\n";
-    if (debugging() and isset($ex->debuginfo)) {
-    $error .= '<DEBUGINFO>'.htmlspecialchars($ex->debuginfo, ENT_COMPAT, 'UTF-8').'</DEBUGINFO>'."\n";
+
+    /**
+     * Send the error information to the WS client
+     * formatted as XML document.
+     * Note: the exception is never passed as null,
+     *       it only matches the abstract function declaration.
+     * @param exception $ex the exception that we are sending
+     */
+    protected function send_error($ex=null) {
+        // Unless debugging is completely off, log the error to server error log.
+        if (debugging('', DEBUG_MINIMAL)) {
+            $info = get_exception_info($ex);
+            // This format is the same as default_exception_handler() in setuplib.php but with the
+            // word 'REST' instead of 'Default', to make it easy to reuse any existing processing.
+            error_log('REST exception handler: ' . $info->message . ' Debug: ' .
+                    $info->debuginfo . "\n" . format_backtrace($info->backtrace, true));
+        }
+
+        $this->send_headers();
+        echo $this->generate_error($ex);
     }
-    $error .= '</EXCEPTION>'."\n";
-}
-return $error;
-}
 
-/**
-* Internal implementation - sending of page headers.
-*/
-protected function send_headers() {
-if ($this->restformat == 'json') {
-header('Content-type: application/json');
-} else {
-header('Content-Type: application/xml; charset=utf-8');
-header('Content-Disposition: inline; filename="response.xml"');
-}
-header('Cache-Control: private, must-revalidate, pre-check=0, post-check=0, max-age=0');
-header('Expires: '. gmdate('D, d M Y H:i:s', 0) .' GMT');
-header('Pragma: no-cache');
-header('Accept-Ranges: none');
-// Allow cross-origin requests only for Web Services.
-// This allow to receive requests done by Web Workers or webapps in different domains.
-// header('Access-Control-Allow-Origin: *');
-}
-
-/**
-* Internal implementation - recursive function producing XML markup.
-*
-* @param mixed $returns the returned values
-* @param external_description $desc
-* @return string
-*/
-protected static function xmlize_result($returns, $desc) {
-if ($desc === null) {
-return '';
-
-} else if ($desc instanceof external_value) {
-if (is_bool($returns)) {
-// we want 1/0 instead of true/false here
-$returns = (int)$returns;
-}
-if (is_null($returns)) {
-return '
-<VALUE null="null" />'."\n";
-} else {
-return '<VALUE>'.htmlspecialchars($returns, ENT_COMPAT, 'UTF-8').'</VALUE>'."\n";
-}
-
-} else if ($desc instanceof external_multiple_structure) {
-$mult = '<MULTIPLE>'."\n";
-    if (!empty($returns)) {
-    foreach ($returns as $val) {
-    $mult .= self::xmlize_result($val, $desc->content);
+    /**
+     * Build the error information matching the REST returned value format (JSON or XML)
+     * @param exception $ex the exception we are converting in the server rest format
+     * @return string the error in the requested REST format
+     */
+    protected function generate_error($ex) {
+        if ($this->restformat == 'json') {
+            $errorobject = new stdClass;
+            $errorobject->exception = get_class($ex);
+            if (isset($ex->errorcode)) {
+                $errorobject->errorcode = $ex->errorcode;
+            }
+            $errorobject->message = $ex->getMessage();
+            if (debugging() and isset($ex->debuginfo)) {
+                $errorobject->debuginfo = $ex->debuginfo;
+            }
+            $error = json_encode($errorobject);
+        } else {
+            $error = '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
+            $error .= '<EXCEPTION class="'.get_class($ex).'">'."\n";
+            if (isset($ex->errorcode)) {
+                $error .= '<ERRORCODE>' . htmlspecialchars($ex->errorcode, ENT_COMPAT, 'UTF-8')
+                        . '</ERRORCODE>' . "\n";
+            }
+            $error .= '<MESSAGE>'.htmlspecialchars($ex->getMessage(), ENT_COMPAT, 'UTF-8').'</MESSAGE>'."\n";
+            if (debugging() and isset($ex->debuginfo)) {
+                $error .= '<DEBUGINFO>'.htmlspecialchars($ex->debuginfo, ENT_COMPAT, 'UTF-8').'</DEBUGINFO>'."\n";
+            }
+            $error .= '</EXCEPTION>'."\n";
+        }
+        return $error;
     }
-    }
-    $mult .= '</MULTIPLE>'."\n";
-return $mult;
 
-} else if ($desc instanceof external_single_structure) {
-$single = '<SINGLE>'."\n";
-    foreach ($desc->keys as $key=>$subdesc) {
-    $value = isset($returns[$key]) ? $returns[$key] : null;
-    $single .= '<KEY name="'.$key.'">'.self::xmlize_result($value, $subdesc).'</KEY>'."\n";
+    /**
+     * Internal implementation - sending of page headers.
+     */
+    protected function send_headers() {
+        if ($this->restformat == 'json') {
+            header('Content-type: application/json');
+        } else {
+            header('Content-Type: application/xml; charset=utf-8');
+            header('Content-Disposition: inline; filename="response.xml"');
+        }
+        header('Cache-Control: private, must-revalidate, pre-check=0, post-check=0, max-age=0');
+        header('Expires: '. gmdate('D, d M Y H:i:s', 0) .' GMT');
+        header('Pragma: no-cache');
+        header('Accept-Ranges: none');
+        // Allow cross-origin requests only for Web Services.
+        // This allow to receive requests done by Web Workers or webapps in different domains.
+        header('Access-Control-Allow-Origin: *');
     }
-    $single .= '</SINGLE>'."\n";
-return $single;
-}
-}
+
+    /**
+     * Internal implementation - recursive function producing XML markup.
+     *
+     * @param mixed $returns the returned values
+     * @param external_description $desc
+     * @return string
+     */
+    protected static function xmlize_result($returns, $desc) {
+        if ($desc === null) {
+            return '';
+
+        } else if ($desc instanceof external_value) {
+            if (is_bool($returns)) {
+                // we want 1/0 instead of true/false here
+                $returns = (int)$returns;
+            }
+            if (is_null($returns)) {
+                return '<VALUE null="null"/>'."\n";
+            } else {
+                return '<VALUE>'.htmlspecialchars($returns, ENT_COMPAT, 'UTF-8').'</VALUE>'."\n";
+            }
+
+        } else if ($desc instanceof external_multiple_structure) {
+            $mult = '<MULTIPLE>'."\n";
+            if (!empty($returns)) {
+                foreach ($returns as $val) {
+                    $mult .= self::xmlize_result($val, $desc->content);
+                }
+            }
+            $mult .= '</MULTIPLE>'."\n";
+            return $mult;
+
+        } else if ($desc instanceof external_single_structure) {
+            $single = '<SINGLE>'."\n";
+            foreach ($desc->keys as $key=>$subdesc) {
+                $value = isset($returns[$key]) ? $returns[$key] : null;
+                $single .= '<KEY name="'.$key.'">'.self::xmlize_result($value, $subdesc).'</KEY>'."\n";
+            }
+            $single .= '</SINGLE>'."\n";
+            return $single;
+        }
+    }
 }
 
 
 /**
-* REST test client class
-*
-* @package webservice_rest
-* @copyright 2009 Petr Skoda (skodak)
-* @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ * REST test client class
+ *
+ * @package    webservice_rest
+ * @copyright  2009 Petr Skoda (skodak)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class webservice_rest_test_client implements webservice_test_client_interface {
-/**
-* Execute test client WS request
-* @param string $serverurl server url (including token parameter or username/password parameters)
-* @param string $function function name
-* @param array $params parameters of the called function
-* @return mixed
-*/
-public function simpletest($serverurl, $function, $params) {
-return download_file_content($serverurl.'&wsfunction='.$function, null, $params);
-}
+    /**
+     * Execute test client WS request
+     * @param string $serverurl server url (including token parameter or username/password parameters)
+     * @param string $function function name
+     * @param array $params parameters of the called function
+     * @return mixed
+     */
+    public function simpletest($serverurl, $function, $params) {
+        return download_file_content($serverurl.'&wsfunction='.$function, null, $params);
+    }
 }

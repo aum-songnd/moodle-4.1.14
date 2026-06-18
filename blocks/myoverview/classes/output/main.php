@@ -199,7 +199,6 @@ class main implements renderable, templatable {
             $this->sort = BLOCK_MYOVERVIEW_SORTING_TITLE;
         }
 
-
         // Check and remember the given view.
         $this->view = $view ? $view : BLOCK_MYOVERVIEW_VIEW_CARD;
 
@@ -294,6 +293,7 @@ class main implements renderable, templatable {
      *
      */
     public function set_available_layouts() {
+
         if ($config = get_config('block_myoverview', 'layouts')) {
             $this->layouts = explode(',', $config);
         } else {
@@ -407,8 +407,15 @@ class main implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         global $CFG, $USER;
-        
+
         $nocoursesurl = $output->image_url('courses', 'block_myoverview')->out();
+
+        $newcourseurl = '';
+        $coursecat = \core_course_category::user_top();
+        if ($coursecat && ($category = \core_course_category::get_nearest_editable_subcategory($coursecat, ['create']))) {
+            $newcourseurl = new \moodle_url('/course/edit.php', ['category' => $category->id]);
+        }
+
         $customfieldvalues = $this->get_customfield_values_for_export();
         $selectedcustomfield = '';
         if ($this->grouping == BLOCK_MYOVERVIEW_GROUPING_CUSTOMFIELD) {
@@ -437,17 +444,14 @@ class main implements renderable, templatable {
         $sort = '';
         if ($this->sort == BLOCK_MYOVERVIEW_SORTING_SHORTNAME) {
             $sort = 'shortname';
-        } elseif ($this->sort == BLOCK_MYOVERVIEW_SORTING_TITLE) {
-            $sort = 'shortname';
-        } elseif ($this->sort == BLOCK_MYOVERVIEW_SORTING_STARTDATE) {
-            $sort = 'c.startdate ASC';
         } else {
-            $sort = 'ul.timeaccess ASC';
+            $sort = $this->sort == BLOCK_MYOVERVIEW_SORTING_TITLE ? 'fullname' : 'ul.timeaccess desc';
         }
-        
+
         $defaultvariables = [
             'totalcoursecount' => count(enrol_get_all_users_courses($USER->id, true)),
             'nocoursesimg' => $nocoursesurl,
+            'newcourseurl' => $newcourseurl,
             'grouping' => $this->grouping,
             'sort' => $sort,
             // If the user preference display option is not available, default to first available layout.
@@ -474,5 +478,4 @@ class main implements renderable, templatable {
         return array_merge($defaultvariables, $preferences);
 
     }
-
 }

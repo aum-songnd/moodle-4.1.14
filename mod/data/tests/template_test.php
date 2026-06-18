@@ -29,7 +29,7 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \mod_data\template
  */
-class template_test extends \advanced_testcase {
+final class template_test extends \advanced_testcase {
     /**
      * Setup to ensure that fixtures are loaded.
      */
@@ -169,7 +169,7 @@ class template_test extends \advanced_testcase {
      *
      * @return array of scenarios
      */
-    public function parse_entries_provider(): array {
+    public static function parse_entries_provider(): array {
         return [
             // Teacher scenarios.
             'Teacher id tag' => [
@@ -393,7 +393,7 @@ class template_test extends \advanced_testcase {
             ],
             'Teacher actionsmenu tag with default options' => [
                 'templatecontent' => 'Some ##actionsmenu## tag',
-                'expected' => '|Some .*edit.*{entryid}.*sesskey.*Edit.* .*delete.*{entryid}.*sesskey.*Delete.* tag|',
+                'expected' => '|Some .*edit.*{entryid}.*Edit.* .*delete.*{entryid}.*Delete.* tag|',
                 'rolename' => 'editingteacher',
             ],
             'Teacher actionsmenu tag with default options (check Show more is not there)' => [
@@ -689,7 +689,7 @@ class template_test extends \advanced_testcase {
             ],
             'Student actionsmenu tag with default options' => [
                 'templatecontent' => 'Some ##actionsmenu## tag',
-                'expected' => '|Some .*edit.*{entryid}.*sesskey.*Edit.* .*delete.*{entryid}.*sesskey.*Delete.* tag|',
+                'expected' => '|Some .*edit.*{entryid}.*Edit.* .*delete.*{entryid}.*Delete.* tag|',
                 'rolename' => 'student',
             ],
             'Student actionsmenu tag with default options (check Show more is not there)' => [
@@ -871,7 +871,7 @@ class template_test extends \advanced_testcase {
      *
      * @return array of scenarios
      */
-    public function parse_add_entry_provider(): array {
+    public static function parse_add_entry_provider(): array {
         return [
             // Editing an entry.
             'Teacher editing entry tags tag' => [

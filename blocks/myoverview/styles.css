@@ -3,36 +3,3 @@
 .block_myoverview button#groupingdropdown + .dropdown-menu li:first-of-type.dropdown-divider:first-of-type {
     display: none;
 }
-
-@media (min-width: 576px) {
-  .block-myoverview .course-listitem .row {
-    display: flex;
-    align-items: center;
-  }
-}
-
-@media (min-width: 576px) {
-  .block-myoverview .course-listitem .col-md-9 {
-    width: calc(100% - 155px);
-  }
-}
-
-@media (min-width: 576px) {
-  .block-myoverview .course-listitem .col-md-1 {
-    width: 40px;
-    align-self: flex-end;
-  }
-}
-
-@media (min-width: 576px) {
-  .block-myoverview .course-listitem .card-img {
-    width: 120px;
-    height: 80px;
-    margin-right: 15px;
-  }
-}
-.block-myoverview .course-listitem .card-img {
-  background-position: center;
-  background-size: cover;
-  border-radius: 0;
-}

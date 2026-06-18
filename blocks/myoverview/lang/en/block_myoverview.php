@@ -22,29 +22,26 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['allincludinghidden'] = 'All';
-$string['all'] = 'All (except removed from view)';
+$string['allincludinghidden'] = 'All (including removed from view)';
+$string['all'] = 'All';
 $string['addtofavourites'] = 'Star this course';
 $string['aria:addtofavourites'] = 'Star for';
 $string['aria:allcoursesincludinghidden'] = 'Show all courses';
 $string['aria:allcourses'] = 'Show all courses except courses removed from view';
 $string['aria:card'] = 'Switch to card view';
 $string['aria:controls'] = 'Course overview controls';
-$string['aria:courseactions'] = 'Actions for current course';
+$string['aria:courseactions'] = 'Actions for course';
 $string['aria:coursesummary'] = 'Course summary text:';
 $string['aria:courseprogress'] = 'Course progress:';
 $string['aria:customfield'] = 'Show {$a} courses';
 $string['aria:displaydropdown'] = 'Display drop-down menu';
-$string['aria:favourites'] = 'Show starred courses';
+$string['aria:favourites'] = 'Show starred courses only';
 $string['aria:future'] = 'Show future courses';
 $string['aria:groupingdropdown'] = 'Grouping drop-down menu';
 $string['aria:inprogress'] = 'Show courses in progress';
-$string['aria:lastaccessed'] = 'Sort courses by last accessed date';
 $string['aria:list'] = 'Switch to list view';
-$string['aria:title'] = 'Sort courses by course name';
 $string['aria:past'] = 'Show past courses';
 $string['aria:removefromfavourites'] = 'Remove star for';
-$string['aria:shortname'] = 'Sort courses by course short name';
 $string['aria:summary'] = 'Switch to summary view';
 $string['aria:sortingdropdown'] = 'Sorting drop-down menu';
 $string['availablegroupings'] = 'Available filters';
@@ -59,7 +56,6 @@ $string['customfiltergrouping_nofields'] = 'This option requires a course custom
 $string['displaycategories'] = 'Display categories';
 $string['displaycategories_help'] = 'Display the course category on dashboard course items including cards, list items and summary items.';
 $string['favourites'] = 'Starred';
-$string['days'] = 'Days';
 $string['future'] = 'Future';
 $string['inprogress'] = 'In progress';
 $string['lastaccessed'] = 'Last accessed';
@@ -75,9 +71,8 @@ $string['privacy:metadata:overviewviewpreference'] = 'The Course overview block 
 $string['privacy:metadata:overviewgroupingpreference'] = 'The Course overview block grouping preference.';
 $string['privacy:metadata:overviewpagingpreference'] = 'The Course overview block paging preference.';
 $string['removefromfavourites'] = 'Unstar this course';
+$string['searchcourses'] = "Search courses";
 $string['shortname'] = 'Short name';
-$string['startdate'] = 'Start date';
-$string['aria:startdate'] = 'Start date';
 $string['summary'] = 'Summary';
 $string['title'] = 'Course name';
 $string['aria:hidecourse'] = 'Remove {$a} from view';
@@ -87,8 +82,13 @@ $string['hidden'] = 'Courses removed from view';
 $string['hidecourse'] = 'Remove from view';
 $string['hiddencourses'] = 'Removed from view';
 $string['show'] = 'Restore to view';
+$string['sortbytitle'] = 'Sort by course name';
+$string['sortbylastaccessed'] = 'Sort by last accessed';
+$string['sortbyshortname'] = 'Sort by short name';
 $string['privacy:request:preference:set'] = 'The value of the setting \'{$a->name}\' was \'{$a->value}\'';
 
-// Deprecated since Moodle 3.7.
-$string['complete'] = 'complete';
-$string['nocourses'] = 'No courses';
+// Deprecated since Moodle 4.0.
+$string['clearsearch'] = "Clear search";
+$string['aria:lastaccessed'] = 'Sort courses by last accessed date';
+$string['aria:shortname'] = 'Sort courses by course short name';
+$string['aria:title'] = 'Sort courses by course name';

@@ -33,7 +33,7 @@ require_once($CFG->dirroot . '/calendar/tests/helpers.php');
 /**
  * Tests various classes and functions in upgradelib.php library.
  */
-class upgradelib_test extends advanced_testcase {
+final class upgradelib_test extends advanced_testcase {
 
     /**
      * Test the {@link upgrade_stale_php_files_present() function
@@ -744,7 +744,7 @@ class upgradelib_test extends advanced_testcase {
      *
      * @return array
      */
-    public function serialized_strings_dataprovider() {
+    public static function serialized_strings_dataprovider(): array {
         return [
             'A configuration that uses the old object' => [
                 'O:6:"object":3:{s:4:"text";s:32:"Nothing that anyone cares about.";s:5:"title";s:16:"Really old block";s:6:"format";s:1:"1";}',
@@ -1423,7 +1423,7 @@ class upgradelib_test extends advanced_testcase {
      *
      * @return array
      */
-    public function usermenu_items_dataprovider(): array {
+    public static function usermenu_items_dataprovider(): array {
         return [
             'Add new item to empty usermenu' => [
                 '',
@@ -1531,5 +1531,37 @@ calendar,core_calendar|/calendar/view.php?view=month',
         $this->assertNotEquals(1, $updatedold->timemodified);
         $this->assertTrue($updatedold->timecreated >= $origtime);
         $this->assertTrue($updatedold->timemodified >= $origtime);
+    }
+
+    /**
+     * Test the check_aurora_version check when the Moodle instance is not using Amazon Aurora as a database architecture.
+     *
+     * @covers ::check_aurora_version
+     */
+    public function test_check_aurora_version_is_not_used(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $CFG->dbtype = 'pgsql';
+
+        $result = new environment_results('custom_checks');
+        $this->assertNull(check_aurora_version($result));
+    }
+
+    /**
+     * Test the check_aurora_version check when the Moodle instance is using Amazon Aurora as a database architecture.
+     *
+     * @covers ::check_aurora_version
+     */
+    public function test_check_aurora_version_is_used(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $CFG->dbtype = 'auroramysql';
+
+        $result = new environment_results('custom_checks');
+        $this->assertInstanceOf(environment_results::class, check_aurora_version($result));
+        $this->assertEquals('Aurora compatibility', $result->getInfo());
+        $this->assertFalse($result->getStatus());
     }
 }

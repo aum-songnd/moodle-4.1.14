@@ -294,6 +294,9 @@ $string['error:cannotact'] = 'Cannot activate the badge. ';
 $string['error:cannotawardbadge'] = 'Cannot award badge to a user.';
 $string['error:cannotrevokebadge'] = 'Cannot revoke badge from a user.';
 $string['error:cannotdeletecriterion'] = 'This criterion cannot be deleted. ';
+$string['error:cannotsendtobackpack'] = '<strong>Can\'t add badge to backpack</strong><br />
+Your backpack provider is sending this message: \'{$a}\'.<br /><br />
+You can try downloading the badge and adding it manually to your backpack, or try again later.';
 $string['error:connectionunknownreason'] = 'The connection was unsuccessful but no reason was given.';
 $string['error:clone'] = 'Cannot clone the badge.';
 $string['error:duplicatename'] = 'Badge with such name already exists in the system.';
@@ -576,6 +579,7 @@ $string['visible'] = 'Visible';
 $string['version'] = 'Version';
 $string['version_help'] = 'The version field may be used to keep track of the badge\'s development. If specified, the version is displayed on the badge page.';
 $string['warnexpired'] = ' (This badge has expired!)';
+$string['wrongrole'] = 'The role you want to use is not assigned to you.';
 $string['year'] = 'Year(s)';
 $string['includeauthdetails'] = "Include authentication details with the backpack";
 

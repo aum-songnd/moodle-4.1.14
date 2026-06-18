@@ -597,6 +597,7 @@ $string['enroladminnewcourse_help'] = 'When an admin adds a new course, should t
 $string['enrolinstancedefaults'] = 'Enrolment instance defaults';
 $string['enrolinstancedefaults_desc'] = 'Default enrolment settings in new courses.';
 $string['enrolmultipleusers'] = 'Enrol the users';
+$string['ensureauroraversion'] = 'Your site is running on Amazon Aurora database engine. Please ensure that the MySQL version in Amazon Aurora is compatible with the Moodle version you are installing or upgrading to. You can check the compatibility in the <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/AuroraMySQL.Updates.30Updates.html" target="_blank">Database engine updates for Amazon Aurora MySQL version 3</a>.';
 $string['environment'] = 'Environment';
 $string['environmenterrortodo'] = 'You must solve all the environmental problems (errors) found above before proceeding to install this Moodle version!';
 $string['environmenterrorupgrade'] = 'Warning: you should solve all the environmental problems (errors) found above before proceeding to upgrade this Moodle version!  Upgrading without fixing these requirements could cause problems such as data loss.  Are you sure you want to continue with the upgrade?';
@@ -666,6 +667,8 @@ $string['fullnamedisplayprivate'] = 'Full name format - private';
 $string['gdrequired'] = 'The GD extension is now required by Moodle for image conversion.';
 $string['generalsettings'] = 'General settings';
 $string['geoipfile'] = 'GeoLite2 City MaxMind DB';
+$string['geopluginapikey'] = 'GeoPlugin API key';
+$string['geopluginapikey_desc'] = 'The API key used to access the GeoPlugin service. Get your own key at <a href="https://www.geoplugin.com/" target="_blank">GeoPlugin page</a>.';
 $string['getremoteaddrconf'] = 'Logged IP address source';
 $string['globalsearch'] = 'Global search';
 $string['globalsearchmanage'] = 'Manage global search';
@@ -1239,6 +1242,7 @@ $string['settingmaxinputvars'] = 'PHP setting max_input_vars is recommended to b
 $string['settingmaxinputvarsrequired'] = 'PHP setting max_input_vars must be at least 5000.';
 $string['settingmemorylimit'] = 'Insufficient memory detected, please set higher memory limit in PHP settings.';
 $string['settingsafemode'] = 'Moodle is not fully compatible with safe mode, please ask server administrator to turn it off. Running Moodle under safe mode is not supported, please expect various problems if you do so.';
+$string['settingzendexceptionignoreargs'] = 'It is strongly recommended that the PHP setting zend.exception_ignore_args be enabled as a security precaution.';
 $string['setupsearchengine'] = 'Setup search engine';
 $string['showcommentscount'] = 'Show comments count';
 $string['showdetails'] = 'Show details';

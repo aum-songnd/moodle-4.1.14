@@ -50,15 +50,6 @@ $functions = array(
         'ajax'          => true,
         'loginrequired' => false,
     ),
-
-    'core_auth_th_request_password_reset' => array(
-        'classname'   => 'core_auth_external',
-        'methodname'  => 'th_request_password_reset',
-        'description' => 'Requests a password reset.',
-        'type'        => 'write',
-        'ajax'          => true,
-        'loginrequired' => false,
-    ),
     'core_auth_is_minor' => array(
         'classname'   => 'core_auth_external',
         'methodname'  => 'is_minor',

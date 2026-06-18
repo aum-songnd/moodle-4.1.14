@@ -38,8 +38,7 @@ require_once($CFG->libdir . '/authlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      Moodle 3.2
  */
-class core_auth_external extends external_api
-{
+class core_auth_external extends external_api {
 
     /**
      * Describes the parameters for confirm_user.
@@ -47,8 +46,7 @@ class core_auth_external extends external_api
      * @return external_function_parameters
      * @since Moodle 3.2
      */
-    public static function confirm_user_parameters()
-    {
+    public static function confirm_user_parameters() {
         return new external_function_parameters(
             array(
                 'username' => new external_value(core_user::get_property_type('username'), 'User name'),
@@ -66,8 +64,7 @@ class core_auth_external extends external_api
      * @since Moodle 3.2
      * @throws moodle_exception
      */
-    public static function confirm_user($username, $secret)
-    {
+    public static function confirm_user($username, $secret) {
         global $PAGE;
 
         $warnings = array();
@@ -115,8 +112,7 @@ class core_auth_external extends external_api
      * @return external_single_structure
      * @since Moodle 3.2
      */
-    public static function confirm_user_returns()
-    {
+    public static function confirm_user_returns() {
 
         return new external_single_structure(
             array(
@@ -132,8 +128,7 @@ class core_auth_external extends external_api
      * @return external_function_parameters
      * @since Moodle 3.4
      */
-    public static function request_password_reset_parameters()
-    {
+    public static function request_password_reset_parameters() {
         return new external_function_parameters(
             array(
                 'username' => new external_value(core_user::get_property_type('username'), 'User name', VALUE_DEFAULT, ''),
@@ -151,8 +146,7 @@ class core_auth_external extends external_api
      * @since Moodle 3.4
      * @throws moodle_exception
      */
-    public static function request_password_reset($username = '', $email = '')
-    {
+    public static function request_password_reset($username = '', $email = '') {
         global $CFG, $PAGE;
         require_once($CFG->dirroot . '/login/lib.php');
 
@@ -168,11 +162,10 @@ class core_auth_external extends external_api
         $context = context_system::instance();
         $PAGE->set_context($context);   // Needed by format_string calls.
 
-        // $CFG->forgottenpasswordurl = '';
         // Check if an alternate forgotten password method is set.
-        // if (!empty($CFG->forgottenpasswordurl)) {
-        //     throw new moodle_exception('cannotmailconfirm');
-        // }
+        if (!empty($CFG->forgottenpasswordurl)) {
+            throw new moodle_exception('cannotmailconfirm');
+        }
 
         $errors = core_login_validate_forgot_password_data($params);
         if (!empty($errors)) {
@@ -204,101 +197,7 @@ class core_auth_external extends external_api
      * @return external_single_structure
      * @since Moodle 3.4
      */
-    public static function request_password_reset_returns()
-    {
-
-        return new external_single_structure(
-            array(
-                'status' => new external_value(PARAM_ALPHANUMEXT, 'The returned status of the process:
-                    dataerror: Error in the sent data (username or email). More information in warnings field.
-                    emailpasswordconfirmmaybesent: Email sent or not (depends on user found in database).
-                    emailpasswordconfirmnotsent: Failure, user not found.
-                    emailpasswordconfirmnoemail: Failure, email not found.
-                    emailalreadysent: Email already sent.
-                    emailpasswordconfirmsent: User pending confirmation.
-                    emailresetconfirmsent: Email sent.
-                '),
-                'notice' => new external_value(PARAM_RAW, 'Important information for the user about the process.'),
-                'warnings'  => new external_warnings(),
-            )
-        );
-    }
-
-
-    public static function th_request_password_reset_parameters()
-    {
-        return new external_function_parameters(
-            array(
-                'username' => new external_value(core_user::get_property_type('username'), 'User name', VALUE_DEFAULT, ''),
-                'email' => new external_value(core_user::get_property_type('email'), 'User email', VALUE_DEFAULT, ''),
-            )
-        );
-    }
-
-    /**
-     * Requests a password reset.
-     *
-     * @param  string $username user name
-     * @param  string $email    user email
-     * @return array warnings and success status (including notices and errors while processing)
-     * @since Moodle 3.4
-     * @throws moodle_exception
-     */
-    public static function th_request_password_reset($username = '', $email = '')
-    {
-        global $CFG, $PAGE;
-        require_once($CFG->dirroot . '/login/lib.php');
-
-        $warnings = array();
-        $params = self::validate_parameters(
-            self::th_request_password_reset_parameters(),
-            array(
-                'username' => $username,
-                'email' => $email,
-            )
-        );
-
-        $context = context_system::instance();
-        $PAGE->set_context($context);   // Needed by format_string calls.
-
-        // $CFG->forgottenpasswordurl = '';
-        // Check if an alternate forgotten password method is set.
-        // if (!empty($CFG->forgottenpasswordurl)) {
-        //     throw new moodle_exception('cannotmailconfirm');
-        // }
-
-        $errors = core_login_validate_forgot_password_data($params);
-        if (!empty($errors)) {
-            $status = 'dataerror';
-            $notice = '';
-
-            foreach ($errors as $itemname => $message) {
-                $warnings[] = array(
-                    'item' => $itemname,
-                    'itemid' => 0,
-                    'warningcode' => 'fielderror',
-                    'message' => s($message)
-                );
-            }
-        } else {
-            list($status, $notice, $url) = core_login_process_password_reset($params['username'], $params['email']);
-        }
-
-        return array(
-            'status' => $status,
-            'notice' => $notice,
-            'warnings' => $warnings,
-        );
-    }
-
-    /**
-     * Describes the request_password_reset return value.
-     *
-     * @return external_single_structure
-     * @since Moodle 3.4
-     */
-    public static function th_request_password_reset_returns()
-    {
+    public static function request_password_reset_returns() {
 
         return new external_single_structure(
             array(
@@ -323,8 +222,7 @@ class core_auth_external extends external_api
      * @return external_function_parameters
      * @since Moodle 3.4
      */
-    public static function is_minor_parameters()
-    {
+    public static function is_minor_parameters() {
         return new external_function_parameters(
             array(
                 'age' => new external_value(PARAM_INT, 'Age'),
@@ -342,8 +240,7 @@ class core_auth_external extends external_api
      * @since Moodle 3.4
      * @throws moodle_exception
      */
-    public static function is_minor($age, $country)
-    {
+    public static function is_minor($age, $country) {
         global $CFG, $PAGE;
         require_once($CFG->dirroot . '/login/lib.php');
 
@@ -356,8 +253,8 @@ class core_auth_external extends external_api
         );
 
         if (!array_key_exists($params['country'], get_string_manager()->get_list_of_countries())) {
-            throw new invalid_parameter_exception('Invalid value for country parameter (value: ' .
-                $params['country'] . ')');
+            throw new invalid_parameter_exception('Invalid value for country parameter (value: '.
+                $params['country'] .')');
         }
 
         $context = context_system::instance();
@@ -365,12 +262,8 @@ class core_auth_external extends external_api
 
         // Check if verification of age and location (minor check) is enabled.
         if (!\core_auth\digital_consent::is_age_digital_consent_verification_enabled()) {
-            throw new moodle_exception(
-                'nopermissions',
-                'error',
-                '',
-                get_string('agelocationverificationdisabled', 'error')
-            );
+            throw new moodle_exception('nopermissions', 'error', '',
+                get_string('agelocationverificationdisabled', 'error'));
         }
 
         $status = \core_auth\digital_consent::is_minor($params['age'], $params['country']);
@@ -386,8 +279,7 @@ class core_auth_external extends external_api
      * @return external_single_structure
      * @since Moodle 3.4
      */
-    public static function is_minor_returns()
-    {
+    public static function is_minor_returns() {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'True if the user is considered to be a digital minor,
@@ -402,8 +294,7 @@ class core_auth_external extends external_api
      * @return external_function_parameters
      * @since Moodle 3.3
      */
-    public static function is_age_digital_consent_verification_enabled_parameters()
-    {
+    public static function is_age_digital_consent_verification_enabled_parameters() {
         return new external_function_parameters(array());
     }
 
@@ -414,8 +305,7 @@ class core_auth_external extends external_api
      * @since Moodle 3.3
      * @throws moodle_exception
      */
-    public static function is_age_digital_consent_verification_enabled()
-    {
+    public static function is_age_digital_consent_verification_enabled() {
         global $PAGE;
 
         $context = context_system::instance();
@@ -438,8 +328,7 @@ class core_auth_external extends external_api
      * @return external_single_structure
      * @since Moodle 3.3
      */
-    public static function is_age_digital_consent_verification_enabled_returns()
-    {
+    public static function is_age_digital_consent_verification_enabled_returns() {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'True if digital consent verification is enabled,
@@ -454,18 +343,13 @@ class core_auth_external extends external_api
      * @return external_function_parameters
      * @since Moodle 3.6
      */
-    public static function resend_confirmation_email_parameters()
-    {
+    public static function resend_confirmation_email_parameters() {
         return new external_function_parameters(
             array(
                 'username' => new external_value(core_user::get_property_type('username'), 'Username.'),
                 'password' => new external_value(core_user::get_property_type('password'), 'Plain text password.'),
-                'redirect' => new external_value(
-                    PARAM_LOCALURL,
-                    'Redirect the user to this site url after confirmation.',
-                    VALUE_DEFAULT,
-                    ''
-                ),
+                'redirect' => new external_value(PARAM_LOCALURL, 'Redirect the user to this site url after confirmation.',
+                    VALUE_DEFAULT, ''),
             )
         );
     }
@@ -480,9 +364,8 @@ class core_auth_external extends external_api
      * @since Moodle 3.6
      * @throws moodle_exception
      */
-    public static function resend_confirmation_email($username, $password, $redirect = '')
-    {
-        global $PAGE;
+    public static function resend_confirmation_email($username, $password, $redirect = '') {
+        global $PAGE, $CFG;
 
         $warnings = array();
         $params = self::validate_parameters(
@@ -499,18 +382,25 @@ class core_auth_external extends external_api
         $username = trim(core_text::strtolower($params['username']));
         $password = $params['password'];
 
+        $user = core_user::get_user_by_username($username);
+
+        if (!empty($user) && $user->confirmed) {
+            if (!empty($CFG->protectusernames)) {
+                throw new moodle_exception('invalidlogin');
+            }
+            throw new moodle_exception('alreadyconfirmed');
+        }
+
         if (is_restored_user($username)) {
+            if (!empty($CFG->protectusernames)) {
+                throw new moodle_exception('invalidlogin');
+            }
             throw new moodle_exception('restoredaccountresetpassword', 'webservice');
         }
 
         $user = authenticate_user_login($username, $password);
-
         if (empty($user)) {
             throw new moodle_exception('invalidlogin');
-        }
-
-        if ($user->confirmed) {
-            throw new moodle_exception('alreadyconfirmed');
         }
 
         // Check if we should redirect the user once the user is confirmed.
@@ -535,8 +425,7 @@ class core_auth_external extends external_api
      * @return external_single_structure
      * @since Moodle 3.6
      */
-    public static function resend_confirmation_email_returns()
-    {
+    public static function resend_confirmation_email_returns() {
 
         return new external_single_structure(
             array(

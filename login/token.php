@@ -29,7 +29,7 @@ require_once(__DIR__ . '/../config.php');
 require_once($CFG->libdir . '/externallib.php');
 
 // Allow CORS requests.
-// header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: *');
 
 if (!$CFG->enablewebservices) {
     throw new moodle_exception('enablewsdescription', 'webservice');

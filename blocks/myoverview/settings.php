@@ -120,10 +120,4 @@ if ($ADMIN->fulltree) {
             get_string('hiddencourses', 'block_myoverview'),
             '',
             1));
-    $settings->add(new admin_setting_configtext(
-        'block_myoverview/days',
-        get_string('days', 'block_myoverview'),
-        '',
-        60
-    ));
 }

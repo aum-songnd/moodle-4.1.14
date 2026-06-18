@@ -70,10 +70,11 @@ if ($mform->is_cancelled()) {
     redirect($returnurl);
 
 } else if ($mdata = $mform->get_data()) {
+
     // Process the form and create the copy task.
     $copydata = \copy_helper::process_formdata($mdata);
     \copy_helper::create_copy($copydata);
-    
+
     if (!empty($mdata->submitdisplay)) {
         // Redirect to the copy progress overview.
         $progressurl = new moodle_url('/backup/copyprogress.php', array('id' => $courseid));

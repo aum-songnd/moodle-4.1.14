@@ -48,8 +48,6 @@ define('BLOCK_MYOVERVIEW_CUSTOMFIELD_EMPTY', -1);
 define('BLOCK_MYOVERVIEW_SORTING_TITLE', 'title');
 define('BLOCK_MYOVERVIEW_SORTING_LASTACCESSED', 'lastaccessed');
 define('BLOCK_MYOVERVIEW_SORTING_SHORTNAME', 'shortname');
-//
-define('BLOCK_MYOVERVIEW_SORTING_STARTDATE', 'startdate');
 
 /**
  * Constants for the user preferences view options
@@ -76,9 +74,11 @@ define('BLOCK_MYOVERVIEW_DISPLAY_CATEGORIES_OFF', 'off');
 /**
  * Get the current user preferences that are available
  *
- * @return mixed Array representing current options along with defaults
+ * @uses core_user::is_current_user
+ *
+ * @return array[] Array representing current options along with defaults
  */
-function block_myoverview_user_preferences() {
+function block_myoverview_user_preferences(): array {
     $preferences['block_myoverview_user_grouping_preference'] = array(
         'null' => NULL_NOT_ALLOWED,
         'default' => BLOCK_MYOVERVIEW_GROUPING_ALL,
@@ -92,26 +92,29 @@ function block_myoverview_user_preferences() {
             BLOCK_MYOVERVIEW_GROUPING_FAVOURITES,
             BLOCK_MYOVERVIEW_GROUPING_HIDDEN,
             BLOCK_MYOVERVIEW_GROUPING_CUSTOMFIELD,
-        )
+        ),
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     );
 
     $preferences['block_myoverview_user_grouping_customfieldvalue_preference'] = [
         'null' => NULL_ALLOWED,
         'default' => null,
         'type' => PARAM_RAW,
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     ];
 
     $preferences['block_myoverview_user_sort_preference'] = array(
         'null' => NULL_NOT_ALLOWED,
-        'default' => BLOCK_MYOVERVIEW_SORTING_TITLE,
+        'default' => BLOCK_MYOVERVIEW_SORTING_LASTACCESSED,
         'type' => PARAM_ALPHA,
         'choices' => array(
             BLOCK_MYOVERVIEW_SORTING_TITLE,
             BLOCK_MYOVERVIEW_SORTING_LASTACCESSED,
-            BLOCK_MYOVERVIEW_SORTING_SHORTNAME,
-            BLOCK_MYOVERVIEW_SORTING_STARTDATE
-        )
+            BLOCK_MYOVERVIEW_SORTING_SHORTNAME
+        ),
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     );
+
     $preferences['block_myoverview_user_view_preference'] = array(
         'null' => NULL_NOT_ALLOWED,
         'default' => BLOCK_MYOVERVIEW_VIEW_CARD,
@@ -120,7 +123,8 @@ function block_myoverview_user_preferences() {
             BLOCK_MYOVERVIEW_VIEW_CARD,
             BLOCK_MYOVERVIEW_VIEW_LIST,
             BLOCK_MYOVERVIEW_VIEW_SUMMARY
-        )
+        ),
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     );
 
     $preferences['/^block_myoverview_hidden_course_(\d)+$/'] = array(
@@ -128,7 +132,8 @@ function block_myoverview_user_preferences() {
         'choices' => array(0, 1),
         'type' => PARAM_INT,
         'null' => NULL_NOT_ALLOWED,
-        'default' => 'none'
+        'default' => 0,
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     );
 
     $preferences['block_myoverview_user_paging_preference'] = array(
@@ -141,7 +146,8 @@ function block_myoverview_user_preferences() {
             BLOCK_MYOVERVIEW_PAGING_48,
             BLOCK_MYOVERVIEW_PAGING_96,
             BLOCK_MYOVERVIEW_PAGING_ALL
-        )
+        ),
+        'permissioncallback' => [core_user::class, 'is_current_user'],
     );
 
     return $preferences;
@@ -156,82 +162,4 @@ function block_myoverview_pre_course_delete(\stdClass $course) {
     // Removing any favourited courses which have been created for users, for this course.
     $service = \core_favourites\service_factory::get_service_for_component('core_course');
     $service->delete_favourites_by_type_and_item('courses', $course->id);
-}
-
-
-require_once($CFG->dirroot . '/course/lib.php');
-
-function course_filter_courses_by_timeline_classification1(
-    $courses,
-    string $classification,
-    int $limit = 0
-) : array {
-
-    if (!in_array($classification,
-            [COURSE_TIMELINE_ALLINCLUDINGHIDDEN, COURSE_TIMELINE_ALL, COURSE_TIMELINE_PAST, COURSE_TIMELINE_INPROGRESS,
-                COURSE_TIMELINE_FUTURE, COURSE_TIMELINE_HIDDEN])) {
-        $message = 'Classification must be one of COURSE_TIMELINE_ALLINCLUDINGHIDDEN, COURSE_TIMELINE_ALL, COURSE_TIMELINE_PAST, '
-            . 'COURSE_TIMELINE_INPROGRESS or COURSE_TIMELINE_FUTURE';
-        throw new moodle_exception($message);
-    }
-
-    $filteredcourses = [];
-    $numberofcoursesprocessed = 0;
-    $filtermatches = 0;
-
-    foreach ($courses as $course) {
-        $numberofcoursesprocessed++;
-        $pref = get_user_preferences('block_myoverview_hidden_course_' . $course->id, 0);
-
-        // Added as of MDL-63457 toggle viewability for each user.
-        if ($classification == COURSE_TIMELINE_ALLINCLUDINGHIDDEN || ($classification == COURSE_TIMELINE_HIDDEN && $pref) ||
-            (($classification == COURSE_TIMELINE_ALL || $classification == course_classify_for_timeline1($course)) && !$pref)) {
-            $filteredcourses[] = $course;
-            $filtermatches++;
-        }
-
-        if ($limit && $filtermatches >= $limit) {
-            // We've found the number of requested courses. No need to continue searching.
-            break;
-        }
-    }
-
-    // Return the number of filtered courses as well as the number of courses that were searched
-    // in order to find the matching courses. This allows the calling code to do some kind of
-    // pagination.
-    return [$filteredcourses, $numberofcoursesprocessed];
-}
-
-function course_classify_for_timeline1($course, $user = null, $completioninfo = null) {
-    global $USER;
-
-    if ($user == null) {
-        $user = $USER;
-    }
-
-    $today = time();
-    $days = get_config('block_myoverview', 'days');
-    $sixty_days = $days * 24 * 60 * 60;
-    // End date past.
-    if (!empty($course->startdate) && ($today - course_classify_start_date($course)) >= $sixty_days) {
-        return COURSE_TIMELINE_PAST;
-    }
-
-    if ($completioninfo == null) {
-        $completioninfo = new completion_info($course);
-    }
-
-    // Course was completed.
-    if ($completioninfo->is_enabled() && $completioninfo->is_course_complete($user->id)) {
-        return COURSE_TIMELINE_PAST;
-    }
-
-    // Start date not reached.
-    if (!empty($course->startdate) && (course_classify_start_date($course) > $today)) {
-        return COURSE_TIMELINE_FUTURE;
-    }
-
-    if (!empty($course->startdate) && ($today - course_classify_start_date($course)) < $sixty_days) {
-        return COURSE_TIMELINE_INPROGRESS;
-    }
 }

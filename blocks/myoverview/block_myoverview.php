@@ -44,9 +44,8 @@ class block_myoverview extends block_base {
      * Returns the contents.
      *
      * @return stdClass contents of block
-     */  
+     */
     public function get_content() {
-        global $DB, $USER;
         if (isset($this->content)) {
             return $this->content;
         }
@@ -58,9 +57,11 @@ class block_myoverview extends block_base {
 
         $renderable = new \block_myoverview\output\main($group, $sort, $view, $paging, $customfieldvalue);
         $renderer = $this->page->get_renderer('block_myoverview');
+
         $this->content = new stdClass();
         $this->content->text = $renderer->render($renderable);
         $this->content->footer = '';
+
         return $this->content;
     }
 
@@ -111,6 +112,32 @@ class block_myoverview extends block_base {
             'instance' => new stdClass(),
             'plugin' => $configs,
         ];
+    }
+
+    /**
+     * Disable block editing on the my courses page.
+     *
+     * @return boolean
+     */
+    public function instance_can_be_edited() {
+        if ($this->page->blocks->is_known_region(BLOCK_POS_LEFT) || $this->page->blocks->is_known_region(BLOCK_POS_RIGHT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Hide the block header on the my courses page.
+     *
+     * @return boolean
+     */
+    public function hide_header() {
+        if ($this->page->blocks->is_known_region(BLOCK_POS_LEFT) || $this->page->blocks->is_known_region(BLOCK_POS_RIGHT)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
 
