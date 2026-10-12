@@ -52,5 +52,15 @@ $functions = array(
         'type'        => 'write',
         'ajax'        => true, // Bắt buộc phải có true để Javascript Ajax call chạy được
         'capabilities'=> 'mod/resource:view',
-    ]
+        'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ],
+    'mod_resource_get_video_progress' => array(
+        'classname'   => 'mod_resource_external',
+        'methodname'  => 'get_video_progress',
+        'description' => 'Returns the current user video progress for a resource activity.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'capabilities'=> 'mod/resource:view',
+        'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    )
 );

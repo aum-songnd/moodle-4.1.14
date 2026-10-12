@@ -250,4 +250,99 @@ class externallib_test extends externallib_advanced_testcase {
         $this->assertEquals('1', $result['warnings'][0]['warningcode']);
         $this->assertEquals($course2->id, $result['warnings'][0]['itemid']);
     }
+
+    /**
+     * Test saving and retrieving the current user's video progress.
+     */
+    public function test_save_and_get_video_progress() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        $course = $this->getDataGenerator()->create_course();
+        $resource = $this->getDataGenerator()->create_module('resource', ['course' => $course->id]);
+        $user = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id);
+        $this->getDataGenerator()->enrol_user($otheruser->id, $course->id, $studentrole->id);
+        $this->setUser($user);
+
+        $saved = mod_resource_external::save_video_progress(
+            $resource->cmid,
+            $otheruser->id,
+            42,
+            120,
+            35,
+            '[1,0,1]'
+        );
+        $saved = \external_api::clean_returnvalue(mod_resource_external::save_video_progress_returns(), $saved);
+        $this->assertTrue($saved['status']);
+
+        $record = $DB->get_record('resource_video_view', ['cm_id' => $resource->cmid], '*', MUST_EXIST);
+        $this->assertEquals($user->id, $record->user_id);
+
+        $progress = mod_resource_external::get_video_progress($resource->cmid);
+        $progress = \external_api::clean_returnvalue(mod_resource_external::get_video_progress_returns(), $progress);
+        $this->assertEquals([
+            'savedtime' => 42,
+            'currenttime' => 42,
+            'duration' => 120,
+            'percent' => 35,
+            'mapa' => '[1,0,1]',
+        ], $progress);
+
+        $record->percent = 100;
+        $DB->update_record('resource_video_view', $record);
+        $completedprogress = mod_resource_external::get_video_progress($resource->cmid);
+        $completedprogress = \external_api::clean_returnvalue(
+            mod_resource_external::get_video_progress_returns(),
+            $completedprogress
+        );
+        $this->assertEquals([
+            'savedtime' => 0,
+            'currenttime' => 42,
+            'duration' => 120,
+            'percent' => 100,
+            'mapa' => '[]',
+        ], $completedprogress);
+
+        $this->setUser($otheruser);
+        $otherprogress = mod_resource_external::get_video_progress($resource->cmid);
+        $otherprogress = \external_api::clean_returnvalue(
+            mod_resource_external::get_video_progress_returns(),
+            $otherprogress
+        );
+        $this->assertEquals([
+            'savedtime' => 0,
+            'currenttime' => 0,
+            'duration' => 0,
+            'percent' => 0,
+            'mapa' => '[]',
+        ], $otherprogress);
+    }
+
+    /**
+     * Saving progress from the app (no mapa) must keep the web mapa and never lower percent.
+     */
+    public function test_save_video_progress_from_app_keeps_mapa() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+
+        $course = $this->getDataGenerator()->create_course();
+        $resource = $this->getDataGenerator()->create_module('resource', ['course' => $course->id]);
+        $user = $this->getDataGenerator()->create_user();
+        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id);
+        $this->setUser($user);
+
+        mod_resource_external::save_video_progress($resource->cmid, 0, 60, 120, 50, '[1,1,0]');
+        mod_resource_external::save_video_progress($resource->cmid, 0, 30, 120, 25);
+
+        $p = mod_resource_external::get_video_progress($resource->cmid);
+        $this->assertEquals(30, $p['savedtime']);
+        $this->assertEquals(50, $p['percent']);
+        $this->assertEquals('[1,1,0]', $p['mapa']);
+    }
 }

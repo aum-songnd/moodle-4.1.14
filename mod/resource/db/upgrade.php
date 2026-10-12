@@ -124,5 +124,10 @@ function xmldb_resource_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026070100, 'resource');
     }
 
+    if ($oldversion < 2026071000) {
+        // Đăng ký thêm web service cho Moodle mobile (get/save video progress).
+        upgrade_mod_savepoint(true, 2026071000, 'resource');
+    }
+
     return true;
 }

@@ -253,15 +253,15 @@ class mod_resource_external extends external_api {
     public static function save_video_progress_parameters() {
         return new external_function_parameters([
             'cmid'        => new external_value(PARAM_INT, 'Course module ID'),
-            'userid'      => new external_value(PARAM_INT, 'User ID'),
+            'userid'      => new external_value(PARAM_INT, 'User ID (bị bỏ qua, luôn dùng user đang đăng nhập)'),
             'currenttime' => new external_value(PARAM_INT, 'Thời gian xem hiện tại (giây)'),
             'duration'    => new external_value(PARAM_INT, 'Tổng thời lượng video (giây)'),
             'percent'     => new external_value(PARAM_INT, 'Phần trăm hoàn thành'),
-            'mapa'        => new external_value(PARAM_RAW, 'Chuỗi mảng JSON tiến trình mapa')
+            'mapa'        => new external_value(PARAM_RAW, 'Chuỗi mảng JSON tiến trình mapa', VALUE_DEFAULT, '')
         ]);
     }
 
-    public static function save_video_progress($cmid, $userid, $currenttime, $duration, $percent, $mapa) {
+    public static function save_video_progress($cmid, $userid, $currenttime, $duration, $percent, $mapa = '') {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::save_video_progress_parameters(), [
@@ -273,7 +273,8 @@ class mod_resource_external extends external_api {
             'mapa'        => $mapa
         ]);
 
-        $context = context_module::instance($params['cmid']);
+        $cm = get_coursemodule_from_id('resource', $params['cmid'], 0, false, MUST_EXIST);
+        $context = context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('mod/resource:view', $context);
 
@@ -302,8 +303,14 @@ class mod_resource_external extends external_api {
         if ($record) {
             $record->currenttime  = $params['currenttime'];
             $record->duration     = $params['duration'];
-            $record->percent      = $params['percent'];
-            $record->mapa         = $params['mapa'];
+            if ($params['mapa'] !== '') {
+                // Gửi từ web: tin tưởng percent + mapa.
+                $record->percent = $params['percent'];
+                $record->mapa    = $params['mapa'];
+            } else {
+                // Gửi từ app (không có mapa): chỉ tăng percent, giữ nguyên mapa cũ.
+                $record->percent = max((int)$record->percent, (int)$params['percent']);
+            }
             $record->timemodified = $now;
 
             $DB->update_record('resource_video_view', $record);
@@ -323,7 +330,6 @@ class mod_resource_external extends external_api {
             $status = "inserted";
         }
 
-        $cm = get_coursemodule_from_id('resource', $params['cmid'], 0, false, MUST_EXIST);
         $course = get_course($cm->course);
         $completion = new \completion_info($course);
 
@@ -347,6 +353,86 @@ class mod_resource_external extends external_api {
         return new external_single_structure([
             'status'  => new external_value(PARAM_BOOL, 'Trạng thái thành công'),
             'message' => new external_value(PARAM_TEXT, 'Thông báo kết quả')
+        ]);
+    }
+
+    /**
+     * Describes the parameters for get_video_progress.
+     *
+     * @return external_function_parameters
+     */
+    public static function get_video_progress_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'Course module ID'),
+        ]);
+    }
+
+    /**
+     * Returns the current user's saved video progress for a resource activity.
+     *
+     * @param int $cmid Course module ID
+     * @return array Saved video progress
+     */
+    public static function get_video_progress($cmid) {
+        global $DB, $USER;
+
+        $params = self::validate_parameters(self::get_video_progress_parameters(), [
+            'cmid' => $cmid,
+        ]);
+
+        $cm = get_coursemodule_from_id('resource', $params['cmid'], 0, false, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+        self::validate_context($context);
+        require_capability('mod/resource:view', $context);
+
+        $progress = $DB->get_record_sql(
+            "SELECT *
+               FROM {resource_video_view}
+              WHERE user_id = :userid
+                AND cm_id = :cmid
+           ORDER BY timemodified DESC, id DESC",
+            ['userid' => $USER->id, 'cmid' => $cm->id],
+            IGNORE_MULTIPLE
+        );
+
+        $result = [
+            'savedtime' => 0,
+            'currenttime' => 0,
+            'duration' => 0,
+            'percent' => 0,
+            'mapa' => '[]',
+        ];
+
+        if ($progress) {
+            $result['currenttime'] = (int) $progress->currenttime;
+            $result['duration'] = (int) $progress->duration;
+            $result['percent'] = (int) $progress->percent;
+
+            if ($result['percent'] < 100) {
+                $result['savedtime'] = $result['currenttime'];
+                if (!empty($progress->mapa)) {
+                    $result['mapa'] = $progress->mapa;
+                }
+            } else {
+                $result['mapa'] = '[]';
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Describes the get_video_progress return value.
+     *
+     * @return external_single_structure
+     */
+    public static function get_video_progress_returns() {
+        return new external_single_structure([
+            'savedtime' => new external_value(PARAM_INT, 'Position to resume playback from, in seconds'),
+            'currenttime' => new external_value(PARAM_INT, 'Last saved playback position, in seconds'),
+            'duration' => new external_value(PARAM_INT, 'Video duration, in seconds'),
+            'percent' => new external_value(PARAM_INT, 'Percentage of video viewed'),
+            'mapa' => new external_value(PARAM_RAW, 'JSON viewing progress map'),
         ]);
     }
 }
