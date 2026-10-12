@@ -29,20 +29,40 @@ defined('MOODLE_INTERNAL') || die;
  * @return mixed True if module supports feature, false if not, null if doesn't know or string for the module purpose.
  */
 function resource_supports($feature) {
-    switch($feature) {
-        case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
-        case FEATURE_GROUPS:                  return false;
-        case FEATURE_GROUPINGS:               return false;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_GRADE_HAS_GRADE:         return false;
-        case FEATURE_GRADE_OUTCOMES:          return false;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_CONTENT;
+    global $CFG;
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+        switch($feature) {
+            case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
+            case FEATURE_GROUPS:                  return false;
+            case FEATURE_GROUPINGS:               return false;
+            case FEATURE_MOD_INTRO:               return true;
+            case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
+            case FEATURE_COMPLETION_HAS_RULES:    return true;
+            case FEATURE_GRADE_HAS_GRADE:         return false;
+            case FEATURE_GRADE_OUTCOMES:          return false;
+            case FEATURE_BACKUP_MOODLE2:          return true;
+            case FEATURE_SHOW_DESCRIPTION:        return true;
 
-        default: return null;
-    }
+            default: return null;
+        }
+    } else {
+        switch($feature) {
+            case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
+            case FEATURE_GROUPS:                  return false;
+            case FEATURE_GROUPINGS:               return false;
+            case FEATURE_MOD_INTRO:               return true;
+            case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
+            case FEATURE_COMPLETION_HAS_RULES:    return true;
+            case FEATURE_GRADE_HAS_GRADE:         return false;
+            case FEATURE_GRADE_OUTCOMES:          return false;
+            case FEATURE_BACKUP_MOODLE2:          return true;
+            case FEATURE_SHOW_DESCRIPTION:        return true;
+            case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_CONTENT;
+
+            default: return null;
+        }
+    } 
 }
 
 /**
@@ -197,16 +217,103 @@ function resource_delete_instance($id) {
  * @param stdClass $coursemodule
  * @return cached_cm_info info
  */
+// function resource_get_coursemodule_info($coursemodule) {
+//     global $CFG, $DB;
+//     require_once("$CFG->libdir/filelib.php");
+//     require_once("$CFG->dirroot/mod/resource/locallib.php");
+//     require_once($CFG->libdir.'/completionlib.php');
+
+//     $context = context_module::instance($coursemodule->id);
+
+//     if (!$resource = $DB->get_record('resource', array('id'=>$coursemodule->instance),
+//             'id, name, display, displayoptions, tobemigrated, revision, intro, introformat')) {
+//         return NULL;
+//     }
+
+//     $info = new cached_cm_info();
+//     $info->name = $resource->name;
+//     if ($coursemodule->showdescription) {
+//         // Convert intro to html. Do not filter cached version, filters run at display time.
+//         $info->content = format_module_intro('resource', $resource, $coursemodule->id, false);
+//     }
+
+//     $version = substr($CFG->release, 0, 1);
+//     if ($version == 3) {
+//         if ($resource->tobemigrated) {
+//             $info->icon ='i/invalid';
+//             return $info;
+//         }
+//     } else {
+//         if ($resource->tobemigrated) {
+//             return $info;
+//         }
+//     } 
+
+//     // See if there is at least one file.
+//     $fs = get_file_storage();
+//     $files = $fs->get_area_files($context->id, 'mod_resource', 'content', 0, 'sortorder DESC, id ASC', false, 0, 0, 1);
+//     if (count($files) >= 1) {
+//         $mainfile = reset($files);
+//         if ($version == 3) {
+//             $info->icon = file_file_icon($mainfile, 24);
+//             $resource->mainfile = $mainfile->get_filename();
+//         } else {
+//             $resource->mainfile = $mainfile->get_filename();
+//         }
+//     }
+
+//     $display = resource_get_final_display_type($resource);
+
+//     if ($display == RESOURCELIB_DISPLAY_POPUP) {
+//         $fullurl = "$CFG->wwwroot/mod/resource/view.php?id=$coursemodule->id&amp;redirect=1";
+//         $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
+//         $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
+//         $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
+//         $wh = "width=$width,height=$height,toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
+//         $info->onclick = "window.open('$fullurl', '', '$wh'); return false;";
+
+//     } else if ($display == RESOURCELIB_DISPLAY_NEW) {
+//         $fullurl = "$CFG->wwwroot/mod/resource/view.php?id=$coursemodule->id&amp;redirect=1";
+//         $info->onclick = "window.open('$fullurl'); return false;";
+
+//     }
+
+//     // If any optional extra details are turned on, store in custom data,
+//     // add some file details as well to be used later by resource_get_optional_details() without retriving.
+//     // Do not store filedetails if this is a reference - they will still need to be retrieved every time.
+//     $version = substr($CFG->release, 0, 1);
+//     if ($version == 3) {
+//         if (($filedetails = resource_get_file_details($resource, $coursemodule)) && empty($filedetails['isref'])) {
+//             $displayoptions = (array) unserialize_array($resource->displayoptions);
+//             $displayoptions['filedetails'] = $filedetails;
+//             $info->customdata = serialize($displayoptions);
+//         } else {
+//             $info->customdata = $resource->displayoptions;
+//         }
+//     } else {
+//         if (($filedetails = resource_get_file_details($resource, $coursemodule)) && empty($filedetails['isref'])) {
+//             $displayoptions = (array) unserialize_array($resource->displayoptions);
+//             $displayoptions['filedetails'] = $filedetails;
+//             $info->customdata['displayoptions'] = serialize($displayoptions);
+//         } else {
+//             $info->customdata['displayoptions'] = $resource->displayoptions;
+//         }
+//         $info->customdata['display'] = $display;
+//     } 
+
+//     return $info;
+// }
 function resource_get_coursemodule_info($coursemodule) {
     global $CFG, $DB;
     require_once("$CFG->libdir/filelib.php");
     require_once("$CFG->dirroot/mod/resource/locallib.php");
+    require_once("$CFG->dirroot/mod/resource/th_filelib.php");
     require_once($CFG->libdir.'/completionlib.php');
 
     $context = context_module::instance($coursemodule->id);
 
     if (!$resource = $DB->get_record('resource', array('id'=>$coursemodule->instance),
-            'id, name, display, displayoptions, tobemigrated, revision, intro, introformat')) {
+            'id, name, display, displayoptions, tobemigrated, revision, intro, introformat, completionpercent')) {
         return NULL;
     }
 
@@ -217,17 +324,33 @@ function resource_get_coursemodule_info($coursemodule) {
         $info->content = format_module_intro('resource', $resource, $coursemodule->id, false);
     }
 
-    if ($resource->tobemigrated) {
-        return $info;
-    }
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+        if ($resource->tobemigrated) {
+            $info->icon ='i/invalid';
+            return $info;
+        }
+    } else {
+        if ($resource->tobemigrated) {
+            return $info;
+        }
+    } 
+
 
     // See if there is at least one file.
     $fs = get_file_storage();
     $files = $fs->get_area_files($context->id, 'mod_resource', 'content', 0, 'sortorder DESC, id ASC', false, 0, 0, 1);
     if (count($files) >= 1) {
         $mainfile = reset($files);
-        $resource->mainfile = $mainfile->get_filename();
-        $info->icon = file_file_icon($mainfile, 24);
+        $version = substr($CFG->release, 0, 1);
+        if ($version == 3) {
+            $info->icon = file_file_icon($mainfile, 32);
+            $resource->mainfile = $mainfile->get_filename();
+        } else {
+            $resource->mainfile = $mainfile->get_filename();
+            $info->icon = th_file_file_icon($mainfile);
+            $info->customdata['filtericon'] = true;
+        }
     }
 
     $display = resource_get_final_display_type($resource);
@@ -257,9 +380,52 @@ function resource_get_coursemodule_info($coursemodule) {
         $info->customdata['displayoptions'] = $resource->displayoptions;
     }
     $info->customdata['display'] = $display;
+    $info->customdata['customcompletionrules']['completionpercent'] = $resource->completionpercent;
 
     return $info;
 }
+function th_file_file_icon($file, $unused = null) {
+    if ($unused !== null) {
+        debugging('Deprecated argument passed to ' . __FUNCTION__, DEBUG_DEVELOPER);
+    }
+
+    if (!is_object($file)) {
+        $file = (object)$file;
+    }
+    if (isset($file->filename)) {
+        $filename = $file->filename;
+    } else if (method_exists($file, 'get_filename')) {
+        $filename = $file->get_filename();
+    } else if (method_exists($file, 'get_visible_name')) {
+        $filename = $file->get_visible_name();
+    } else {
+        $filename = '';
+    }
+    if (isset($file->mimetype)) {
+        $mimetype = $file->mimetype;
+    } else if (method_exists($file, 'get_mimetype')) {
+        $mimetype = $file->get_mimetype();
+    } else {
+        $mimetype = '';
+    }
+    $mimetypes = &th_get_mimetypes_array();
+
+    if ($filename) {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ($extension && !empty($mimetypes[$extension])) {
+            // if file name has known extension, return icon for this extension
+            return th_file_extension_icon($filename);
+        }
+    }
+    return th_file_mimetype_icon($mimetype);
+}
+function th_file_extension_icon($filename, $size = NULL) {
+    return 'f/'.th_mimeinfo('icon', $filename);
+}
+function th_file_mimetype_icon($mimetype, $size = NULL) {
+    return 'f/'.mimeinfo_from_type('icon', $mimetype);
+}
+
 
 /**
  * Called when viewing course page. Shows extra details after the link if
@@ -270,12 +436,24 @@ function resource_get_coursemodule_info($coursemodule) {
 function resource_cm_info_view(cm_info $cm) {
     global $CFG;
     require_once($CFG->dirroot . '/mod/resource/locallib.php');
-    $customdata = $cm->customdata;
-    if (is_array($customdata) && isset($customdata['displayoptions'])) {
-        $resource = (object) ['displayoptions' => $customdata['displayoptions']];
+
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+
+        $resource = (object)array('displayoptions' => $cm->customdata);
         $details = resource_get_optional_details($resource, $cm);
         if ($details) {
-            $cm->set_after_link(' ' . html_writer::tag('span', $details, ['class' => 'resourcelinkdetails']));
+            $cm->set_after_link(' ' . html_writer::tag('span', $details,
+                    array('class' => 'resourcelinkdetails')));
+        }
+    } else {
+        $customdata = $cm->customdata;
+        if (is_array($customdata) && isset($customdata['displayoptions'])) {
+            $resource = (object) ['displayoptions' => $customdata['displayoptions']];
+            $details = resource_get_optional_details($resource, $cm);
+            if ($details) {
+                $cm->set_after_link(' ' . html_writer::tag('span', $details, ['class' => 'resourcelinkdetails']));
+            }
         }
     }
 }
@@ -534,6 +712,9 @@ function resource_view($resource, $course, $cm, $context) {
     // Completion.
     $completion = new completion_info($course);
     $completion->set_module_viewed($cm);
+    if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        $completion->update_state($cm);
+    }
 }
 
 /**
@@ -610,4 +791,58 @@ function mod_resource_get_path_from_pluginfile(string $filearea, array $args) : 
         'itemid' => 0,
         'filepath' => $filepath,
     ];
+}
+
+/**
+ * Thêm link Report vào navigation block của activity.
+ */
+function resource_extend_settings_navigation($settings, $resourcenode) {
+    global $PAGE, $CFG;
+
+    if (!has_capability('mod/resource:viewreport', $PAGE->cm->context)) {
+        return;
+    }
+
+    $url = new moodle_url('/mod/resource/report.php', ['id' => $PAGE->cm->id]);
+    $resourcenode->add(
+        get_string('report', 'mod_resource'),
+        $url,
+        \navigation_node::TYPE_SETTING,
+        null,
+        'report',
+        new pix_icon('i/report', '')
+    );
+}
+
+/**
+ * Obtains the automatic completion state for this resource based on custom completion conditions.
+ *
+ * @param stdClass $course Course object
+ * @param cm_info|stdClass $cm Course module object
+ * @param int $userid User ID
+ * @param bool $type Type of comparison (COMPLETION_AND or COMPLETION_OR)
+ * @return bool True if completed, false if not.
+ */
+function resource_get_completion_state($course, $cm, $userid, $type) {
+    global $DB;
+
+    $resource = $DB->get_record('resource', array('id' => $cm->instance), 'id, completionpercent');
+    if (!$resource) {
+        return false;
+    }
+
+    if (!empty($resource->completionpercent)) {
+        $progress = $DB->get_record_sql(
+            "SELECT MAX(percent) as maxpercent
+               FROM {resource_video_view}
+              WHERE cm_id = :cmid AND user_id = :userid",
+            ['cmid' => $cm->id, 'userid' => $userid]
+        );
+
+        if (!$progress || (int)$progress->maxpercent < (int)$resource->completionpercent) {
+            return false;
+        }
+    }
+
+    return true;
 }

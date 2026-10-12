@@ -61,16 +61,36 @@ function resource_redirect_if_migrated($oldid, $cmid) {
  * @return does not return
  */
 function resource_display_embed($resource, $cm, $course, $file) {
-    global $PAGE, $OUTPUT;
+    global $CFG, $DB, $PAGE, $OUTPUT, $USER;
 
     $clicktoopen = resource_get_clicktoopen($file, $resource->revision);
 
     $context = context_module::instance($cm->id);
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($context->id, 'mod_resource', 'content', 0, 'sortorder DESC, id ASC', false);
+    array_shift($files);
+
+    $subfile = '';
+    $track = '';
+    foreach ($files as $key => $f) {
+        $filename = explode(".", $f->get_filename())[0];
+        $contenthash = $f->get_contenthash();
+        $dir1 = substr($contenthash, 0, 2);
+        $dir2 = substr($contenthash, 2, 2);
+        $contentpath = $dir1 . "/" . $dir2 . "/" . $contenthash;
+        $subfile = $subfile . ",lang/$filename/$contentpath";
+        // print_object($f);
+
+        // $label = $filename[0];
+        $track .= '<track src="' . moodle_url::make_pluginfile_url($context->id, 'mod_resource', 'content', 0,
+            $f->get_filepath(), $f->get_filename()) . '" kind="subtitles" label="' . $filename . '" default="true">';
+    }
+
     $moodleurl = moodle_url::make_pluginfile_url($context->id, 'mod_resource', 'content', $resource->revision,
-            $file->get_filepath(), $file->get_filename());
+        $file->get_filepath(), $file->get_filename());
 
     $mimetype = $file->get_mimetype();
-    $title    = $resource->name;
+    $title = $resource->name;
 
     $extension = resourcelib_get_extension($file->get_filename());
 
@@ -80,17 +100,126 @@ function resource_display_embed($resource, $cm, $course, $file) {
         core_media_manager::OPTION_BLOCK => true,
     );
 
-    if (file_mimetype_in_typegroup($mimetype, 'web_image')) {  // It's an image
+    if (file_mimetype_in_typegroup($mimetype, 'web_image')) {
+        // It's an image
         $code = resourcelib_embed_image($moodleurl->out(), $title);
 
     } else if ($mimetype === 'application/pdf') {
         // PDF document
-        $code = resourcelib_embed_pdf($moodleurl->out(), $title, $clicktoopen);
+        $code = thresourcelib_embed_pdf($moodleurl->out(), $title, $clicktoopen);
 
     } else if ($mediamanager->can_embed_url($moodleurl, $embedoptions)) {
-        // Media (audio/video) file.
-        $code = $mediamanager->embed_url($moodleurl, $title, 0, 0, $embedoptions);
+        // Media (aud io/video) file.
+        // $code = $mediamanager->embed_url($moodleurl, $title, 0, 0, $embedoptions);
 
+        $sql = "SELECT r.usedrm FROM {course_modules} cm
+                JOIN {resource} r ON cm.instance = r.id
+                WHERE cm.id = $cm->id";
+
+        $usedrm = $DB->get_field_sql($sql);
+
+        $config = get_config('resource');
+        $hostdrm = $config->urlDRM;
+        // $globalnotusedrm = $config->globalnotusedrm;
+        $globalusedrm = $config->globalusedrm;
+
+        if (0 == $globalusedrm) {
+            $code = $mediamanager->embed_url($moodleurl, $title, 0, 0, $embedoptions);
+            preg_match('/(<video[^>]*)(>)/i', $code, $matches);
+            $subtitles = $matches[0] . $track;
+            $code = str_replace($matches[0], $subtitles, $code);
+        } else {
+            if ($usedrm || 2 == $globalusedrm) {
+                $contenthash = $file->get_contenthash();
+                $dir1 = substr($contenthash, 0, 2);
+                $dir2 = substr($contenthash, 2, 2);
+                $contentpath = $dir1 . "/" . $dir2 . "/" . $contenthash;
+
+                $u_agent = $_SERVER['HTTP_USER_AGENT'];
+                $operating_system = 'Unknown Operating System';
+
+                if (preg_match('/chrome|chromium|crios/i', $u_agent)) {
+                    $bs = 'chrome';
+                } else if (preg_match('/firefox|fxios/i', $u_agent)) {
+                    $bs = 'firefox';
+                } else if (preg_match('/safari/i', $u_agent)) {
+                    $bs = 'safari';
+                }
+
+                $os = '';
+                if (preg_match('/iphone|ipad|ipod/i', $u_agent)) {
+                    $os = 'iphone';
+                }
+
+                $type = '';
+
+                if ($os == 'iphone') {
+                    $contentsrc = $hostdrm . "/hls/," . $contentpath . $subfile . ",.urlset/master.m3u8";
+                    $type = 'application/x-mpegURL';
+                } else if ($bs == 'safari') {
+                   $contentsrc = $hostdrm . "/hls/," . $contentpath . $subfile . ",.urlset/master.m3u8";
+                    $type = 'application/x-mpegURL';
+                } else {
+                    $contentsrc = $hostdrm . "/edash/," . $contentpath . $subfile . ",.urlset/manifest.mpd";
+                    $type = 'application/dash+xml';
+                }
+
+                // print($contentsrc);
+
+                $width = $CFG->media_default_width . "px";
+                $height = $CFG->media_default_height . "px";
+                $dir_str = explode("/", $contentpath)[2];
+                $code = "
+        <div class='resourcecontent'>
+            <div class='mediaplugin mediaplugin_videojs d-block'>
+                <div style='max-width:$width;'>
+                    <video-js id=vid1 width='$width' class='vjs-default-skin' controls></video-js>
+                </div>
+            </div>
+        </div>
+        <link href='video-js.css' rel='stylesheet'>
+        <script src='video.js'></script>
+        <script src='videojs-http-streaming.min.js'></script>
+        <script src='videojs-contrib-eme.min.js'></script>
+        <script>
+            const key = '$dir_str'+'_'+'$cm->id'+'_'+'$USER->id';
+
+            var player = videojs('vid1', {playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]});
+
+            player.ready(function () {
+                const settings = player.textTrackSettings;
+                const match = document.cookie.match(new RegExp('videojs_sub_settings=([^;]+)'));
+                const sub_settings = match ? match[1] : 0;
+                if (sub_settings) {
+                    settings.setValues(JSON.parse(sub_settings));
+                } else {
+                    const expireTimestamp = Date.now() + 365 * 24 * 60 * 60 * 1000; // +365 ngày
+                    const expires = new Date(expireTimestamp).toUTCString();
+                    document.cookie = 'videojs_sub_settings=' + JSON.stringify(settings.getValues()) + ';expires=' + expires + ';path=/;SameSite=Lax';
+                }
+                settings.on('change', function () {
+                    const expireTimestamp = Date.now() + 365 * 24 * 60 * 60 * 1000; // +365 ngày
+                    const expires = new Date(expireTimestamp).toUTCString();
+                    document.cookie = 'videojs_sub_settings=' + JSON.stringify(settings.getValues()) + ';expires=' + expires + ';path=/;SameSite=Lax';
+                });
+                settings.updateDisplay();
+            });
+            player.eme();
+            player.src({
+              src: '$contentsrc',
+              type: '$type',
+              keySystems: {
+                'org.w3.clearkey': 'dash_clear_key.php'
+              }
+            });
+        </script>";
+            } else {
+                $code = $mediamanager->embed_url($moodleurl, $title, 0, 0, $embedoptions);
+                preg_match('/(<video[^>]*)(>)/i', $code, $matches);
+                $subtitles = $matches[0] . $track;
+                $code = str_replace($matches[0], $subtitles, $code);
+            }
+        }
     } else {
         // We need a way to discover if we are loading remote docs inside an iframe.
         $moodleurl->param('embed', 1);
@@ -99,15 +228,143 @@ function resource_display_embed($resource, $cm, $course, $file) {
         $code = resourcelib_embed_general($moodleurl, $title, $clicktoopen, $mimetype);
     }
 
-    // Let the module handle the display.
-    $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+        resource_print_header($resource, $cm, $course);
+        resource_print_heading($resource, $cm, $course);
 
-    resource_print_header($resource, $cm, $course);
+        echo $code;
 
-    echo format_text($code, FORMAT_HTML, ['noclean' => true]);
+        // --- ĐOẠN CODE CUSTOM THEO DÕI TIẾN TRÌNH VIDEO ---
+        global $DB, $USER, $PAGE, $OUTPUT;
+        if (strpos($mimetype, 'video') !== false || strpos($mimetype, 'mpegURL') !== false || strpos($mimetype, 'dash+xml') !== false) {
+            $savedtime = 0;
+            $mapadata = '[]';
 
-    echo $OUTPUT->footer();
-    die;
+            $latest = $DB->get_record_sql(
+                "SELECT * FROM {resource_video_view}
+                WHERE user_id = :user_id
+                    AND cm_id = :cm_id
+                ORDER BY timemodified DESC
+                LIMIT 1",
+                ['user_id' => $USER->id, 'cm_id' => $cm->id]
+            );
+
+            if ($latest && $latest->percent >= 100) {
+                $savedtime = 0;
+                $mapadata = '[]';
+            } else if ($latest) {
+                $savedtime = $latest->currenttime;
+                if (!empty($latest->mapa)) {
+                    $mapadata = $latest->mapa;
+                }
+            }
+
+            echo $OUTPUT->render_from_template('mod_resource/mapa', [
+                'class' => '',
+                'mapadata' => base64_encode($mapadata),
+                'text' => ''
+            ]);
+
+            $trackerinterval = get_config('resource', 'trackerinterval');
+            if (empty($trackerinterval) || !is_numeric($trackerinterval)) {
+                $trackerinterval = 30;
+            }
+
+            $PAGE->requires->js_call_amd('mod_resource/video_tracker', 'init', [
+                $USER->id,
+                $cm->id,
+                $savedtime,
+                (int)$trackerinterval
+            ]);
+        }
+        // --- END CODE CUSTOM ---
+        echo $OUTPUT->footer();
+        die;
+    } else {
+        // Let the module handle the display.
+        $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
+
+        resource_print_header($resource, $cm, $course);
+
+        echo $code;
+
+        // --- ĐOẠN CODE CUSTOM THEO DÕI TIẾN TRÌNH VIDEO ---
+        global $DB, $USER, $PAGE, $OUTPUT;
+        if (strpos($mimetype, 'video') !== false || strpos($mimetype, 'mpegURL') !== false || strpos($mimetype, 'dash+xml') !== false) {
+            $savedtime = 0;
+            $mapadata = '[]';
+
+            $latest = $DB->get_record_sql(
+                "SELECT * FROM {resource_video_view}
+                WHERE user_id = :user_id
+                    AND cm_id = :cm_id
+                ORDER BY timemodified DESC
+                LIMIT 1",
+                ['user_id' => $USER->id, 'cm_id' => $cm->id]
+            );
+
+            if ($latest && $latest->percent >= 100) {
+                $savedtime = 0;
+                $mapadata = '[]';
+            } else if ($latest) {
+                $savedtime = $latest->currenttime;
+                if (!empty($latest->mapa)) {
+                    $mapadata = $latest->mapa;
+                }
+            }
+
+            echo $OUTPUT->render_from_template('mod_resource/mapa', [
+                'class' => '', 
+                'mapadata' => base64_encode($mapadata),
+                'text' => ''
+            ]);
+
+            $trackerinterval = get_config('resource', 'trackerinterval');
+            if (empty($trackerinterval) || !is_numeric($trackerinterval)) {
+                $trackerinterval = 30;
+            }
+
+            $PAGE->requires->js_call_amd('mod_resource/video_tracker', 'init', [
+                $USER->id,
+                $cm->id,
+                $savedtime,
+                (int)$trackerinterval
+            ]);
+        }
+        // --- END CODE CUSTOM ---
+
+        echo $OUTPUT->footer();
+        die;
+    }
+}
+
+function resource_print_heading($resource, $cm, $course, $notused = false) {
+	global $OUTPUT;
+	echo $OUTPUT->heading(format_string($resource->name), 2);
+}
+function resource_print_intro($resource, $cm, $course, $ignoresettings = false) {
+	global $OUTPUT;
+
+	$options = empty($resource->displayoptions) ? array() : unserialize($resource->displayoptions);
+
+	$extraintro = resource_get_optional_details($resource, $cm);
+	if ($extraintro) {
+		// Put a paragaph tag around the details
+		$extraintro = html_writer::tag('p', $extraintro, array('class' => 'resourcedetails'));
+	}
+
+	if ($ignoresettings || !empty($options['printintro']) || $extraintro) {
+		$gotintro = trim(strip_tags($resource->intro));
+		if ($gotintro || $extraintro) {
+			echo $OUTPUT->box_start('mod_introbox', 'resourceintro');
+			if ($gotintro) {
+				echo format_module_intro('resource', $resource, $cm->id);
+			}
+			echo $extraintro;
+			echo $OUTPUT->box_end();
+		}
+	}
 }
 
 /**
@@ -124,11 +381,21 @@ function resource_display_frame($resource, $cm, $course, $file) {
     $frame = optional_param('frameset', 'main', PARAM_ALPHA);
 
     if ($frame === 'top') {
-        $PAGE->set_pagelayout('frametop');
-        $PAGE->activityheader->set_description(resource_get_intro($resource, $cm, true));
-        resource_print_header($resource, $cm, $course);
-        echo $OUTPUT->footer();
-        die;
+        $version = substr($CFG->release, 0, 1);
+        if ($version == 3) {
+            $PAGE->set_pagelayout('frametop');
+            resource_print_header($resource, $cm, $course);
+            resource_print_heading($resource, $cm, $course);
+            resource_print_intro($resource, $cm, $course);
+            echo $OUTPUT->footer();
+            die;
+        } else {
+            $PAGE->set_pagelayout('frametop');
+            $PAGE->activityheader->set_description(resource_get_intro($resource, $cm, true));
+            resource_print_header($resource, $cm, $course);
+            echo $OUTPUT->footer();
+            die;
+        }
 
     } else {
         $config = get_config('resource');
@@ -203,10 +470,18 @@ function resource_get_clicktodownload($file, $revision) {
 function resource_print_workaround($resource, $cm, $course, $file) {
     global $CFG, $OUTPUT, $PAGE;
 
-    // Let the module handle the display.
-    $PAGE->activityheader->set_description(resource_get_intro($resource, $cm, true));
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+        resource_print_header($resource, $cm, $course);
+        resource_print_heading($resource, $cm, $course, true);
+        resource_print_intro($resource, $cm, $course, true);
+    } else {
+        // Let the module handle the display.
+        $PAGE->activityheader->set_description(resource_get_intro($resource, $cm, true));
 
-    resource_print_header($resource, $cm, $course);
+        resource_print_header($resource, $cm, $course);
+    }
+
 
     $resource->mainfile = $file->get_filename();
     echo '<div class="resourceworkaround">';
@@ -424,13 +699,25 @@ function resource_get_intro(object $resource, object $cm, bool $ignoresettings =
  * @return void, does not return
  */
 function resource_print_tobemigrated($resource, $cm, $course) {
-    global $DB, $OUTPUT, $PAGE;
-    $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
-    $resource_old = $DB->get_record('resource_old', array('oldid'=>$resource->id));
-    resource_print_header($resource, $cm, $course);
-    echo $OUTPUT->notification(get_string('notmigrated', 'resource', $resource_old->type));
-    echo $OUTPUT->footer();
-    die;
+    global $DB, $OUTPUT, $PAGE, $CFG;
+
+     if ($version == 3) {
+        $resource_old = $DB->get_record('resource_old', array('oldid'=>$resource->id));
+        resource_print_header($resource, $cm, $course);
+        resource_print_heading($resource, $cm, $course);
+        resource_print_intro($resource, $cm, $course);
+        echo $OUTPUT->notification(get_string('notmigrated', 'resource', $resource_old->type));
+        echo $OUTPUT->footer();
+        die;
+    } else {
+
+        $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
+        $resource_old = $DB->get_record('resource_old', array('oldid'=>$resource->id));
+        resource_print_header($resource, $cm, $course);
+        echo $OUTPUT->notification(get_string('notmigrated', 'resource', $resource_old->type));
+        echo $OUTPUT->footer();
+        die;
+    }
 }
 
 /**
@@ -441,11 +728,19 @@ function resource_print_tobemigrated($resource, $cm, $course) {
  * @return void, does not return
  */
 function resource_print_filenotfound($resource, $cm, $course) {
-    global $DB, $OUTPUT, $PAGE;
+    global $DB, $OUTPUT, $PAGE, $CFG;
 
     $resource_old = $DB->get_record('resource_old', array('oldid'=>$resource->id));
-    $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
-    resource_print_header($resource, $cm, $course);
+    $version = substr($CFG->release, 0, 1);
+    if ($version == 3) {
+        resource_print_header($resource, $cm, $course);
+        resource_print_heading($resource, $cm, $course);
+        resource_print_intro($resource, $cm, $course);
+    } else {
+
+        $PAGE->activityheader->set_description(resource_get_intro($resource, $cm));
+        resource_print_header($resource, $cm, $course);
+    }
     if ($resource_old) {
         echo $OUTPUT->notification(get_string('notmigrated', 'resource', $resource_old->type));
     } else {
@@ -522,4 +817,36 @@ function resource_set_mainfile($data) {
         $file = reset($files);
         file_set_sortorder($context->id, 'mod_resource', 'content', 0, $file->get_filepath(), $file->get_filename(), 1);
     }
+}
+
+
+function thresourcelib_embed_pdf($fullurl, $title, $clicktoopen) {
+    global $CFG, $PAGE;
+
+    $code = <<<EOT
+                <div id="pdf-container"></div>
+                <script>
+                    // Define the full URL to the PDF
+                    var fullurl = '$fullurl';
+                    var clicktoopen = '$clicktoopen';
+                    if (window.innerWidth > 768) {
+                        document.getElementById('pdf-container').innerHTML = 
+                            '<div class="resourcecontent resourcepdf">' +
+                                '<object id="resourceobject" data="' + fullurl + '" type="application/pdf" width="100%" height="600">' +
+                                    '<param name="src" value="' + fullurl + '" />' +
+                                    clicktoopen +
+                                '</object>' +
+                            '</div>';
+                    } else {
+                        document.getElementById('pdf-container').innerHTML = 
+                            '<div class="resourcecontent resourcepdf" style="max-width: 100%; overflow-x: auto; max-height: 100vh; overflow-y: auto; border: 1px solid #ddd; background-color: #f9f9f9;">' +
+                                clicktoopen +
+                            '</div>';
+                    }
+                </script>    
+            EOT;
+
+    // the size is hardcoded in the boject obove intentionally because it is adjusted by the following function on-the-fly
+    // $PAGE->requires->js_init_call('M.util.init_maximised_embed', array('resourceobject'), true);
+    return $code;
 }

@@ -1,13 +1,160 @@
-.path-mod-resource .resourcecontent {
+.path-mod-resource .mediaplugin_videojs,
+.path-mod-resource .mediaplugin_videojs>div {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 auto;
+}
+
+.path-mod-resource .video-js {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16/9;
+}
+
+
+#resource-mapa-visualizacao {
+    position: relative;
+    width: 100%;
+    height: 25px;
+    background-color: #e9ecef;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    overflow: visible !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#resource-mapa-visualizacao:hover {
+    transform: scaleY(1.6);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#resource-mapa-visualizacao .mapa,
+#resource-mapa-visualizacao .clique {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+#resource-mapa-visualizacao .mapa-item {
+    flex: 1 1 0%;
+    height: 100%;
+    background-color: transparent;
+}
+
+#resource-mapa-visualizacao .mapa-item.viewed {
+    background-color: #e5007d;
+}
+
+#resource-mapa-visualizacao .mapa-item:hover {
+    background-color: rgba(135, 133, 134, 0.511) !important;
+}
+
+.path-mod-resource .vjs-playback-rate .vjs-menu-content {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    width: 60px !important;
+    margin-left: -10px !important;
+}
+
+/* Style for responsive PDF display */
+.path-mod-resource .resourcepdf,
+.path-mod-resource #resourceobject {
+    width: 100% !important;
+    height: 85vh !important;
+    min-height: 600px !important;
+}
+
+
+#mapa-visualizacao {
+    margin: 5px 0;
+    background: rgba(206, 206, 206, 0.5);
+    padding: 1px;
+    width: 100%;
+    position: relative;
+    transition: all ease 0.3s;
+}
+
+#mapa-visualizacao .mapa,
+#mapa-visualizacao .clique {
+    display: flex;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+#mapa-visualizacao .mapa div,
+#mapa-visualizacao .clique div {
+    height: 100%;
+    background: #e60076;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+#mapa-visualizacao .clique {
+    z-index: 3;
+}
+
+#mapa-visualizacao .clique div {
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0);
+}
+
+#mapa-visualizacao .clique div:hover {
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 1;
+}
+
+#mapa-visualizacao #seu-mapa-view {
+    margin: -3px 0 !important;
+    padding-bottom: 0;
+    font-size: 8px;
+    position: relative;
+    z-index: 2;
+    color: #000;
     text-align: center;
+    transition: all ease 0.3s;
 }
 
-.path-mod-resource .resourcedetails {
-    font-size: 0.8em;
-    color: #555;
+#mapa-visualizacao #seu-mapa-view span {
+    font-weight: 700;
 }
 
-.resourcelinkdetails {
-    font-size: 0.8em;
-    color: #555;
+@media (max-width: 750px) {
+    #mapa-visualizacao #seu-mapa-view {
+        font-size: 15px;
+        margin: 3px 0 !important;
+    }
+}
+
+#mapa-visualizacao:hover {
+    margin-top: -10px;
+}
+
+#mapa-visualizacao:hover #seu-mapa-view {
+    font-size: 15px;
+    margin: 3px 0 !important;
+}
+
+#mapa-visualizacao.report {
+    display: flex;
+    width: 100%;
+    margin: 6px 0;
+    height: 20px;
+}
+
+#mapa-visualizacao.report div {
+    opacity: 0;
+    background: #e60076;
+    width: 100%;
+    height: 19px;
 }

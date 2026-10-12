@@ -71,4 +71,23 @@ if ($ADMIN->fulltree) {
     $options = array('0' => get_string('none'), '1' => get_string('allfiles'), '2' => get_string('htmlfilesonly'));
     $settings->add(new admin_setting_configselect('resource/filterfiles',
         get_string('filterfiles', 'resource'), get_string('filterfilesexplain', 'resource'), 0, $options));
+
+    $settings->add(new admin_setting_heading('headingurldrm', get_string('setting_drm', 'resource'), ''));
+    // $settings->add(new admin_setting_configcheckbox('resource/globalnotusedrm',
+    //     get_string('force_use_normal_link', 'resource'), "When this button is ticked. Then all mod_resouce activity instances in the system use the available video viewing link. Override the \"use DRM\" setting in each plugin.\n When unchecked, whether or not to use anti-download links is taken from the settings of each activity instance.", 0));
+    $options = array(
+        '0' => get_string('no_drm', 'resource'),
+        '1' => get_string('use_instance_resource_setting', 'resource'), 
+        '2' => get_string('use_drm', 'resource'), 
+    );
+    $settings->add(new admin_setting_configselect('resource/globalusedrm',
+        get_string('use_drm_setting', 'resource'), get_string('drm_desc', 'resource'), 0, $options));
+    $settings->add(new admin_setting_configtext('resource/urlDRM', get_string('drm_url', 'resource'), get_string('drm_url', 'resource'), '', PARAM_URL, 30));
+    $settings->add(new admin_setting_configtext(
+        'resource/trackerinterval',
+        get_string('trackerinterval', 'resource'),
+        get_string('trackerinterval_desc', 'resource'),
+        30,
+        PARAM_INT
+    ));
 }

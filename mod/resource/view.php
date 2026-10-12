@@ -32,18 +32,26 @@ $id       = optional_param('id', 0, PARAM_INT); // Course Module ID
 $r        = optional_param('r', 0, PARAM_INT);  // Resource instance ID
 $redirect = optional_param('redirect', 0, PARAM_BOOL);
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
-
+$version = substr($CFG->release, 0, 1);
 if ($r) {
     if (!$resource = $DB->get_record('resource', array('id'=>$r))) {
         resource_redirect_if_migrated($r, 0);
-        throw new \moodle_exception('invalidaccessparameter');
+        if ($version == 3) {
+            print_error('invalidaccessparameter');
+        } else {
+            throw new \moodle_exception('invalidaccessparameter');
+        }
     }
     $cm = get_coursemodule_from_instance('resource', $resource->id, $resource->course, false, MUST_EXIST);
 
 } else {
     if (!$cm = get_coursemodule_from_id('resource', $id)) {
         resource_redirect_if_migrated(0, $id);
-        throw new \moodle_exception('invalidcoursemodule');
+        if ($version == 3) {
+            print_error('invalidcoursemodule');
+        } else {
+            throw new \moodle_exception('invalidcoursemodule');
+        }
     }
     $resource = $DB->get_record('resource', array('id'=>$cm->instance), '*', MUST_EXIST);
 }

@@ -128,3 +128,37 @@ If there are multiple files in this resource, the start file type is displayed.
 
 If the file type is not known to the system, it will not display.';
 $string['uploadeddate'] = 'Uploaded {$a}';
+$string['setting_drm'] = 'Setting DRM';
+$string['drm_url'] = 'DRM URL';
+$string['use_drm_setting'] = 'Use DRM';
+$string['use_instance_resource_setting'] = 'Use instance resource setting';
+$string['no_drm'] = 'Force all resources not to use DRM';
+$string['use_drm'] = 'Force all resources to use DRM';
+$string['use_drm_instance'] = 'Use DRM';
+$string['drm_desc'] = 'Select Force all resources not to use DRM: Do not use DRM <br> Select Use instance resource setting: Use DRM with selected videos in each resource\'s settings <br>
+Select Force all resources to use DRM: Use system-wide DRM regardless of whether resource instances are in use or not';
+
+// Report video progress strings
+$string['report'] = 'Video watch time report';
+$string['report_title'] = 'Video watch time report';
+$string['report_title_user'] = 'Student video watch time details - {$a}';
+$string['report_userid'] = 'User ID';
+$string['report_nome'] = 'First name / Last name';
+$string['report_email'] = 'Email';
+$string['report_tempo'] = 'Watched time';
+$string['report_duracao'] = 'Video duration';
+$string['report_porcentagem'] = 'Percentage seen';
+$string['report_mapa'] = 'View Map';
+$string['report_comecou'] = 'Started watching when';
+$string['report_terminou'] = 'Finished watching when';
+$string['report_assistiu'] = 'Watched when';
+$string['report_all'] = 'All views for this student';
+$string['report_visualizacoes'] = 'Visualizations';
+$string['completionpercent'] = 'Enable';
+$string['completionpercentgroup'] = 'Requires percentage';
+$string['completiondetail:percent'] = 'Watch at least {$a}% of the video';
+$string['errorcompletionpercent'] = 'Percentage must be between 1 and 100.';
+$string['resource:viewreport'] = 'View video progress report';
+
+$string['trackerinterval'] = 'Auto-save interval';
+$string['trackerinterval_desc'] = 'Time in seconds between automatic progress saves for videos. Default is 30.';

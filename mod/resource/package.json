@@ -1,0 +1,18 @@
+{
+  "name": "resource",
+  "version": "1.0.0",
+  "description": "- **Tên plugin**: resource - **Kiểu plugin**: mod - **Project**: vmc - **Chức năng chung**: Đây là plugin resource gốc của moodle đã chỉnh sửa để thêm tính năng chống download video - **Người phát triển**:    - minhpl@aum.edu.vn   - datdt720@wru.vn: chỉnh sửa thêm tính năng bật tắt link download video và các setting khác # Mô tả chi tiết - Đây là plugin resource gốc của moodle đã chỉnh sửa để thêm tính năng chống download video - Có thể bật tắt tính năng chống download cho từng video - Cách sử dụng:     - Khi thêm resource chỉ cần chọn **Sử dụng DRM** và lưu lại     ![Untitled](https://user-images.githubusercontent.com/66956549/175457226-641c2a65-4326-4272-8d78-855c106e95ad.png)     - Nếu không muốn dùng thì bỏ chọn **Sử dụng DRM** và lưu lại - Trong setting có thể thay đổi domain name của link chống download video (Administration>Plugins>Activity modules>File ) ![image](https://user-images.githubusercontent.com/66956549/175458845-ca9c3b89-7fe4-4bf5-ad5b-c1cd459c7b1c.png)",
+  "main": "mux.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "minhpl@aum.edu.vn",
+  "license": "ISC",
+  "dependencies": {
+    "@videojs/http-streaming": "^2.15.0",
+    "videojs-contrib-eme": "^5.0.1"
+  }
+}

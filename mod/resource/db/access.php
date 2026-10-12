@@ -46,6 +46,15 @@ $capabilities = array(
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
 
+    'mod/resource:viewreport' => array(
+        'captype'      => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes'   => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager'        => CAP_ALLOW,
+        ),
+    ),
+
 /* TODO: review public portfolio API first!
     'mod/resource:portfolioexport' => array(
 

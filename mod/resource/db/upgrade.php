@@ -45,16 +45,84 @@
 defined('MOODLE_INTERNAL') || die;
 
 function xmldb_resource_upgrade($oldversion) {
-    global $CFG;
+    global $CFG, $DB;
 
-    // Automatically generated Moodle v3.9.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2024051900) {
+        
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('resource');
+        $field = new xmldb_field('usedrm', XMLDB_TYPE_INTEGER, '18', null, XMLDB_NOTNULL, null, 0);
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    }
 
-    // Automatically generated Moodle v4.0.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2026061100) {
+        // 1. Định nghĩa bảng 'resource_video_view'
+        $table = new xmldb_table('resource_video_view');
 
-    // Automatically generated Moodle v4.1.0 release upgrade line.
-    // Put any upgrade step following this.
+        // 2. Định nghĩa các trường thông tin (Fields)
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('cm_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('currenttime', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('duration', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('percent', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('mapa', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        // 3. Định nghĩa Khóa chính (Primary Key)
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // 4. Định nghĩa Chỉ mục (Index)
+        $table->add_index('cm_user', XMLDB_INDEX_NOTUNIQUE, ['cm_id', 'user_id']);
+        $dbman = $DB->get_manager();
+        // Dòng 83 gây lỗi lúc trước - Giờ $dbman đã được định nghĩa ở đầu hàm nên sẽ chạy tốt
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Khai báo nâng cấp thành công
+        upgrade_mod_savepoint(true, 2026061100, 'resource');
+    }
+    
+    if ($oldversion < 2026062900) {
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('resource_video_view');
+
+        // Thêm cột timefinished để lưu thời điểm kết thúc phiên xem
+        $field = new xmldb_field('timefinished', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'timemodified');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026062900, 'resource');
+    }
+
+    if ($oldversion < 2026063000) {
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('resource');
+
+        $field = new xmldb_field('completionpercent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0, 'usedrm');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026063000, 'resource');
+    }
+
+    if ($oldversion < 2026070100) {
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('resource_video_view');
+        $field = new xmldb_field('timefinished');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026070100, 'resource');
+    }
 
     return true;
 }

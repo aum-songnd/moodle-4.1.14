@@ -28,18 +28,31 @@ defined('MOODLE_INTERNAL') || die;
 /**
  * Define the complete resource structure for backup, with file and id annotations
  */
-class backup_resource_activity_structure_step extends backup_activity_structure_step {
+class backup_resource_activity_structure_step extends backup_activity_structure_step
+{
 
-    protected function define_structure() {
+    protected function define_structure()
+    {
 
         // To know if we are including userinfo
         $userinfo = $this->get_setting_value('userinfo');
 
         // Define each element separated
         $resource = new backup_nested_element('resource', array('id'), array(
-            'name', 'intro', 'introformat', 'tobemigrated',
-            'legacyfiles', 'legacyfileslast', 'display',
-            'displayoptions', 'filterfiles', 'revision', 'timemodified'));
+            'name',
+            'intro',
+            'introformat',
+            'tobemigrated',
+            'legacyfiles',
+            'legacyfileslast',
+            'display',
+            'displayoptions',
+            'filterfiles',
+            'revision',
+            'timemodified',
+            'usedrm',
+            'completionpercent'
+        ));
 
         // Build the tree
         // (love this)

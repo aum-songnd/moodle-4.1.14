@@ -67,6 +67,7 @@ class mod_resource_mod_form extends moodleform_mod {
         $filemanager_options['mainfile'] = true;
 
         $mform->addElement('filemanager', 'files', get_string('selectfiles'), null, $filemanager_options);
+        $mform->addElement('advcheckbox', 'usedrm', '', get_string('use_drm_instance', 'resource'), array('group' => 1), array(0, 1));
 
         // add legacy files flag only if used
         if (isset($this->current->legacyfiles) and $this->current->legacyfiles != RESOURCELIB_LEGACYFILES_NO) {
@@ -186,6 +187,11 @@ class mod_resource_mod_form extends moodleform_mod {
                 $default_values['showdate'] = 0;
             }
         }
+        if (!empty($default_values['completionpercent'])) {
+            $default_values['completionpercentenabled'] = 1;
+        } else {
+            $default_values['completionpercent'] = 80;
+        }
     }
 
     function definition_after_data() {
@@ -208,6 +214,14 @@ class mod_resource_mod_form extends moodleform_mod {
             $errors['files'] = get_string('required');
             return $errors;
         }
+        
+        if (!empty($data['completionpercentenabled'])) {
+            $percent = (int)$data['completionpercent'];
+            if ($percent < 1 || $percent > 100) {
+                $errors['completionpercentgroup'] = get_string('errorcompletionpercent', 'mod_resource');
+            }
+        }
+        
         if (count($files) == 1) {
             // no need to select main file if only one picked
             return $errors;
@@ -227,5 +241,44 @@ class mod_resource_mod_form extends moodleform_mod {
             }
         }
         return $errors;
+    }
+
+    /**
+     * Thêm các điều kiện completion tùy chỉnh vào form.
+     */
+    public function add_completion_rules() {
+        $mform = $this->_form;
+
+        $group = [];
+        $group[] = $mform->createElement('checkbox', 'completionpercentenabled', '',
+            get_string('completionpercent', 'mod_resource'));
+        $group[] = $mform->createElement('text', 'completionpercent', '', ['size' => 3]);
+        $group[] = $mform->createElement('static', 'completionpercent_percentsign', '', '%');
+        $mform->setType('completionpercent', PARAM_INT);
+        $mform->addGroup($group, 'completionpercentgroup',
+            get_string('completionpercentgroup', 'mod_resource'), '', false);
+        $mform->disabledIf('completionpercent', 'completionpercentenabled', 'notchecked');
+        $mform->setDefault('completionpercent', 80);
+
+        return ['completionpercentgroup'];
+    }
+
+    /**
+     * Kiểm tra xem completion rule có được bật không.
+     */
+    public function completion_rule_enabled($data) {
+        return !empty($data['completionpercentenabled']) && $data['completionpercent'] > 0;
+    }
+
+    /**
+     * Lưu dữ liệu completion vào instance.
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
+        $autocompletion = !empty($data->completion) &&
+            $data->completion == COMPLETION_TRACKING_AUTOMATIC;
+        if (empty($data->completionpercentenabled) || !$autocompletion) {
+            $data->completionpercent = 0;
+        }
     }
 }
