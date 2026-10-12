@@ -250,14 +250,37 @@ class mod_resource_external extends external_api {
         }   
     }
 
+    /**
+     * Normalize the 101-cell map used by the web video tracker.
+     * Only binary values are accepted. The server, not the client percent, calculates progress.
+     */
+    private static function parse_video_mapa($json) {
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded) || count($decoded) !== 101 || array_keys($decoded) !== range(0, 100)) {
+            throw new invalid_parameter_exception('mapa must be a JSON array containing 101 binary cells (0 or 1)');
+        }
+        foreach ($decoded as &$cell) {
+            if ($cell !== 0 && $cell !== 1) {
+                throw new invalid_parameter_exception('mapa cells must be numeric 0 or 1');
+            }
+        }
+        unset($cell);
+        return $decoded;
+    }
+
+    /** Match the percentage calculation in amd/src/video_tracker.js. */
+    private static function video_mapa_percent($mapa) {
+        return min(100, (int)round(array_sum($mapa) / 100 * 100));
+    }
+
     public static function save_video_progress_parameters() {
         return new external_function_parameters([
-            'cmid'        => new external_value(PARAM_INT, 'Course module ID'),
-            'userid'      => new external_value(PARAM_INT, 'User ID (bị bỏ qua, luôn dùng user đang đăng nhập)'),
-            'currenttime' => new external_value(PARAM_INT, 'Thời gian xem hiện tại (giây)'),
-            'duration'    => new external_value(PARAM_INT, 'Tổng thời lượng video (giây)'),
-            'percent'     => new external_value(PARAM_INT, 'Phần trăm hoàn thành'),
-            'mapa'        => new external_value(PARAM_RAW, 'Chuỗi mảng JSON tiến trình mapa', VALUE_DEFAULT, '')
+            'cmid' => new external_value(PARAM_INT, 'Course module ID'),
+            'userid' => new external_value(PARAM_INT, 'Ignored: authenticated user is used'),
+            'currenttime' => new external_value(PARAM_INT, 'Playback position (seconds)'),
+            'duration' => new external_value(PARAM_INT, 'Video duration (seconds)'),
+            'percent' => new external_value(PARAM_INT, 'Client percentage (server recalculates from mapa)'),
+            'mapa' => new external_value(PARAM_RAW, '101-cell JSON viewing map, required for accurate progress', VALUE_DEFAULT, '')
         ]);
     }
 
@@ -265,12 +288,12 @@ class mod_resource_external extends external_api {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::save_video_progress_parameters(), [
-            'cmid'        => $cmid,
-            'userid'      => $userid,
+            'cmid' => $cmid,
+            'userid' => $userid,
             'currenttime' => $currenttime,
-            'duration'    => $duration,
-            'percent'     => $percent,
-            'mapa'        => $mapa
+            'duration' => $duration,
+            'percent' => $percent,
+            'mapa' => $mapa
         ]);
 
         $cm = get_coursemodule_from_id('resource', $params['cmid'], 0, false, MUST_EXIST);
@@ -278,81 +301,79 @@ class mod_resource_external extends external_api {
         self::validate_context($context);
         require_capability('mod/resource:view', $context);
 
-        $params['userid'] = $USER->id;
+        if ($params['duration'] <= 0 || $params['currenttime'] < 0 ||
+                $params['currenttime'] > $params['duration'] ||
+                $params['percent'] < 0 || $params['percent'] > 100) {
+            throw new invalid_parameter_exception('Invalid video time, duration or percent');
+        }
+        // Legacy mobile requests without mapa cannot prove watched segments. Fail explicitly
+        // rather than silently crediting a seek as watching the whole video.
+        if ($params['mapa'] === '') {
+            throw new invalid_parameter_exception('mapa is required; update the app to send the web-compatible viewing map');
+        }
+        $incomingmapa = self::parse_video_mapa($params['mapa']);
+        $incomingpercent = self::video_mapa_percent($incomingmapa);
         $now = time();
 
         $latest = $DB->get_record_sql(
             "SELECT * FROM {resource_video_view}
-              WHERE user_id = :user_id
-                AND cm_id = :cm_id
-              ORDER BY timemodified DESC
-              LIMIT 1",
-            ['user_id' => $params['userid'], 'cm_id' => $params['cmid']]
+              WHERE user_id = :user_id AND cm_id = :cm_id
+              ORDER BY timemodified DESC, id DESC",
+            ['user_id' => $USER->id, 'cm_id' => $params['cmid']], IGNORE_MULTIPLE
         );
 
-        if ($latest) {
-            if ($latest->percent >= 100 && $params['percent'] < 100) {
-                $record = false;
-            } else {
-                $record = $latest;
-            }
+        // Same as Web: after 100% a new session starts at the beginning with empty mapa.
+        // The previous completed attempt is retained for Moodle completion reports.
+        $newattempt = !$latest || ((int)$latest->percent >= 100 && $incomingpercent < 100);
+        if ($newattempt) {
+            $record = new stdClass();
+            $record->user_id = $USER->id;
+            $record->cm_id = $params['cmid'];
+            $record->timecreated = $now;
         } else {
-            $record = false;
+            $record = $latest;
+            // Concurrent/late updates from one session must not erase viewed cells.
+            // Do not merge with an already-completed attempt when starting a replay.
+            if (!empty($latest->mapa)) {
+                $previousmapa = json_decode($latest->mapa, true);
+                if (is_array($previousmapa) && count($previousmapa) === 101) {
+                    foreach ($incomingmapa as $index => $value) {
+                        if (isset($previousmapa[$index]) && $previousmapa[$index] == 1) {
+                            $incomingmapa[$index] = 1;
+                        }
+                    }
+                }
+            }
         }
+        $record->currenttime = $params['currenttime'];
+        $record->duration = $params['duration'];
+        $record->mapa = json_encode($incomingmapa);
+        $record->percent = self::video_mapa_percent($incomingmapa);
+        $record->timemodified = $now;
 
-        if ($record) {
-            $record->currenttime  = $params['currenttime'];
-            $record->duration     = $params['duration'];
-            if ($params['mapa'] !== '') {
-                // Gửi từ web: tin tưởng percent + mapa.
-                $record->percent = $params['percent'];
-                $record->mapa    = $params['mapa'];
-            } else {
-                // Gửi từ app (không có mapa): chỉ tăng percent, giữ nguyên mapa cũ.
-                $record->percent = max((int)$record->percent, (int)$params['percent']);
-            }
-            $record->timemodified = $now;
-
-            $DB->update_record('resource_video_view', $record);
-            $status = "updated";
+        if ($newattempt) {
+            $DB->insert_record('resource_video_view', $record);
         } else {
-            $newrecord = new stdClass();
-            $newrecord->user_id      = $params['userid'];
-            $newrecord->cm_id        = $params['cmid'];
-            $newrecord->currenttime  = $params['currenttime'];
-            $newrecord->duration     = $params['duration'];
-            $newrecord->percent      = $params['percent'];
-            $newrecord->mapa         = $params['mapa'];
-            $newrecord->timecreated  = $now;
-            $newrecord->timemodified = $now;
-
-            $DB->insert_record('resource_video_view', $newrecord);
-            $status = "inserted";
+            $DB->update_record('resource_video_view', $record);
         }
 
         $course = get_course($cm->course);
         $completion = new \completion_info($course);
-
         if ($completion->is_enabled($cm) && $cm->completion == COMPLETION_TRACKING_AUTOMATIC) {
-            $resource_record = $DB->get_record('resource', ['id' => $cm->instance], 'completionpercent');
-            
-            if (empty($resource_record->completionpercent)) {
-                $completion->update_state($cm, COMPLETION_COMPLETE, $params['userid']);
-            } else if ((int)$params['percent'] >= (int)$resource_record->completionpercent) {
-                $completion->update_state($cm, COMPLETION_COMPLETE, $params['userid']);
+            $resourcerecord = $DB->get_record('resource', ['id' => $cm->instance], 'completionpercent');
+            $threshold = empty($resourcerecord->completionpercent) ? 0 : (int)$resourcerecord->completionpercent;
+            if ($record->percent >= $threshold) {
+                $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
             }
         }
 
-        return [
-            'status' => true,
-            'message' => 'Lưu dữ liệu thành công: ' . $status
-        ];
+        return ['status' => true, 'message' => $newattempt ? 'inserted' : 'updated'];
     }
 
     public static function save_video_progress_returns() {
         return new external_single_structure([
-            'status'  => new external_value(PARAM_BOOL, 'Trạng thái thành công'),
-            'message' => new external_value(PARAM_TEXT, 'Thông báo kết quả')
+            'status' => new external_value(PARAM_BOOL, 'Success'),
+            'message' => new external_value(PARAM_TEXT, 'Result')
         ]);
     }
 
@@ -401,12 +422,16 @@ class mod_resource_external extends external_api {
             'duration' => 0,
             'percent' => 0,
             'mapa' => '[]',
+            'completed' => false,
+            'timemodified' => 0,
         ];
 
         if ($progress) {
             $result['currenttime'] = (int) $progress->currenttime;
             $result['duration'] = (int) $progress->duration;
             $result['percent'] = (int) $progress->percent;
+            $result['completed'] = $result['percent'] >= 100;
+            $result['timemodified'] = (int) $progress->timemodified;
 
             if ($result['percent'] < 100) {
                 $result['savedtime'] = $result['currenttime'];
@@ -433,6 +458,8 @@ class mod_resource_external extends external_api {
             'duration' => new external_value(PARAM_INT, 'Video duration, in seconds'),
             'percent' => new external_value(PARAM_INT, 'Percentage of video viewed'),
             'mapa' => new external_value(PARAM_RAW, 'JSON viewing progress map'),
+            'completed' => new external_value(PARAM_BOOL, 'Current attempt is complete'),
+            'timemodified' => new external_value(PARAM_INT, 'Last save timestamp'),
         ]);
     }
 }
