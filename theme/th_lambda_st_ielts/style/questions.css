@@ -1,0 +1,180 @@
+.que.ddwtos .drop.active,
+.que.thddwtos .drop.active {
+    border: 1px dashed black !important;
+    border-radius: 5px;
+    opacity: 1 !important;
+    min-width: 100px !important;
+}
+
+.que.ddwtos .drop,
+.que.thddwtos .drop {
+    min-width: 100px !important;
+}
+
+.que.ddwtos .formulation {
+    display: flex !important;
+    gap: 5em;
+}
+
+.que.ddwtos .answercontainer .draggrouphomes1 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
+.que.ddwtos .answercontainer .draggrouphomes1 .draghome {
+    width: auto !important;
+    min-width: unset !important;
+    max-width: max-content !important;
+    padding-inline: 20px;
+}
+
+.que.ddwtos .draghome {
+    flex-direction: column !important;
+    border-radius: 5px !important;
+    min-width: 100px !important;
+}
+
+.que.ddimageortext .hotspot,
+.que.ddwtos .hotspot,
+.que.ddimageortextquestion .hotspot {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hotspot::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 40%;
+    top: 50%;
+    transform: translateY(-50%);
+
+    font-size: 17px;
+    font-weight: bold;
+    color: black;
+
+    pointer-events: none;
+    white-space: nowrap;
+
+    z-index: 1;
+}
+
+.hotspot {
+    position: absolute;
+    z-index: 1;
+}
+
+.draghome.placed {
+    position: relative;
+    z-index: 5;
+    background: #fff;
+}
+
+.draghome {
+    will-change: transform;
+}
+
+body.th-quiz-review .que .outcome.clearfix .rightanswer .hotspot::after {
+    display: none !important;
+}
+
+
+body.th-quiz-review .que .formulation .hotspot::after {
+    display: inline !important;
+}
+
+.que.ddwtos .qtext span.drop,
+.que.thddwtos .qtext span.drop {
+    height: 25px !important;
+    line-height: normal !important;
+    position: relative !important;
+}
+
+.que.ddwtos .draghome.group1,
+.que.thddwtos .draghome.group1 {
+    height: 25px !important;
+    line-height: normal !important;
+}
+
+.que.ddwtos .drop::after,
+.que.thddwtos .drop::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 40%;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      font-weight: bold;
+      color: black;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 1;
+  }
+
+  /*DRAG DROP overflow*/
+.que.ddwtos .drop {
+    border-radius: 5px !important;
+    min-width: 150px !important;
+    white-space: normal !important;
+}
+
+.que.ddwtos .draghome {
+    border-radius: 5px !important;
+    min-width: 150px !important;
+    white-space: normal !important;
+}
+
+.que.ddwtos .placed {
+    width: inherit !important;
+}
+
+/*TH DRAG DROP overflow*/
+.que.thddwtos .drop {
+    border-radius: 5px !important;
+    min-width: 150px !important;
+    white-space: normal !important;
+}
+
+.que.thddwtos .draghome {
+    border-radius: 5px !important;
+    min-width: 150px !important;
+    white-space: normal !important;
+}
+
+.que.thddwtos .placed {
+    width: inherit !important;
+}
+
+
+/* THDDWTOS: đáp án tự co giãn theo độ dài nội dung. */
+.que.thddwtos .draghome.group1,
+.que.thddwtos .drag.group1 {
+    width: fit-content !important;
+    min-width: 70px !important;
+    max-width: 180px !important;
+
+    height: auto !important;
+    min-height: 29px !important;
+    line-height: 20px !important;
+
+    padding: 4px 10px !important;
+    box-sizing: border-box !important;
+
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    text-align: center !important;
+}
+
+/* Hotspot/drop trên ảnh co giãn theo đáp án. */
+.que.thddwtos .imagehotspot-wrapper .hotspot,
+.que.thddwtos .imagehotspot-wrapper .drop {
+    width: fit-content !important;
+    min-width: 70px !important;
+    max-width: 180px !important;
+
+    height: auto !important;
+    min-height: 29px !important;
+    box-sizing: border-box !important;
+}

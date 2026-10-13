@@ -1,0 +1,378 @@
+/* ==========================================================================
+   IELTS attempt header (logo + Test taker ID + icons)
+   ========================================================================== */
+
+.th-ielts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    background-color: #ffffff;
+    /* border-bottom: 1px solid #e0e0e0; */
+}
+
+.th-ielts-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.th-ielts-header-logo {
+    height: 32px;
+    width: auto;
+}
+
+.th-ielts-header-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333333;
+}
+
+.th-ielts-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.th-ielts-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a4a4a;
+    cursor: pointer;
+}
+
+.th-ielts-header-icon:hover {
+    color: #000000;
+}
+
+.th-ielts-header-icon-edit {
+    color: #d21e2b;
+}
+
+/* ==========================================================================
+   Navigation buttons (prev / next)
+   ========================================================================== */
+
+.th-custom-nav-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 50px;
+}
+
+.th-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f5f5f5;
+    color: #333333;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.th-nav-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* ==========================================================================
+   Canh #quiz-timer-wrapper cùng hàng với .th-ielts-header
+   ========================================================================== */
+#quiz-timer-wrapper {
+    position: fixed !important;
+    top: 14px !important;
+    right: 150px !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 10000 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+body.th-has-listening-audio-description #quiz-timer-wrapper {
+    top: 22px !important;
+}
+
+#quiz-timer-wrapper .row {
+    position: static !important;
+    right: auto !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+@media (max-width: 779px) {
+    #quiz-timer-wrapper {
+        top: 8px !important;
+        right: 60px !important;
+        margin-right: 0 !important;
+    }
+}
+
+/* Trang summary: chỉ đổi top về 0, giữ nguyên mọi thứ khác so với attempt.
+   Dùng #page-mod-quiz-summary (id trên <body>) để scope riêng, không đụng
+   tới trang attempt. */
+#page-mod-quiz-summary #quiz-timer-wrapper {
+    top: 0 !important;
+}
+
+/* ==========================================================================
+   Banner part hiện tại + khoảng câu hỏi, page offset, back-button slot
+   (trước đây nhúng inline trong render_ielts_header())
+   ========================================================================== */
+
+.th-ielts-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+}
+
+/* Banner cố định ngay dưới header: Part hiện tại + khoảng câu hỏi */
+.th-part-banner {
+    position: absolute;
+    top: 80px; 
+    left: 20px;
+    right: 20px;
+    z-index: 1029;
+    background: #f1f2ec;
+    border: 2px solid #d5d5d5;
+    padding: 14px 24px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 10px;
+}
+.th-part-banner .th-part-banner-title {
+    font-weight: 700;
+    font-size: 2.05rem;
+    color: #2b2b2b;
+}
+.th-part-banner .th-part-banner-desc {
+    font-size: 1.3rem;
+    color: #2b2b2b;
+    line-height: 2;
+}
+
+#page {
+    padding-top: var(--th-page-offset, 64px);
+}
+.th-quiz-questions-wrapper .formulation.th-split .th-col-left,
+.th-quiz-questions-wrapper .formulation.th-split .th-col-right {
+    height: calc(90vh - var(--th-page-offset, 64px));
+}
+
+/* Nút Back sau khi được chuyển vào header */
+.th-ielts-header-back-slot {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+}
+.th-ielts-header-back-slot .btn.btn-secondary {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.th-ielts-header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.th-ielts-header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+audio.th-ielts-single-audio::-webkit-media-controls-timeline {
+    display: none !important;
+}
+
+audio.th-ielts-single-audio::-webkit-media-controls-current-time-display {
+    display: none !important;
+}
+
+audio.th-ielts-single-audio::-webkit-media-controls-time-remaining-display {
+    display: none !important;
+}
+
+audio.th-ielts-single-audio::-webkit-media-controls-play-button {
+    display: none !important;
+}
+
+body.th-audio-overlay-open {
+    overflow: hidden !important;
+}
+
+#th-audio-resume-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 100vh;
+    padding: 30px;
+
+    background: rgba(25, 25, 25, 0.76);
+
+    opacity: 1;
+    visibility: visible;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+}
+
+#th-audio-resume-overlay.is-hiding {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.th-audio-resume-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 950px;
+    padding: 0;
+    color: #fff;
+    text-align: center;
+}
+
+.th-icon-audio .fa-headphones::before {
+    font-size: 120px !important;
+}
+
+.th-listening-icon {
+    font-size: 16px;
+    color: #555;
+}
+
+.th-audio-resume-message {
+    max-width: 900px;
+    margin-bottom: 18px;
+
+    color: #fff;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.th-audio-resume-instruction {
+    margin-bottom: 18px;
+
+    color: #fff;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.th-audio-play-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    min-width: 90px;
+    min-height: 44px;
+
+    padding: 10px 16px;
+
+    border: 1px solid #000;
+    border-radius: 3px;
+
+    background: #050505;
+    color: #fff;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.th-audio-play-button:hover,
+.th-audio-play-button:focus {
+    background: #222;
+    color: #fff;
+}
+
+.th-audio-play-button:focus {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.th-audio-play-button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.th-audio-play-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+    background: #fff;
+    margin-right: 5px;
+}
+
+.th-audio-play-triangle {
+    width: 0;
+    height: 0;
+
+    margin-left: 2px;
+
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid #111;
+}
+
+.btn-play {
+    background: black;
+    padding: 10px 25px;
+    border-radius: 5px;
+}
+
+#th-audio-resume-overlay .btn-play:hover {
+    background-color: #595959 !important;
+}
+
+@media (max-width: 768px) {
+    #th-audio-resume-overlay {
+        min-height: 100dvh;
+        padding: 20px;
+    }
+
+    .th-audio-resume-message,
+    .th-audio-resume-instruction {
+        font-size: 14px;
+    }
+}
+
+/* Do not display a broken-image icon before the site header logo is found. */
+.th-ielts-header-logo:not([src]) { display: none; }

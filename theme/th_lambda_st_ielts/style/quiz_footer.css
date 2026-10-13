@@ -1,0 +1,412 @@
+/* ===== HIDE MOODLE DEFAULT CHROME ===== */
+.breadcrumb-nav, 
+nav[aria-label="breadcrumb"], 
+.breadcrumb,
+.page-header-nav, 
+#mod_quiz_navblock, 
+.block_quiz_navblock,
+[data-block="quiz_navblock"], 
+.footerlinks, 
+#page-footer,  
+#page-navbar, 
+#page-header-nav,
+#quiz-navblock, 
+.navbar, 
+#page-header, 
+.mt-5, 
+.info {
+    display: none !important;
+}
+
+#block-region-side-pre,
+aside#block-region-side-pre,
+.block-region[data-blockregion="side-pre"] { 
+    display: none !important; 
+}
+
+#region-bs-main-and-pre { 
+    width: 100% !important; 
+}
+
+#region-main.span8, 
+#region-main.span9 {
+    width: 100% !important;
+    margin-left: 0 !important;
+    float: none !important;
+}
+
+#page-content, 
+#region-main, 
+.que, 
+#responseform {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+#page, 
+#page-wrapper { 
+    padding-left: 0 !important; 
+    margin-left: 0 !important; 
+}
+
+body { 
+    padding-bottom: 56px !important; 
+}
+
+#wrapper { 
+    border-top: 0 !important; 
+}
+
+/* .back-to-top {
+   bottom: 120px !important;
+} */
+
+.error-button {
+    bottom: 400px !important;
+}
+
+/* =====================================================================
+   FIXED FOOTER BAR
+===================================================================== */
+.th-ielts-footer {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    display: flex;
+    align-items: stretch;
+    z-index: 9999;
+    font-family: inherit;
+}
+
+/* =====================================================================
+   PART SECTIONS
+===================================================================== */
+.th-footer-part {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0 !important;
+    padding: 0 18px;
+    position: relative;
+    min-width: 0 !important;
+    gap: 5px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.th-footer-part:last-of-type { 
+    border-right: none; 
+}
+
+.th-part-label {
+    font-size: 18px;
+    color: #333;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: 400;
+}
+
+.th-part-count {
+    font-size: 18px;
+    color: #888;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.th-footer-part.th-active-part {
+    flex: 2 1 0 !important;
+}
+
+/* Khi container chỉ có đúng 2 part, chia đều 50/50 thay vì để active-part chiếm 2/3 */
+#th-footer-parts-container:has(> .th-footer-part:nth-child(2):last-child) .th-footer-part {
+    flex: 1 1 0 !important;
+}
+
+.th-footer-part.th-active-part .th-part-label {
+    font-weight: 700;
+    color: #111;
+    border-top: 4px solid #c1c1c1;
+    padding-top: 10px;
+    padding-inline: 30px;
+}
+
+.th-footer-part.th-active-part .th-part-count {
+    display: none;
+}
+
+.th-footer-part.th-active-part::before {
+    content: "";
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    right: 0;
+    height: 3px;
+}
+
+/* =====================================================================
+   QUESTION NUMBER LIST
+===================================================================== */
+.th-footer-qn-list {
+    display: none !important;
+}
+
+.th-footer-part.th-active-part .th-footer-qn-list {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+    flex: 2 1 0;
+    min-width: 0;
+}
+
+/* ── question button ── */
+.th-sub-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 20px !important;
+    height: 24px !important;
+    border-radius: 0 !important;
+    font-size: 18px !important;
+    font-weight: 400 !important;
+    border: none !important;
+    border-top: 4px solid #c1c1c1 !important;
+    padding-top: 9px !important;
+    background: transparent !important;
+    color: #888 !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: color 0.1s !important;
+}
+
+.th-sub-btn:hover {
+    color: #111 !important;
+    text-decoration: none !important;
+}
+
+.th-sub-btn.complete {
+    border-top: 4px solid #4caf50 !important;
+    color: #256029 !important;
+    padding-top: 9px !important;
+}
+
+.th-sub-btn.notyetanswered {
+    color: #c1c1c1 !important;
+}
+
+/* =====================================================================
+   REVIEW STATE (trang review - xem lại bài đã nộp)
+   Cùng cấu trúc border-top + màu chữ như .complete/.notyetanswered ở
+   trang attempt, nhưng thêm phân biệt đúng / sai / 1 phần.
+===================================================================== */
+.th-sub-btn.th-review-correct {
+    border-top: 4px solid #4caf50 !important;
+    color: #256029 !important;
+    padding-top: 9px !important;
+}
+
+.th-sub-btn.th-review-incorrect {
+    border-top: 4px solid #e53935 !important;
+    color: #b71c1c !important;
+    padding-top: 9px !important;
+}
+
+.th-sub-btn.th-review-notanswered {
+    color: #c1c1c1 !important;
+}
+
+/* Badge nhỏ cho câu đã được đánh dấu "flag" lúc làm bài (chỉ hiển thị
+   thêm lên trên trạng thái đúng/sai đã có, không thay thế màu) */
+.th-sub-btn.th-review-correct.flagged,
+.th-sub-btn.th-review-incorrect.flagged,
+.th-sub-btn.th-review-notanswered.flagged {
+    position: relative !important;
+}
+
+.th-sub-btn.th-review-correct.flagged::after,
+.th-sub-btn.th-review-incorrect.flagged::after,
+.th-sub-btn.th-review-notanswered.flagged::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    right: -1px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2a6c96;
+}
+
+/* ── Câu đang được focus (prev/next hoặc click) ── */
+.th-sub-btn.th-current {
+    border: 4px solid #2a6c96 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-weight: 700 !important;
+    border-radius: 3px !important;
+    padding-top: 4px !important;
+    padding-inline: 1px !important;
+}
+
+/* Hidden source container */
+#th-nav-source { 
+    display: none !important; 
+}
+
+/* =====================================================================
+   FINISH BUTTON
+===================================================================== */
+.th-footer-finish {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 70px;
+    background: #d1d1d1;
+    cursor: pointer;
+}
+
+.th-footer-finish:hover { 
+    background: #000 !important; 
+}
+
+.th-footer-finish .btn,
+.th-footer-finish input[type="submit"],
+.th-footer-finish button,
+.th-footer-finish a {
+    background: transparent !important;
+    border: none !important;
+    color: #555 !important;
+    height: 100% !important;
+    width: 100% !important;
+    padding: 0 20px !important;
+    border-radius: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.th-footer-finish:hover .btn,
+.th-footer-finish:hover input[type="submit"],
+.th-footer-finish:hover button,
+.th-footer-finish:hover a,
+.th-footer-finish:hover .endtestlink {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+.endtestlink { 
+    color: #000 !important; 
+}
+
+.endtestlink:hover { 
+    color: #fff !important; 
+}
+
+/* =====================================================================
+   PREV / NEXT NAVIGATION BUTTONS
+===================================================================== */
+.th-custom-nav-buttons {
+    position: fixed !important;
+    bottom: 200px !important;
+    right: 0 !important;
+    z-index: 10001 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 3px !important;
+    height: 52px !important;
+}
+
+.th-nav-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 52px !important;
+    height: 52px !important;
+    background: #111111 !important;
+    color: #ffffff !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 5px !important;
+    text-decoration: none !important;
+}
+
+.th-nav-btn:hover { 
+    background: #2a2a2a !important; 
+}
+
+.th-nav-btn.disabled {
+    background: #777777 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.th-nav-btn svg {
+    width: 32px !important;
+    height: 32px !important;
+    stroke: #ffffff !important;
+    display: block !important;
+}
+
+#responseform input::placeholder,
+#responseform textarea::placeholder {
+    text-align: center;
+    font-weight: bold;
+    color: #000;
+}
+
+/* DDWTOS drop zone focus – match cloze input */
+.que.ddwtos .drop:focus,
+.que.ddwtos .drop.valid-drag-over-drop,
+.que.ddwtos .draghome.placed:focus:not(.beingdragged),
+.que.ddwtos .draghome.placed.valid-drag-over-drop {
+    border-color: rgba(82, 168, 236, .8) !important;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(82, 168, 236, .6) !important;
+}
+
+.row{
+    position: absolute;
+    right: 5px;
+    top: -2px;
+}
+
+#quiz-timer-wrapper{
+    top: 24px;   
+}
+
+.que.gapselect select.custom-select[class*="place"] option:first-child {
+    text-align: center !important;
+}
+
+.que select.custom-select:has(option[value="0"]:checked),
+.que select.custom-select:has(option[value=""]:checked) {
+    font-weight: bold;
+    color: #000;
+    text-align: center !important;
+}
+
+.que select.custom-select:has(option[value="0"]:checked) option:not([value="0"]),
+.que select.custom-select:has(option[value=""]:checked) option:not([value=""]) {
+    text-align: left !important;
+}
+
+@media (max-width: 779px) {
+    #quiz-timer-wrapper { 
+        margin-right: 10%;
+    }
+}
+
+.back-to-top{
+    padding-bottom: 80px;
+}
