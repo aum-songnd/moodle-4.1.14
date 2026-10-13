@@ -391,46 +391,4 @@ window.thLayoutReady = window.thLayoutReady || (function () {
     }
 })();
 
-// Always reuse the logo actually rendered inside the site's .logo-header.
-// Do not fall back to the static IELTS SVG or to a separate theme setting.
-(function () {
-    function syncHeaderLogo() {
-        var target = document.querySelector('.th-ielts-header-logo');
-        var source = document.querySelector('.logo-header img');
-        if (!target || !source || source === target) {
-            return;
-        }
-        var url = source.currentSrc || source.getAttribute('src');
-        if (url && target.getAttribute('src') !== url) {
-            target.setAttribute('src', url);
-        }
-        target.alt = source.alt || 'Site logo';
-        if (source.hasAttribute('srcset')) {
-            target.setAttribute('srcset', source.getAttribute('srcset'));
-        } else {
-            target.removeAttribute('srcset');
-        }
-        if (source.hasAttribute('sizes')) {
-            target.setAttribute('sizes', source.getAttribute('sizes'));
-        } else {
-            target.removeAttribute('sizes');
-        }
-    }
-    function start() {
-        syncHeaderLogo();
-        // Some Moodle layouts update the logo after the initial DOM render.
-        var source = document.querySelector('.logo-header');
-        if (source && window.MutationObserver) {
-            new MutationObserver(syncHeaderLogo).observe(source, {
-                subtree: true, childList: true, attributes: true,
-                attributeFilter: ['src', 'srcset', 'sizes', 'alt']
-            });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-    } else {
-        start();
-    }
-    window.addEventListener('load', syncHeaderLogo);
-})();
+// The quiz logo is rendered server-side from theme_lambda by mod_quiz_renderer.php.

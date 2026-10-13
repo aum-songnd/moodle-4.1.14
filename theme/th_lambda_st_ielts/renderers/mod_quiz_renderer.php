@@ -432,8 +432,8 @@ class theme_th_lambda_st_ielts_mod_quiz_renderer extends theme_th_lambda_st_mod_
             '})();' .
             '</script>';
 
-        // The IELTS logo is synchronized with the actual .logo-header image
-        // in javascript/ielts_header.js, not with a theme setting or SVG fallback.
+        // Use the same underlying logo storage as the inherited th_lambda_st theme.
+        $parentlogo = theme_config::load('lambda')->setting_file_url('logo', 'logo');
         $cssurl  = new moodle_url('/theme/th_lambda_st_ielts/style/ielts_header.css');
 
         $output .= html_writer::empty_tag('link', [
@@ -446,10 +446,13 @@ class theme_th_lambda_st_ielts_mod_quiz_renderer extends theme_th_lambda_st_mod_
 
         // Bên trái: logo + tên bài thi (quiz name).
         $output .= html_writer::start_tag('div', ['class' => 'th-ielts-header-left']);
-        $output .= html_writer::empty_tag('img', [
-            'alt'   => 'IELTS',
-            'class' => 'th-ielts-header-logo',
-        ]);
+        if (!empty($parentlogo)) {
+            $output .= html_writer::empty_tag('img', [
+                'src'   => $parentlogo,
+                'alt'   => 'Site logo',
+                'class' => 'th-ielts-header-logo',
+            ]);
+        }
 
         $output .= html_writer::start_tag('div', ['class' => 'th-ielts-header-info']);
         $output .= html_writer::tag('span', s($quizname), ['class' => 'th-ielts-header-title']);

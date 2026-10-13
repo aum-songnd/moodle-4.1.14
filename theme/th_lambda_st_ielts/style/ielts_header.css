@@ -18,7 +18,7 @@
 }
 
 .th-ielts-header-logo {
-    height: 32px;
+    height: 80px;
     width: auto;
 }
 
@@ -84,7 +84,7 @@
    ========================================================================== */
 #quiz-timer-wrapper {
     position: fixed !important;
-    top: 14px !important;
+    top: 36px !important;
     right: 150px !important;
     left: auto !important;
     bottom: auto !important;
@@ -127,7 +127,7 @@ body.th-has-listening-audio-description #quiz-timer-wrapper {
 .th-ielts-header {
     position: fixed;
     top: 0;
-    left: 0;
+    left: 15px;
     right: 0;
     z-index: 1030;
 }
@@ -135,13 +135,13 @@ body.th-has-listening-audio-description #quiz-timer-wrapper {
 /* Banner cố định ngay dưới header: Part hiện tại + khoảng câu hỏi */
 .th-part-banner {
     position: absolute;
-    top: 80px; 
+    top: 100px;
     left: 20px;
     right: 20px;
     z-index: 1029;
     background: #f1f2ec;
-    border: 2px solid #d5d5d5;
-    padding: 14px 24px;
+    border: 1px solid #d5d5d5;
+    padding: 10px 12px;
     border-radius: 4px;
     box-sizing: border-box;
     display: flex;

@@ -51,7 +51,8 @@ function theme_th_lambda_st_ielts_get_setting($setting, $format = false) {
 
 function theme_th_lambda_st_ielts_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
     if ($context->contextlevel == CONTEXT_SYSTEM) {
-        $theme = theme_config::load('th_lambda_st');		
+        // Serve inherited theme files from the original Lambda storage.
+        $theme = theme_config::load('lambda');
 		if ($filearea === 'logo') {
             return $theme->setting_file_serve('logo', $args, $forcedownload, $options);
         } else if ($filearea === 'favicon') {
