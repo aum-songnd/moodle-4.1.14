@@ -46,3 +46,4 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 History:
 2024030400: fix state essay
+2026111100: support individual grading and state tracking for recordrtc and essay in cluster

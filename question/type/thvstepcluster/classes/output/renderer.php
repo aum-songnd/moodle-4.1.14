@@ -37,6 +37,20 @@ use qtype_recordrtc\output\video_recorder;
  */
 class qtype_thvstepcluster_renderer extends qtype_renderer {
 
+	public function head_code(question_attempt $qa) {
+		global $PAGE;
+
+		$config = get_config('qtype_thvstepcluster');
+		if (empty($config->globalusedrm)) {
+			return parent::head_code($qa);
+		}
+
+		//AMD init
+		$PAGE->requires->js_call_amd('qtype_thvstepcluster/drm_replace', 'init');
+
+		return parent::head_code($qa);
+	}
+
 	/**
 	 * Generates the display of the formulation part of the question. This is the
 	 * area that contains the quetsion text, and the controls for students to
@@ -63,13 +77,15 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		$i = 0;
 		$result = '';
 		foreach ($question_items_instance as $key => $value) {
+			if($value === null) {
+				continue;
+			}
 			$inputname1 = "$inputname$key";
 			$variable_name = "answer$key";
 			$user_response = $qa->get_last_qt_var("answer$key", '');
 			$question = $value;
 			$contextid = $question->contextid;
 			$itemid = $question->id;
-			 
 			if ($question->get_type_name() == "description") {
 				$data = [];
 				$originalString = $question->format_questiontext($qa);
@@ -92,104 +108,221 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			} elseif ($question->get_type_name() == "multichoice") {
 				$data = [];
 
-				$questiontext = $question->questiontext;
+				$ismultiple = $question instanceof \qtype_multichoice_multi_question;
+
 				$originalString = $question->format_questiontext($qa);
 				$search = "/question/questiontext/";
-				$replace = "/qtype_thvstepcluster/questiontext/from_question/";  
+				$replace = "/qtype_thvstepcluster/questiontext/from_question/";
 				$newString = str_replace($search, $replace, $originalString);
 				$data["questiontext"] = $newString;
-				// $data['questiontext'] = $question->format_questiontext($qa);
-				$data['inputname'] = $inputname1;
+
+				$data['inputname'] = $inputname1; // answer{key}
 				$data['answers'] = [];
+				$data['showfeedback'] = false;
+				$data['ismultiple'] = $ismultiple;
+
 				$answernumbers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-				$answervalues = '012345678910111213141516171819202122232425';
 
-				$correct_response = $question->get_correct_response();
-				$correct_response = isset($correct_response["answer"]) ? $correct_response["answer"] : '';
-				$answers = $question->answers;
-	            $data['showfeedback'] = false;
-				foreach ($question->get_order($qa) as $value => $ansid) {
-					$data['answers'][] = $question->answers[$ansid];
-				}
-				foreach ($data['answers'] as $key2 => $answer) {
-					$answer->answernumber = $answernumbers[$key2];
-					$answer->answervalue = $answervalues[$key2];
-	
-					$answer->answer = question_rewrite_question_urls($answer->answer, 'pluginfile.php', $contextid, 'question', 'answer', [$usageid, $slot], $answer->id);
-					
-					if ($answer->answervalue == $user_response) {
-						$answer->checked = true;
-						if ($options->correctness) {
-							if ($user_response == $correct_response) {
-								$answer->correct = true;
-								$answer->iconcorrect = html_writer::span($this->feedback_image($this->is_right($answer)), 'ml-1');
-							} else {
-								$answer->incorrect = true;
-								$answer->iconincorrect = html_writer::span($this->feedback_image($this->is_right($answer)), 'ml-1');
-							}
-						}
-						if($answer->checked) {
-							$data['checked_radio'] = true;
-						}else {
-							$data['checked_radio'] = false;
-						}
-					} else {
-						$answer->checked = false;	
-					}
-				}
-				$data['answer'] = isset($data['answers'][$correct_response]->answer) ? $data['answers'][$correct_response]->answer : '';
-				foreach ($data['answers'] as $key2 => $answer) {
-					$answer->answernumber = $answernumbers[$key2];
-					$answer->answervalue = $answervalues[$key2];
-					if ($answer->answervalue == $user_response) {
-						$answer->checked = true;
-						if ($options->correctness) {
-							if ($user_response == $correct_response) {
-								$answer->correct = true;
-								if ($options->feedback) {
-			                    	$specificfeedback = html_writer::tag('div', $question->correctfeedback, array('class' => 'specificfeedback'));
-					            } else {
-					                $specificfeedback = '';
-					            }
-					            if ($options->generalfeedback) {
-				                    $text = question_rewrite_question_urls($question->generalfeedback, 'pluginfile.php', $contextid, 'question', 'generalfeedback', [$usageid, $slot], $itemid);
-					                $generalfeedback = html_writer::tag('div', $text, array('class' => 'generalfeedback'));
-					            } else {
-					                $generalfeedback = '';
-					            }
-						        break;
-							} else {
-								$answer->incorrect = true;
-							}
-							if($answer->checked) {
-								$data['checked_radio'] = true;
-							}else {
-								$data['checked_radio'] = false;
+				$correct_raw = $question->get_correct_response();
+				$correct_indexes = [];
+
+				if (!empty($correct_raw)) {
+					if ($ismultiple) {
+						foreach ($correct_raw as $name => $value) {
+							if ($value && preg_match('/^choice(\d+)$/', $name, $m)) {
+								$correct_indexes[] = (int)$m[1]; // idx
 							}
 						}
 					} else {
-						$answer->checked = false;
-						if ($options->feedback) {
-		                    $specificfeedback = html_writer::tag('div', $question->incorrectfeedback, array('class' => 'specificfeedback'));
-			            } else {
-			                $specificfeedback = '';
-			            }
-			            if ($options->generalfeedback) {
-		                    $text = question_rewrite_question_urls($question->generalfeedback, 'pluginfile.php', $contextid, 'question', 'generalfeedback', [$usageid, $slot], $itemid);
-			                $generalfeedback = html_writer::tag('div', $text, array('class' => 'generalfeedback'));
-			            } else {
-			                $generalfeedback = '';
-			            }
+						$correct_indexes[] = (int)($correct_raw['answer'] ?? -1); // idx
+					}
+				}			
+
+				// --- User response
+				$user_indexes = [];
+
+				if ($ismultiple) {
+					foreach ($question->get_order($qa) as $idx => $ansid) {
+						$varname = "answer{$key}_choice{$idx}";
+						$value = $qa->get_last_qt_var($varname, 0);
+						if (!empty($value)) {
+							$user_indexes[] = $idx;
+						}
+					}
+				} else {
+					// single: answer{key} lưu idx; -1 là clear
+					if ($user_response !== '' && $user_response !== null) {
+						$ir = (int)$user_response;
+						if ($ir >= 0) {
+							$user_indexes[] = $ir; // idx
+						}
 					}
 				}
 
-				$clearchoicefieldname = $data['inputname'].'_clearchoice';
-				$qid = $qa->get_outer_question_div_unique_id() .'-' . $i;
-			
+				// --- Render answers (theo order attempt)
+				foreach ($question->get_order($qa) as $idx => $ansid) {
+					if (!isset($question->answers[$ansid])) {
+						continue;
+					}
+
+					$answer = clone $question->answers[$ansid];
+
+					$answer->answernumber = $answernumbers[$idx] ?? '';
+					$answer->answervalue  = (string)$idx;
+
+					$answer->answer = question_rewrite_question_urls(
+						$answer->answer,
+						'pluginfile.php',
+						$contextid,
+						'question',
+						'answer',
+						[$usageid, $slot],
+						$answer->id
+					);
+
+					$answer->checked = in_array($idx, $user_indexes, true);
+
+					if ($options->correctness) {
+						$is_correct_choice = in_array($idx, $correct_indexes, true);
+
+						if ($answer->checked && $is_correct_choice) {
+							$answer->correct = true;
+							$answer->iconcorrect = html_writer::span(
+								$this->feedback_image(1),
+								'ml-1'
+							);
+						} elseif ($answer->checked && !$is_correct_choice) {
+							$answer->incorrect = true;
+							$answer->iconincorrect = html_writer::span(
+								$this->feedback_image(0),
+								'ml-1'
+							);
+						}
+					}
+
+					$answer->showfeedback = false;
+					if ($options->feedback && trim($answer->feedback) !== '' && $answer->checked) {
+						$feedbackhtml = $question->format_text(
+							$answer->feedback,
+							$answer->feedbackformat,
+							$qa,
+							'question',
+							'answerfeedback',
+							$answer->id
+						);
+						$answer->feedback = $feedbackhtml;
+						$answer->showfeedback = true;
+					}
+
+					$data['answers'][] = $answer;
+				}
+
+				$data['checked_radio'] = !$ismultiple && !empty($user_indexes);
+
+				// --- Right answers text
+				$rightanswers = [];
+				foreach ($correct_indexes as $idx) {
+					if (!isset($data['answers'][$idx])) {
+						continue;
+					}
+
+					$anshtml = trim($data['answers'][$idx]->answer);
+					$checktext = trim(html_to_text($anshtml, 0, false));
+					if ($checktext !== '') {
+						$rightanswers[] = $anshtml;
+					}
+				}
+
+				$data['hasmultiplecorrect'] = (count($rightanswers) > 1);
+
+				$lines = [];
+				$last = count($rightanswers) - 1;
+				foreach ($rightanswers as $ii => $txt) {
+					$lines[] = ($ii < $last) ? ($txt . ',') : $txt;
+				}
+				$data['answer'] = implode('<br>', $lines);
+
+				// --- Tính fully/partial correct đúng hệ
+				$is_fully_correct = false;
+				if (!empty($correct_indexes)) {
+					sort($correct_indexes);
+					$user_sorted = $user_indexes;
+					sort($user_sorted);
+					$is_fully_correct = ($user_sorted === $correct_indexes);
+				}
+
+				$correct_selected_count = 0;
+				if ($ismultiple && !empty($correct_indexes) && !empty($user_indexes)) {
+					$correct_selected_count = count(array_intersect($correct_indexes, $user_indexes));
+				}
+
+				$is_partially_correct = $ismultiple
+					&& $correct_selected_count > 0
+					&& !$is_fully_correct;
+
+				$data['correctselectedcount'] = $correct_selected_count;
+				$data['haspartialcorrect']    = $is_partially_correct;
+
+				// --- feedback blocks (giữ logic của bạn)
+				$specificfeedback = '';
+				$generalfeedback  = '';
+
+				if ($options->feedback) {
+					$field = '';
+					$formatfield = '';
+					$defaulttext = '';
+
+					if ($is_fully_correct) {
+						$field = 'correctfeedback';
+						$formatfield = 'correctfeedbackformat';
+						$defaulttext = get_string('correctfeedbackdefault', 'question');
+					} else if ($is_partially_correct) {
+						$field = 'partiallycorrectfeedback';
+						$formatfield = 'partiallycorrectfeedbackformat';
+						$defaulttext = get_string('partiallycorrectfeedbackdefault', 'question');
+					} else {
+						$field = 'incorrectfeedback';
+						$formatfield = 'incorrectfeedbackformat';
+						$defaulttext = get_string('incorrectfeedbackdefault', 'question');
+					}
+
+					if (!empty($question->$field)) {
+						$text = $question->format_text(
+							$question->$field,
+							$question->$formatfield,
+							$qa,
+							'question',
+							$field,
+							$question->id
+						);
+					} else {
+						$text = $defaulttext;
+					}
+
+					$specificfeedback = html_writer::tag('div', $text, ['class' => 'specificfeedback']);
+				}
+
+				if ($options->generalfeedback) {
+					$text = $question->format_text(
+						$question->generalfeedback,
+						$question->generalfeedbackformat,
+						$qa,
+						'question',
+						'generalfeedback',
+						$question->id
+					);
+
+					$generalfeedback = html_writer::tag('div', $text, ['class' => 'generalfeedback']);
+				}
+
+				$clearchoicefieldname = $data['inputname'] . '_clearchoice';
+				$qid = $qa->get_outer_question_div_unique_id() . '-' . $i;
+
 				$data['clearchoicefieldname'] = $clearchoicefieldname;
 				$data['qid'] = $qid;
 				$data['correctness'] = $options->correctness;
 				$data['rightanswer'] = $options->rightanswer;
+
 				if ($data['feedback'] = $options->feedback) {
 					$data['feedbacktext'] = $specificfeedback;
 				}
@@ -199,24 +332,36 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 					$replace = "/qtype_thvstepcluster/generalfeedback/from_question/";
 					$data['generalfeedbacktext'] = str_replace($search, $replace, $data['generalfeedbacktext']);
 				}
+
+				// Rewrite answer URLs in answers.
 				$search = "/question/answer/";
 				$replace = "/qtype_thvstepcluster/answer/from_question/";
-				foreach ($data['answers'] as $key => $value) {
-					$value->answer = str_replace($search, $replace, $value->answer);
+				foreach ($data['answers'] as $keya => $valuea) {
+					$valuea->answer = str_replace($search, $replace, $valuea->answer);
 				}
-				
-				$search = "/question/answer/";
-				$replace = "/qtype_thvstepcluster/answer/from_question/"; 
-				$data = $this->recursive_str_replace($search, $replace, $data);
+
 				$htmla = $this->render_from_template('qtype_thvstepcluster/multichoice', $data);
 				$html .= $htmla;
+
 				$search = "/question/answerfeedback/";
-				$replace = "/qtype_thvstepcluster/answerfeedback/from_question/"; 
+				$replace = "/qtype_thvstepcluster/answerfeedback/from_question/";
 				$html = str_replace($search, $replace, $html);
 
-				$this->page->requires->js_call_amd('qtype_multichoice/clearchoice', 'init', [$qa->get_outer_question_div_unique_id() . '-' . $i, $clearchoicefieldname]);
-				$this->page->requires->js_call_amd('qtype_multichoice/answers', 'init', [$qa->get_outer_question_div_unique_id() . '-' . $i]);
-	            $i++;
+				if (!$ismultiple) {
+					$this->page->requires->js_call_amd(
+						'qtype_multichoice/clearchoice',
+						'init',
+						[$qa->get_outer_question_div_unique_id() . '-' . $i, $clearchoicefieldname]
+					);
+				}
+
+				$this->page->requires->js_call_amd(
+					'qtype_multichoice/answers',
+					'init',
+					[$qa->get_outer_question_div_unique_id() . '-' . $i]
+				);
+
+				$i++;
 			} elseif ($question->get_type_name() == "essay") {
 				$originalString = $this->formulation_and_controls_essay($qa, $options, $question, $variable_name);
 				$search = "/question/questiontext/";
@@ -230,7 +375,14 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$search = "/question/generalfeedback/";
 				$replace = "/qtype_thvstepcluster/generalfeedback/from_question/"; 
 				$newString = str_replace($search, $replace, $newString);
-				$html .= html_writer::div($newString,"que essay manualgraded notyetanswered");
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$suboutcome = $this->render_subquestion_outcome($qa, $options, $question_original, $key);
+				if ($suboutcome) {
+					$newString .= $suboutcome;
+				}
+
+				$html .= html_writer::div($newString, "que essay manualgraded " . $substateclass);
 			} else if ($question->get_type_name() == "recordrtc") {
 				$originalString = $this->formulation_and_controls_recordrtc($qa, $options, $question,$variable_name);
 				$search = "/question/questiontext/";
@@ -244,7 +396,14 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$search = "/question/generalfeedback/";
 				$replace = "/qtype_thvstepcluster/generalfeedback/from_question/"; 
 				$newString = str_replace($search, $replace, $newString);
-				$html .= html_writer::div($newString,"que recordrtc manualgraded notyetanswered");
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$suboutcome = $this->render_subquestion_outcome($qa, $options, $question_original, $key);
+				if ($suboutcome) {
+					$newString .= $suboutcome;
+				}
+
+				$html .= html_writer::div($newString, "que recordrtc manualgraded " . $substateclass);
 			} elseif ($question->get_type_name() == "truefalse") {
 				$originalString = $this->formulation_and_controls_truefalse($qa, $options, $question, $variable_name, $inputname1, $user_response);
 				$search = "/question/questiontext/";
@@ -258,7 +417,9 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$search = "/question/generalfeedback/";
 				$replace = "/qtype_thvstepcluster/generalfeedback/from_question/"; 
 				$newString = str_replace($search, $replace, $newString);
-				$html .= html_writer::div($newString,"que truefalse manualgraded notyetanswered");
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($newString, "que truefalse manualgraded " . $substateclass);
 			} else if ($question->get_type_name() == "shortanswer") {
 				$originalString = $this->formulation_and_controls_shortanswer($qa, $options, $question, $variable_name, $inputname1, $user_response);
 	
@@ -273,7 +434,9 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$search = "/question/generalfeedback/";
 				$replace = "/qtype_thvstepcluster/generalfeedback/from_question/"; 
 				$newString = str_replace($search, $replace, $newString);
-				$html .= html_writer::div($newString,"que shortanswer manualgraded notyetanswered");
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($newString, "que shortanswer manualgraded " . $substateclass);
 			} else if ($question->get_type_name() == "multianswer") {
 				$inputname1 = "$inputname$key";
 				$originalString = $this->formulation_and_controls_multianswer($qa, $options, $question, $variable_name, $inputname1, $key ,$user_response);
@@ -288,9 +451,56 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$search = "/question/generalfeedback/";
 				$replace = "/qtype_thvstepcluster/generalfeedback/from_question/"; 
 				$newString = str_replace($search, $replace, $newString);
-				$html .= html_writer::div($newString,"que multianswer deferredfeedback notyetanswered");
-			}
+				$newString = html_writer::div($newString, "qtext");
 
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($newString, "que multianswer deferredfeedback " . $substateclass);
+			} elseif ($question->get_type_name() == "match") {
+				$matchhtml = $this->formulation_and_controls_match(
+					$qa,
+					$options,
+					$question,
+					$key
+				);
+
+				$matchhtml = str_replace("/question/questiontext/", "/qtype_thvstepcluster/questiontext/from_question/", $matchhtml);
+				$matchhtml = str_replace("/question/answerfeedback/", "/qtype_thvstepcluster/answerfeedback/from_question/", $matchhtml);
+				$matchhtml = str_replace("/question/generalfeedback/", "/qtype_thvstepcluster/generalfeedback/from_question/", $matchhtml);
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($matchhtml, "que match manualgraded " . $substateclass);
+			} else if ($question->get_type_name() == "gapselect") {
+				$gapselecthtml = $this->formulation_and_controls_gapselect(
+					$qa,
+					$options,
+					$question,
+					$key
+				);
+
+				$gapselecthtml = str_replace("/question/questiontext/", "/qtype_thvstepcluster/questiontext/from_question/", $gapselecthtml);
+				$gapselecthtml = str_replace("/question/answerfeedback/", "/qtype_thvstepcluster/answerfeedback/from_question/", $gapselecthtml);
+				$gapselecthtml = str_replace("/question/generalfeedback/", "/qtype_thvstepcluster/generalfeedback/from_question/", $gapselecthtml);
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($gapselecthtml, "que gapselect manualgraded " . $substateclass);
+			} else if ($question->get_type_name() == "ddwtos" || $question->get_type_name() == "thddwtos") {
+				$type = $question->get_type_name();
+				$ddwtosid = $qa->get_outer_question_div_unique_id() . '_'.$type . $key;
+				$ddwtoshtml = $this->formulation_and_controls_ddwtos(
+					$qa,
+					$options,
+					$question,
+					$key,
+					$ddwtosid
+				);
+				
+				$ddwtoshtml = str_replace("/question/questiontext/", "/qtype_thvstepcluster/questiontext/from_question/", $ddwtoshtml);
+				$ddwtoshtml = str_replace("/question/answerfeedback/", "/qtype_thvstepcluster/answerfeedback/from_question/", $ddwtoshtml);
+				$ddwtoshtml = str_replace("/question/generalfeedback/", "/qtype_thvstepcluster/generalfeedback/from_question/", $ddwtoshtml);
+
+				$substateclass = $question_original->get_subquestion_state_class($qa, $key, $options->correctness);
+				$html .= html_writer::div($ddwtoshtml, "que $type manualgraded " . $substateclass, ['id' => $ddwtosid]);
+			}
 		}
 
 
@@ -303,6 +513,607 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 
 		return $html;
 	}
+
+	/**
+	 * Render outcome (grade, correctness icon, teacher comment) for a subquestion.
+	 *
+	 * @param question_attempt $qa
+	 * @param question_display_options $options
+	 * @param qtype_thvstepcluster_question $question_original
+	 * @param int $key
+	 * @return string HTML fragment
+	 */
+	protected function render_subquestion_outcome(question_attempt $qa, question_display_options $options, $question_original, int $key): string {
+		$output = '';
+		$substate = $question_original->get_subquestion_state($qa, $key);
+		$submark = $question_original->get_subquestion_mark($qa, $key);
+		$submaxmark = $question_original->get_subquestion_max_mark($key);
+		$subcomment = $question_original->get_subquestion_comment($qa, $key);
+		$subcommentformat = $question_original->get_subquestion_comment_format($qa, $key);
+
+		$gradehtml = '';
+		if ($options->marks && $qa->get_state()->is_finished()) {
+			if ($submark !== null) {
+				$icon = '';
+				if ($options->correctness) {
+					$fraction = $submaxmark > 0 ? min(max(0.0, $submark / $submaxmark), 1.0) : 0.0;
+					$icon = $this->feedback_image($fraction);
+				}
+				$marktext = get_string('mark', 'question') . ': ' . format_float($submark, 2) . ' / ' . format_float($submaxmark, 2);
+				$gradehtml .= html_writer::tag('span', $icon . ' ' . $marktext, ['class' => 'subq-mark-badge font-weight-bold mr-2']);
+			} else if ($substate == question_state::$needsgrading) {
+				$gradehtml .= html_writer::tag('span', get_string('needsgrading', 'question') . ' (' . format_float($submaxmark, 2) . ' ' . get_string('points', 'question') . ')', ['class' => 'badge badge-secondary py-1 px-2']);
+			}
+		}
+
+		$commenthtml = '';
+		if (($options->feedback || $options->manualcomment) && !empty($subcomment)) {
+			$formattedcomment = format_text($subcomment, $subcommentformat, ['context' => $options->context]);
+			$commenthtml .= html_writer::div(
+				html_writer::tag('strong', get_string('comment', 'question') . ': ', ['class' => 'd-block mb-1']) . $formattedcomment,
+				['class' => 'subq-teacher-comment alert alert-secondary p-2 mt-2 mb-0']
+			);
+		}
+
+		if ($gradehtml || $commenthtml) {
+			$output .= html_writer::start_div('subq-outcome-box outcome clearfix p-2 mt-2 border rounded bg-light');
+			if ($gradehtml) {
+				$output .= html_writer::div($gradehtml, 'subq-grade-line mb-1');
+			}
+			if ($commenthtml) {
+				$output .= $commenthtml;
+			}
+			$output .= html_writer::end_div();
+		}
+
+		return $output;
+	}
+
+	/**
+	 * Output manual comment and grading controls for subquestions.
+	 *
+	 * @param question_attempt $qa
+	 * @param question_display_options $options
+	 * @return string HTML fragment
+	 */
+	public function manual_comment(question_attempt $qa, question_display_options $options) {
+		$question = $qa->get_question();
+		if (!method_exists($question, 'get_subquestions_grade_summary')) {
+			return '';
+		}
+
+		$summary = $question->get_subquestions_grade_summary($qa);
+		$has_manual = false;
+		foreach ($summary as $item) {
+			if (!empty($item['is_manual'])) {
+				$has_manual = true;
+				break;
+			}
+		}
+
+		if (!$has_manual) {
+			return '';
+		}
+
+		$output = '';
+
+		if ($options->manualcomment == question_display_options::EDITABLE) {
+			$output .= html_writer::start_div('cluster-subquestions-grading card mb-3 border-info');
+			$output .= html_writer::tag('div',
+				html_writer::tag('h5', 'Chấm điểm chi tiết từng câu hỏi trong cụm', ['class' => 'm-0 font-weight-bold']),
+				['class' => 'card-header bg-info text-white py-2']
+			);
+			$output .= html_writer::start_div('card-body p-3');
+
+			$output .= html_writer::tag('p',
+				'Vui lòng nhập điểm và nhận xét cho từng câu hỏi tự luận / ghi âm dưới đây. ' .
+				'Tổng điểm sẽ tự động được cập nhật vào ô điểm chung bên dưới.',
+				['class' => 'text-muted small mb-3']
+			);
+
+			foreach ($summary as $key => $item) {
+				$subq_num = $key + 1;
+				$subq_name = s($item['name']);
+				$type_label = ($item['qtype'] === 'recordrtc') ? 'Ghi âm (Record RTC)' : (($item['qtype'] === 'essay') ? 'Tự luận (Essay)' : ucfirst($item['qtype']));
+				$maxmark_formatted = format_float($item['maxmark'], 2);
+
+				$output .= html_writer::start_div('subq-grading-item border rounded p-2 mb-3 bg-light');
+				$output .= html_writer::tag('div',
+					html_writer::tag('strong', "Câu $subq_num: $subq_name") .
+					html_writer::span(" [Loại: $type_label - Tối đa: $maxmark_formatted điểm]", 'text-muted small ml-2'),
+					['class' => 'subq-title mb-2 pb-1 border-bottom']
+				);
+
+				if ($item['is_manual']) {
+					$markfield = $qa->get_qt_field_name("submark_$key");
+					$commentfield = $qa->get_qt_field_name("subcomment_$key");
+					$cur_mark = ($item['mark'] !== null) ? format_float($item['mark'], 2) : '';
+					$cur_comment = $item['comment'];
+
+					// Mark input
+					$output .= html_writer::start_div('form-group row align-items-center mb-2');
+					$output .= html_writer::tag('label', 'Điểm số câu này:', ['class' => 'col-sm-3 col-form-label font-weight-bold', 'for' => $markfield]);
+					$output .= html_writer::start_div('col-sm-9 d-flex align-items-center');
+					$output .= html_writer::empty_tag('input', [
+						'type' => 'number',
+						'step' => '0.01',
+						'min' => '0',
+						'max' => $item['maxmark'],
+						'class' => 'form-control d-inline-block cluster-submark-input mr-2',
+						'style' => 'width: 110px;',
+						'name' => $markfield,
+						'id' => $markfield,
+						'value' => $cur_mark,
+						'data-subq' => $key,
+						'data-maxmark' => $item['maxmark'],
+					]);
+					$output .= html_writer::tag('span', "/ $maxmark_formatted điểm", ['class' => 'text-muted font-weight-bold']);
+					$output .= html_writer::end_div();
+					$output .= html_writer::end_div();
+
+					// Comment textarea
+					$output .= html_writer::start_div('form-group row mb-1');
+					$output .= html_writer::tag('label', 'Nhận xét câu này:', ['class' => 'col-sm-3 col-form-label', 'for' => $commentfield]);
+					$output .= html_writer::start_div('col-sm-9');
+					$output .= html_writer::tag('textarea', s($cur_comment), [
+						'class' => 'form-control cluster-subcomment-input',
+						'rows' => 2,
+						'name' => $commentfield,
+						'id' => $commentfield,
+						'data-subq' => $key,
+						'placeholder' => 'Nhập lời phê / nhận xét riêng cho câu này (nếu có)...'
+					]);
+					$output .= html_writer::end_div();
+					$output .= html_writer::end_div();
+				} else {
+					// Auto graded question
+					$automark_formatted = ($item['mark'] !== null) ? format_float($item['mark'], 2) : '0.00';
+					$output .= html_writer::tag('div',
+						'Điểm tự động chấm: ' . html_writer::tag('strong', "$automark_formatted / $maxmark_formatted điểm") .
+						html_writer::empty_tag('input', [
+							'type' => 'hidden',
+							'class' => 'cluster-automark-val',
+							'data-subq' => $key,
+							'value' => ($item['mark'] !== null) ? $item['mark'] : 0,
+						]),
+						['class' => 'text-success py-1 small']
+					);
+				}
+
+				$output .= html_writer::end_div(); // subq-grading-item
+			}
+
+			// Script to auto-calculate sum of submarks into the overall -mark field
+			$script = "
+			<script>
+			(function() {
+				function initClusterGradingAutoSum() {
+					var container = document.querySelector('.cluster-subquestions-grading');
+					if (!container) return;
+					var form = container.closest('form');
+					if (!form) return;
+					var overallMarkInput = form.querySelector('input[name$=\"-mark\"]:not([name*=\"submark\"])');
+					var submarkInputs = container.querySelectorAll('.cluster-submark-input');
+					var autoMarks = container.querySelectorAll('.cluster-automark-val');
+					var subcommentInputs = container.querySelectorAll('.cluster-subcomment-input');
+
+					function recalc() {
+						var total = 0;
+						var hasAnyManual = false;
+						submarkInputs.forEach(function(inp) {
+							var v = parseFloat(inp.value);
+							if (!isNaN(v) && v >= 0) {
+								total += v;
+								hasAnyManual = true;
+							}
+						});
+						autoMarks.forEach(function(inp) {
+							var v = parseFloat(inp.value);
+							if (!isNaN(v)) {
+								total += v;
+							}
+						});
+						if (overallMarkInput && hasAnyManual) {
+							overallMarkInput.value = total.toFixed(2);
+						}
+						syncPayload();
+					}
+
+					function syncPayload() {
+						var payload = {};
+						var hasAny = false;
+						submarkInputs.forEach(function(inp) {
+							var subq = inp.getAttribute('data-subq');
+							if (!payload[subq]) payload[subq] = {};
+							if (inp.value !== '') {
+								payload[subq].mark = parseFloat(inp.value);
+								hasAny = true;
+							}
+						});
+						subcommentInputs.forEach(function(cinp) {
+							var subq = cinp.getAttribute('data-subq');
+							if (subq !== null && subq !== '') {
+								if (!payload[subq]) payload[subq] = {};
+								if (cinp.value !== '') {
+									payload[subq].comment = cinp.value;
+									hasAny = true;
+								}
+							}
+						});
+
+						var commentTextarea = form.querySelector('textarea[name$=\"-comment\"]');
+						if (commentTextarea && hasAny) {
+							var curVal = commentTextarea.value.replace(/<!--TH_CLUSTER_SUBGRADES:.*?-->/s, '').trim();
+							var tag = '<!--TH_CLUSTER_SUBGRADES:' + JSON.stringify(payload) + '-->';
+							commentTextarea.value = curVal ? (curVal + ' ' + tag) : tag;
+						}
+					}
+
+					submarkInputs.forEach(function(inp) {
+						inp.addEventListener('input', recalc);
+						inp.addEventListener('change', recalc);
+					});
+					subcommentInputs.forEach(function(inp) {
+						inp.addEventListener('input', syncPayload);
+						inp.addEventListener('change', syncPayload);
+					});
+					form.addEventListener('submit', function() {
+						recalc();
+						syncPayload();
+					});
+				}
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', initClusterGradingAutoSum);
+				} else {
+					initClusterGradingAutoSum();
+				}
+			})();
+			</script>";
+			$output .= $script;
+
+			$output .= html_writer::end_div(); // card-body
+			$output .= html_writer::end_div(); // card
+		} else if ($options->manualcomment == question_display_options::VISIBLE) {
+			$output .= html_writer::start_div('cluster-subquestions-grading-summary card mb-3 border-secondary');
+			$output .= html_writer::tag('div',
+				html_writer::tag('h6', 'Kết quả chi tiết từng câu hỏi con trong cụm', ['class' => 'm-0 font-weight-bold']),
+				['class' => 'card-header bg-light py-2']
+			);
+			$output .= html_writer::start_div('card-body p-0 table-responsive');
+			$output .= html_writer::start_tag('table', ['class' => 'table table-bordered table-sm mb-0']);
+			$output .= html_writer::tag('thead',
+				html_writer::tag('tr',
+					html_writer::tag('th', 'STT', ['class' => 'text-center', 'style' => 'width: 50px;']) .
+					html_writer::tag('th', 'Câu hỏi con') .
+					html_writer::tag('th', 'Loại', ['style' => 'width: 140px;']) .
+					html_writer::tag('th', 'Điểm đạt', ['class' => 'text-center', 'style' => 'width: 110px;']) .
+					html_writer::tag('th', 'Trạng thái', ['class' => 'text-center', 'style' => 'width: 130px;']) .
+					html_writer::tag('th', 'Nhận xét')
+				),
+				['class' => 'thead-light']
+			);
+			$output .= html_writer::start_tag('tbody');
+
+			foreach ($summary as $key => $item) {
+				$subq_num = $key + 1;
+				$type_label = ($item['qtype'] === 'recordrtc') ? 'Record RTC' : (($item['qtype'] === 'essay') ? 'Essay' : ucfirst($item['qtype']));
+				$mark_str = ($item['mark'] !== null) ? format_float($item['mark'], 2) . ' / ' . format_float($item['maxmark'], 2) : '- / ' . format_float($item['maxmark'], 2);
+
+				$badge_class = 'badge-secondary';
+				$status_str = 'Chờ chấm';
+				if ($item['state_class'] === 'correct') {
+					$badge_class = 'badge-success';
+					$status_str = 'Đúng';
+				} else if ($item['state_class'] === 'partiallycorrect') {
+					$badge_class = 'badge-warning';
+					$status_str = 'Đúng một phần';
+				} else if ($item['state_class'] === 'incorrect') {
+					$badge_class = 'badge-danger';
+					$status_str = 'Sai';
+				} else if ($item['state_class'] === 'notanswered') {
+					$badge_class = 'badge-dark';
+					$status_str = 'Chưa làm';
+				}
+
+				$status_badge = html_writer::span($status_str, 'badge ' . $badge_class);
+				$comment_display = !empty($item['comment']) ? format_text($item['comment'], $item['commentformat'], ['context' => $options->context]) : '-';
+
+				$output .= html_writer::tag('tr',
+					html_writer::tag('td', $subq_num, ['class' => 'text-center align-middle']) .
+					html_writer::tag('td', s($item['name']), ['class' => 'align-middle']) .
+					html_writer::tag('td', $type_label, ['class' => 'align-middle small']) .
+					html_writer::tag('td', $mark_str, ['class' => 'text-center align-middle font-weight-bold']) .
+					html_writer::tag('td', $status_badge, ['class' => 'text-center align-middle']) .
+					html_writer::tag('td', $comment_display, ['class' => 'align-middle small'])
+				);
+			}
+
+			$output .= html_writer::end_tag('tbody');
+			$output .= html_writer::end_tag('table');
+			$output .= html_writer::end_div();
+			$output .= html_writer::end_div();
+		}
+
+		return $output;
+	}
+	
+	/**
+     * Find strings that we can use to glue the fragments with
+     *
+     * These strings have to be all different and neither of them can be present in the text
+     *
+     * @param array $fragments
+     * @return array array with indexes from 1 to count($fragments)-1
+     */
+    protected function get_fragments_glue_placeholders($fragments) {
+        $fragmentscount = count($fragments);
+        if ($fragmentscount <= 1) {
+            return [];
+        }
+        $prefix = '[[$';
+        $postfix = ']]';
+        $text = join('', $fragments);
+        while (preg_match('/' . preg_quote($prefix, '/') . '\\d+' . preg_quote($postfix, '/') . '/', $text)) {
+            $prefix .= '$';
+        }
+        $glues = [];
+        for ($i = 1; $i < $fragmentscount; $i++) {
+            $glues[$i] = $prefix . $i . $postfix;
+        }
+        return $glues;
+    }
+
+	protected function box_id(question_attempt $qa, $place) {
+        return str_replace(':', '_', $qa->get_qt_field_name($place));
+    }
+
+	protected function post_qtext_elements(question_attempt $qa,
+            question_display_options $options) {
+        return '';
+    }
+
+	protected function embedded_element(question_attempt $qa, $question, $questionkey, $place,
+            question_display_options $options) {
+        $group = $question->places[$place];
+
+        $fieldname = "answer{$questionkey}_p{$place}";
+		// $fieldname = $qa->get_qt_field_name($fieldshort);
+
+        $value = $qa->get_last_qt_var($fieldname);
+
+        $attributes = [
+            'id' => $this->box_id($qa, $fieldname),
+            'class' => 'custom-select place' . $place,
+        ];
+        $groupclass = 'group' . $group;
+
+        if ($options->readonly) {
+            $attributes['disabled'] = 'disabled';
+        }
+
+        $orderedchoices = $question->get_ordered_choices($group);
+
+        $selectoptions = [];
+        foreach ($orderedchoices as $orderedchoicevalue => $orderedchoice) {
+            $selectoptions[$orderedchoicevalue] = format_string($orderedchoice->text);
+        }
+
+        $feedbackimage = '';
+        if ($options->correctness) {
+            $response = $qa->get_last_qt_data();
+            if (array_key_exists($fieldname, $response)) {
+                $fraction = (int) ($response[$fieldname] ==
+                        $question->get_right_choice_for($place));
+                $attributes['class'] .= ' ' . $this->feedback_class($fraction);
+                $feedbackimage = $this->feedback_image($fraction);
+            }
+        }
+
+        $label = $options->add_question_identifier_to_label(get_string('blanknumber', 'qtype_gapselect', $place));
+        // Use non-breaking space instead of 'Choose...'.
+        $selecthtml = html_writer::label($label, $attributes['id'], false, ['class' => 'sr-only']);
+        $selecthtml .= html_writer::select($selectoptions, $qa->get_qt_field_name($fieldname),
+                        $value, '&nbsp;', $attributes) . ' ' . $feedbackimage;
+        return html_writer::tag('span', $selecthtml, ['class' => 'control '.$groupclass]);
+    }
+
+	public function formulation_and_controls_gapselect(question_attempt $qa, question_display_options $options, $question, $questionkey) {
+		$questiontext = '';
+		// Glue question fragments together using unique placeholders, apply format_text to the result
+        // and then substitute each placeholder with the embedded element.
+        // This will ensure that format_text() is applied to the whole question but not to the embedded elements.
+		$placeholders = $this->get_fragments_glue_placeholders($question->textfragments);
+		foreach ($question->textfragments as $i => $fragment) {
+            if ($i > 0) {
+                $questiontext .= $placeholders[$i];
+                // There is a preg_replace 11 lines ahead where the $embeddedelements is used as the replace.
+                // If there are currency like options ($4) in the select then the preg_replace treats them as backreferences.
+                // So we need to escape the backreferences here.
+                $embeddedelements[$placeholders[$i]] =
+                        preg_replace('/\$(\d)/', '\\\$$1', $this->embedded_element($qa, $question, $questionkey, $i, $options));
+            }
+            $questiontext .= $fragment;
+        }
+
+		$questiontext = $question->format_text($questiontext, $question->questiontextformat, $qa, 'question', 'questiontext', $question->id);
+
+        foreach ($placeholders as $i => $placeholder) {
+            $questiontext = preg_replace('/'. preg_quote($placeholder, '/') . '/',
+                $embeddedelements[$placeholder], $questiontext);
+        }
+
+        $result = '';
+        $result .= html_writer::tag('div', $questiontext, array('class' => 'qtext'));
+
+        $result .= $this->post_qtext_elements($qa, $options);
+
+        if ($qa->get_state() == question_state::$invalid) {
+            $result .= html_writer::nonempty_tag('div',
+                    $question->get_validation_error($qa->get_last_qt_data()),
+                    array('class' => 'validationerror'));
+        }
+
+		$output = '';
+		$outcome = '';
+		if (!empty($options->feedback) || !empty($options->rightanswer)) {
+			$outcome .= html_writer::nonempty_tag('div',
+					$this->sub_feedback($qa, $options, $question, $questionkey), array('class' => 'feedback'));
+			// $outcome .= html_writer::nonempty_tag('div',
+			// 		$behaviouroutput->feedback($qa, $options), array('class' => 'im-feedback'));
+			$outcome .= html_writer::nonempty_tag('div',
+					$options->extrainfocontent, array('class' => 'extra-feedback'));
+			$output .= html_writer::nonempty_tag('div',
+                $this->add_part_heading(get_string('feedback', 'question'),
+                    $outcome),
+                array('class' => 'outcome clearfix'));
+		
+		}
+		return $result . $output;
+	}
+
+	protected function format_choices($qa, $question) {
+		$choices = [];
+		$choiceorder = $question->get_choice_order();
+
+		foreach ($choiceorder as $displaykey => $choiceid) {
+
+			$rawtext = $question->choices[$choiceid];
+			$rawformat = $question->choiceformat[$choiceid] ?? FORMAT_HTML;
+
+			$choices[$displaykey] = $question->format_text(
+				$rawtext,
+				$rawformat,
+				$qa,
+				'qtype_match',
+				'choice',
+				$choiceid
+			);
+		}
+
+		return $choices;
+	}
+
+
+	public function format_stem_text($qa, $question, $stemid) {
+
+		$rawtext = $question->stems[$stemid];
+		$rawformat = $question->stemformat[$stemid] ?? FORMAT_HTML;
+
+		return $question->format_text(
+			$rawtext,
+			$rawformat,
+			$qa,
+			'qtype_match',
+			'subquestion',
+			$stemid
+		);
+	}
+
+
+	public function formulation_and_controls_match(
+        question_attempt $qa,
+        question_display_options $options,
+        $question,
+        $questionkey
+    ) {
+
+		// Order của stem.
+		$stemorder = $question->get_stem_order();
+
+		$response = $qa->get_last_qt_data();
+
+		$choices = $this->format_choices($qa, $question);
+
+		$html = html_writer::tag('div',
+			$question->format_questiontext($qa),
+			['class' => 'qtext']
+		);
+
+		$html .= html_writer::start_tag('div', ['class' => 'ablock']);
+		$html .= html_writer::start_tag('table', ['class' => 'answer']);
+		$html .= html_writer::start_tag('tbody');
+
+		$parity = 0;
+		$i = 1;
+
+		foreach ($stemorder as $stemIndex => $stemid) {
+
+			$html .= html_writer::start_tag('tr', ['class' => 'r'.$parity]);
+
+			//answer{questionKey}_{i}
+			$fieldshort = "answer{$questionkey}_{$i}";
+
+			$fieldname = $qa->get_qt_field_name($fieldshort);
+
+			$selected = $response[$fieldshort] ?? 0;
+
+			$html .= html_writer::tag('td',
+				$this->format_stem_text($qa, $question, $stemid),
+				['class' => 'text']
+			);
+
+			$fraction = (int) ($selected && $selected == $question->get_right_choice_for($stemid));
+
+			$classes = 'control';
+			$feedbackimage = '';
+
+			if ($options->correctness && $selected) {
+				$classes .= ' ' . $this->feedback_class($fraction);
+				$feedbackimage = $this->feedback_image($fraction);
+			}
+
+			$labeltext = get_string('answer', 'qtype_match', $i);
+
+			$select = html_writer::label(
+				$labeltext,
+				"menu{$fieldname}",
+				false,
+				['class' => 'accesshide']
+			);
+
+			$select .= html_writer::select(
+				$choices,
+				$fieldname,
+				$selected,
+				['0' => get_string('choose')],
+				[
+					'class' => 'custom-select ml-1',
+					'disabled' => $options->readonly
+				]
+			);
+
+			$html .= html_writer::tag('td', $select . ' ' . $feedbackimage, [
+				'class' => $classes
+			]);
+
+			$html .= html_writer::end_tag('tr');
+
+			$parity = 1 - $parity;
+			$i++;
+		}
+
+		$html .= html_writer::end_tag('tbody');
+		$html .= html_writer::end_tag('table');
+		$html .= html_writer::end_tag('div');
+
+		$output = '';
+		$outcome = '';
+		if (!empty($options->feedback) || !empty($options->rightanswer)) {
+			$outcome .= html_writer::nonempty_tag('div',
+					$this->sub_feedback($qa, $options, $question, $questionkey), array('class' => 'feedback'));
+			// $outcome .= html_writer::nonempty_tag('div',
+			// 		$behaviouroutput->feedback($qa, $options), array('class' => 'im-feedback'));
+			$outcome .= html_writer::nonempty_tag('div',
+					$options->extrainfocontent, array('class' => 'extra-feedback'));
+			$output .= html_writer::nonempty_tag('div',
+                $this->add_part_heading(get_string('feedback', 'question'),
+                    $outcome),
+                array('class' => 'outcome clearfix'));
+		
+		}
+		return $html .$output;
+	}
+
 
 	public function formulation_and_controls_multianswer(question_attempt $qa,
             question_display_options $options, $question, $variable_name, $inputname, $key, $user_response) {
@@ -512,9 +1323,7 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 	public function formulation_and_controls_truefalse(question_attempt $qa,
             question_display_options $options, $question, $variable_name, $inputname, $user_response) {
 
-        // $question = $qa->get_question();
         $response = $qa->get_last_qt_var($variable_name, '');
-        // print_object($response);
        
         $trueattributes = array(
             'type' => 'radio',
@@ -826,18 +1635,36 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 
 		// Replace all the placeholders with the corresponding recording or player widget.
 		foreach ($question->widgets as $widget) {
-			$filename = qtype_recordrtc::get_media_filename($widget->name, $widget->type);
+			$existingfile = null;
+			$filename = null;
 
-			$filename = $variable_name;
+			$try = [
+				$variable_name . '.mp3',
+				$variable_name . '.m4a',
+				$variable_name . '.aac',
+				$variable_name . '.ogg',
+				$variable_name . '.webm',
+				$variable_name . '.wav',
+			];
 
-			$existingfile = $question->get_file_from_response($filename, $existingfiles);
+			foreach ($try as $t) {
+				$existingfile = $question->get_file_from_response($t, $existingfiles);
+				if ($existingfile) {
+					$filename = $t;
+					break;
+				}
+			}
 
+			if (!$filename) {
+				$filename = $variable_name . '.mp3';
+			}
+			
 			if ($options->readonly) {
 				// Review.
 				if ($existingfile) {
-					$recordingurl = $qa->get_response_file_url($existingfile);
+					$recordingurl = $existingfile ? $qa->get_response_file_url($existingfile) : null;
 				} else {
-					$recordingurl = null;
+					$recordingurl = $existingfile ? moodle_url::make_draftfile_url($draftitemid, '/', $filename) : null;
 				}
 
 
@@ -900,6 +1727,8 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		$output .= html_writer::tag('div', $questiontext, ['class' => 'qtext']);
 
 		if (!$options->readonly) {
+			global $CFG;
+			require_once($CFG->dirroot . '/repository/lib.php');
 			// Initialise the JavaScript.
 			$repositories = repository::get_instances(
 				['type' => 'upload', 'currentcontext' => $options->context]);
@@ -936,6 +1765,203 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
         }
 
 		return $output;
+	}
+
+	protected function post_qtext_elements_ddwtos(question_attempt $qa,
+        question_display_options $options, $question, $questionkey) {
+        $result = '';
+
+        $dragboxs = '';
+        foreach ($question->choices as $group => $choices) {
+            $dragboxs .= $this->drag_boxes_ddwtos($qa, $group,
+                    $question->get_ordered_choices($group), $options);
+        }
+
+        $classes = array('answercontainer');
+        if ($options->readonly) {
+            $classes[] = 'readonly';
+        }
+        $result .= html_writer::tag('div', $dragboxs, array('class' => implode(' ', $classes)));
+
+        // We abuse the clear_wrong method to output the hidden form fields we
+        // want irrespective of whether we are actually clearing the wrong
+        // bits of the response.
+        if (!$options->clearwrong) {
+            $result .= $this->clear_wrong_ddwtos($qa, $question, $questionkey, false);
+        }
+        return $result;
+    }
+
+	protected function drag_boxes_ddwtos(question_attempt $qa, int $group, array $choices,
+        question_display_options $options) {
+        $boxes = '';
+        foreach ($choices as $key => $choice) {
+            // Bug 8632: long text entry causes bug in drag and drop field in IE.
+            $content = str_replace('-', '&#x2011;', $choice->text);
+            $content = str_replace(' ', '&#160;', $content);
+
+            $infinite = '';
+            if ($choice->infinite) {
+                $infinite = ' infinite';
+            }
+
+            $boxes .= html_writer::tag('span', $content, [
+                    'class' => 'draghome user-select-none choice' . $key . ' group' .
+                            $choice->draggroup . $infinite]) . ' ';
+        }
+
+        return html_writer::nonempty_tag('div', $boxes, [
+			'class' => 'user-select-none draggrouphomes' . $group
+		]);
+    }
+
+	public function clear_wrong_ddwtos(question_attempt $qa, $question, $questionkey, bool $reallyclear = true) {
+
+        $response = $qa->get_last_qt_data();
+
+        if (!empty($response) && $reallyclear) {
+            $cleanresponse = $question->clear_wrong_from_response($response);
+        } else {
+            $cleanresponse = $response;
+        }
+
+        $output = '';
+        foreach ($question->places as $place => $group) {
+            $fieldname = "answer{$questionkey}_" . $question->field($place);
+
+            if (array_key_exists($fieldname, $response)) {
+                $value = (string) $response[$fieldname];
+            } else {
+                $value = '0';
+            }
+            if (array_key_exists($fieldname, $cleanresponse)) {
+                $cleanvalue = (string) $cleanresponse[$fieldname];
+            } else {
+                $cleanvalue = '0';
+            }
+            if ($cleanvalue === $value) {
+                // Normal case: just one hidden input, to store the
+                // current value and be the value submitted.
+                $output .= html_writer::empty_tag('input', array(
+                        'type' => 'hidden',
+                        'id' => $this->box_id($qa, "answer{$questionkey}_p" . $place),
+                        'class' => 'placeinput place' . $place . ' group' . $group,
+                        'name' => $qa->get_qt_field_name($fieldname),
+                        'value' => s($value)));
+            } else {
+                // The case, which only happens when the question is read-only, where
+                // we want to show the drag item in a given place (first hidden input),
+                // but when submitted, we want it to go to a different place (second input).
+                $output .= html_writer::empty_tag('input', array(
+                        'type' => 'hidden',
+                        'id' => $this->box_id($qa, "answer{$questionkey}_p" . $place),
+                        'class' => 'placeinput place' . $place . ' group' . $group,
+                        'value' => s($value))) .
+                        html_writer::empty_tag('input', array(
+                        'type' => 'hidden',
+                        'name' => $qa->get_qt_field_name($fieldname),
+                        'value' => s($cleanvalue)));
+            }
+        }
+        return $output;
+    }
+
+	public function embedded_element_ddwtos(question_attempt $qa, $question, $questionkey, $place,
+            question_display_options $options) {
+
+        $group = $question->places[$place];
+        $label = $options->add_question_identifier_to_label(get_string('blanknumber', 'qtype_ddwtos', $place));
+        $boxcontents = '&#160;' . html_writer::tag('span', $label, array('class' => 'accesshide'));
+		$fieldname = "answer{$questionkey}_place{$place}";
+
+        $value = $qa->get_last_qt_var($fieldname);
+
+        $attributes = array(
+            'class' => 'place' . $place . ' drop active group' . $group,
+			'data-place' => $place
+        );
+
+        if ($options->readonly) {
+            $attributes['class'] .= ' readonly';
+        } else {
+            $attributes['tabindex'] = '0';
+        }
+
+        $feedbackimage = '';
+        if ($options->correctness) {
+            $response = $qa->get_last_qt_data();
+            $fieldname = "answer{$questionkey}_" . $question->field($place);
+            if (array_key_exists($fieldname, $response)) {
+                $fraction = (int) ($response[$fieldname] ==
+                        $question->get_right_choice_for($place));
+                $feedbackimage = $this->feedback_image($fraction);
+            }
+        }
+
+        return html_writer::tag('span', $boxcontents, $attributes) . ' ' . $feedbackimage;
+    }
+
+	public function formulation_and_controls_ddwtos(question_attempt $qa, question_display_options $options, $question, $questionkey, $ddwtosid) {
+		$questiontext = '';
+
+		// Glue question fragments together using unique placeholders, apply format_text to the result
+        // and then substitute each placeholder with the embedded element.
+        // This will ensure that format_text() is applied to the whole question but not to the embedded elements.
+		$placeholders = $this->get_fragments_glue_placeholders($question->textfragments);
+		foreach ($question->textfragments as $i => $fragment) {
+            if ($i > 0) {
+                $questiontext .= $placeholders[$i];
+                // There is a preg_replace 11 lines ahead where the $embeddedelements is used as the replace.
+                // If there are currency like options ($4) in the select then the preg_replace treats them as backreferences.
+                // So we need to escape the backreferences here.
+                $embeddedelements[$placeholders[$i]] =
+                        preg_replace('/\$(\d)/', '\\\$$1', $this->embedded_element_ddwtos($qa, $question, $questionkey, $i, $options));
+            }
+            $questiontext .= $fragment;
+        }
+
+		$questiontext = $question->format_text($questiontext, $question->questiontextformat, $qa, 'question', 'questiontext', $question->id);
+
+        foreach ($placeholders as $i => $placeholder) {
+            $questiontext = preg_replace('/'. preg_quote($placeholder, '/') . '/',
+                $embeddedelements[$placeholder], $questiontext);
+        }
+
+        $result = '';
+        $result .= html_writer::tag('div', $questiontext, array('class' => 'qtext'));
+
+        $result .= $this->post_qtext_elements_ddwtos($qa, $options, $question, $questionkey);
+
+        if ($qa->get_state() == question_state::$invalid) {
+            $result .= html_writer::nonempty_tag('div',
+                    $question->get_validation_error($qa->get_last_qt_data()),
+                    array('class' => 'validationerror'));
+        }
+
+		if($question->get_type_name() === "ddwtos") {
+			$this->page->requires->js_call_amd('qtype_ddwtos/ddwtos', 'init',
+                [$ddwtosid, $options->readonly]);
+		} else {
+			$this->page->requires->js_call_amd('qtype_thddwtos/ddwtos', 'init',
+                [$ddwtosid, $options->readonly]);
+		}
+
+		$output = '';
+		$outcome = '';
+		if (!empty($options->feedback) || !empty($options->rightanswer)) {
+			$outcome .= html_writer::nonempty_tag('div',
+					$this->sub_feedback($qa, $options, $question, $questionkey), array('class' => 'feedback'));
+			// $outcome .= html_writer::nonempty_tag('div',
+			// 		$behaviouroutput->feedback($qa, $options), array('class' => 'im-feedback'));
+			$outcome .= html_writer::nonempty_tag('div',
+					$options->extrainfocontent, array('class' => 'extra-feedback'));
+			$output .= html_writer::nonempty_tag('div',
+                $this->add_part_heading(get_string('feedback', 'question'),
+                    $outcome),
+                array('class' => 'outcome clearfix'));
+		
+		}
+		return $result . $output;
 	}
 
 	/**
@@ -1127,118 +2153,274 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
         return $output;
     }
 
-     protected function general_feedback(question_attempt $qa) {
-    	global $CFG;
-    	$config = get_config('qtype_thvstepcluster');
-	    $globalusedrm = $config->globalusedrm;
+    protected function general_feedback(question_attempt $qa) {
+		global $CFG;
 
-        if (1 == $globalusedrm) {
-	    	$hostdrm = $config->urlDRM;
-		    $questionid = $qa->get_question()->id;
-        	$fs = get_file_storage();
-		    $files = $fs->get_area_files($qa->get_question()->contextid, 'question', 'generalfeedback', $questionid, 'sortorder DESC, id ASC', false);
-		    // $generalfeedback = $qa->get_question()->generalfeedback;
-		    $generalfeedback = $qa->get_question()->format_generalfeedback($qa);
+		$config = get_config('qtype_thvstepcluster');
+		if (empty($config->globalusedrm)) {
+			return $qa->get_question()->format_generalfeedback($qa);
+		}
 
-	        $u_agent = $_SERVER['HTTP_USER_AGENT'];
-	        $operating_system = 'Unknown Operating System';
+		$generalfeedback = $qa->get_question()->format_generalfeedback($qa);
 
-	        if (preg_match('/chrome|chromium|crios/i', $u_agent)) {
-	            $bs = 'chrome';
-	        } else if (preg_match('/firefox|fxios/i', $u_agent)) {
-	            $bs = 'firefox';
-	        } else if (preg_match('/safari/i', $u_agent)) {
-	            $bs = 'safari';
-	        }
+		// Get video from generalfeedback
+		$questionid = $qa->get_question()->id;
+		$fs = get_file_storage();
+		$files = $fs->get_area_files(
+			$qa->get_question()->contextid,
+			'question',
+			'generalfeedback',
+			$questionid,
+			'sortorder DESC, id ASC',
+			false
+		);
 
-	        $os = '';
-	        if (preg_match('/iphone|ipad|ipod/i', $u_agent)) {
-	            $os = 'iphone';
-	        }
+		$u_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+		$bs = '';
+		$os = '';
 
-	        $type = '';
-	        $subfile = '';
-		    $code = "<link href='$CFG->wwwroot/question/type/thvstepcluster/video-js.css' rel='stylesheet'>
+		if (preg_match('/chrome|chromium|crios/i', $u_agent)) {
+			$bs = 'chrome';
+		} else if (preg_match('/firefox|fxios/i', $u_agent)) {
+			$bs = 'firefox';
+		} else if (preg_match('/safari/i', $u_agent)) {
+			$bs = 'safari';
+		}
+
+		if (preg_match('/iphone|ipad|ipod/i', $u_agent)) {
+			$os = 'iphone';
+		}
+
+		foreach ($files as $file) {
+			if ($file->get_mimetype() !== 'video/mp4') {
+				continue;
+			}
+
+			// ===== Build DRM source =====
+			$contenthash = $file->get_contenthash();
+			$dir1 = substr($contenthash, 0, 2);
+			$dir2 = substr($contenthash, 2, 2);
+			$contentpath = $dir1 . '/' . $dir2 . '/' . $contenthash;
+
+			$hostdrm = rtrim($config->urlDRM, '/');
+			if ($os === 'iphone') {
+				$drmsrc = $hostdrm . '/hls/,' . $contentpath . ',.urlset/master.m3u8';
+				$drmtype = 'application/x-mpegURL';
+			} else if ($bs === 'safari') {
+				$drmsrc = $hostdrm . '/dash/,' . $contentpath . ',.urlset/manifest.mpd';
+				$drmtype = 'application/dash+xml';
+			} else {
+				$drmsrc = $hostdrm . '/edash/,' . $contentpath . ',.urlset/manifest.mpd';
+				$drmtype = 'application/dash+xml';
+			}
+
+			// ===== Gắn DRM metadata vào <video> =====
+			$filename = rawurlencode($file->get_filename());
+			$filename = pathinfo($filename, PATHINFO_FILENAME);
+
+			$pattern = '/<video\b[^>]*>\s*<source\s+src=["\'](?:[^"\']*\/)?'
+					. $filename
+					. '\.mp4[^"\']*["\'][^>]*>.*?<\/video>/is';
+
+			if (preg_match($pattern, $generalfeedback, $matches)) {
+
+				$videohtml = $matches[0];
+
+				// Nếu đã có data-drm-src thì bỏ qua
+				if (strpos($videohtml, 'data-drm-src') === false) {
+					$videohtml = preg_replace(
+						'/<video\b/',
+						'<video data-drm-src="' . s($drmsrc) . '" data-drm-type="' . s($drmtype) . '"',
+						$videohtml,
+						1
+					);
+				}
+
+				$generalfeedback = str_replace($matches[0], $videohtml, $generalfeedback);
+			}
+		}
+
+		$code = "<link href='$CFG->wwwroot/question/type/thvstepcluster/video-js.css' rel='stylesheet'>
 			    <script src='$CFG->wwwroot/question/type/thvstepcluster/video.js'></script>
 			    <script src='$CFG->wwwroot/question/type/thvstepcluster/videojs-http-streaming.min.js'></script>
-			    <script src='$CFG->wwwroot/question/type/thvstepcluster/node_modules/videojs-contrib-eme/dist/videojs-contrib-eme.min.js'></script>";
-			$generalfeedback = $code . $generalfeedback;
-		    $i = 0;
-		    foreach ($files as $key => $f) {
-		    	if ($f->get_mimetype() == 'video/mp4'){
-		    		$filename = pathinfo($f->get_filename(), PATHINFO_FILENAME);
-			        $filename_encode = rawurlencode($f->get_filename());
-		    		$filename_encode = pathinfo($filename_encode, PATHINFO_FILENAME);
-			        $contenthash = $f->get_contenthash($filename);
-			        $dir1 = substr($contenthash, 0, 2);
-			        $dir2 = substr($contenthash, 2, 2);
-			        $contentpath = $dir1 . "/" . $dir2 . "/" . $contenthash;
+			    <script src='$CFG->wwwroot/question/type/thvstepcluster/videojs-contrib-eme.min.js'></script>";
+		$generalfeedback = $code . $generalfeedback;
+		
+		return $generalfeedback;
+	}
 
-		            if ($os == 'iphone') {
-		                $contentsrc = $hostdrm . "/hls/," . $contentpath . $subfile . ",.urlset/master.m3u8";
-		                $type = 'application/x-mpegURL';
-		            } else if ($bs == 'safari') {
-		                $contentsrc = $hostdrm . "/dash/," . $contentpath . $subfile . ",.urlset/manifest.mpd";
-		                $type = 'application/dash+xml';
-		            } else {
-		                $contentsrc = $hostdrm . "/edash/," . $contentpath . $subfile . ",.urlset/manifest.mpd";
-		                $type = 'application/dash+xml';
-		            }
+	protected function add_part_heading($heading, $content) {
+        if ($content) {
+            $content = html_writer::tag('h4', $heading, array('class' => 'accesshide')) . $content;
+        }
+        return $content;
+    }
 
-		            // print($contentsrc);
+	public function sub_feedback(question_attempt $qa, question_display_options $options, $question, $key) {
+        $output = '';
+        $hint = null;
+		$type = $question->get_type_name();
 
-		            $width = $CFG->media_default_width . "px";
-		            $height = $CFG->media_default_height . "px";
-		            $videoid = 'video_' . $questionid . '_' . $i;
-		            $code = "
-				    <div class='resourcecontent'>
-				        <div class='mediaplugin mediaplugin_videojs d-block'>
-				            <div style='max-width:$width;max-height:$height;'>
-				                <video-js id='$videoid' width='$width' class='vjs-default-skin' controls></video-js>
-				            </div>
-				        </div>
-				    </div>
-				    
-				    <script>
-				    var player = videojs('$videoid', {playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]});
-				    player.eme();
-				    player.src({
-				      src: '$contentsrc',
-				      type: '$type',
-				      keySystems: {
-				        'org.w3.clearkey': '$CFG->wwwroot/question/type/thvstepcluster/dash_clear_key.php'
-				      }
-				    });
-				    </script>";
-				    $pattern = '/<video\b[^>]*>\s*<source\s+src=["\'](?:[^"\']*\/)?'.$filename_encode.'\.mp4[^"\']*["\'][^>]*>.*?<\/video>/i';
-				    $generalfeedback =  preg_replace('/\s+(?=<\/?)/', '', $generalfeedback);
-				    preg_match($pattern, $generalfeedback, $matches);
-				    $generalfeedback = str_replace($matches[0], $code, $generalfeedback);
-				    $i++;
-		    	}
-	    	}
-	    	return $generalfeedback;
+        if ($options->feedback) {
+            $output .= html_writer::nonempty_tag('div', $this->sub_specific_feedback($qa, $question),
+                    array('class' => 'specificfeedback'));
+            $hint = $qa->get_applicable_hint();
+        }
 
+        if ($options->numpartscorrect || $type == "gapselect" || $type == "match" || $type == "ddwtos") {
+            $output .= html_writer::nonempty_tag('div', $this->sub_num_parts_correct($qa, $question, $key, $type),
+                    array('class' => 'numpartscorrect'));
+        }
+
+        if ($hint) {
+            $output .= $this->sub_hint($qa, $hint, $question);
+        }
+
+        if ($options->generalfeedback) {
+            $output .= html_writer::nonempty_tag('div', $this->sub_general_feedback($qa, $question),
+                    array('class' => 'generalfeedback'));
+        }
+
+        if ($options->rightanswer) {
+            $output .= html_writer::nonempty_tag('div', $this->sub_correct_response($qa, $question, $type),
+                    array('class' => 'rightanswer'));
+        }
+        return $output;
+    }
+
+	public function sub_specific_feedback(question_attempt $qa, $question) {
+        return $this->sub_combined_feedback($qa, $question);
+    }
+
+	/**
+     * Gereate the general feedback. This is feedback is shown ot all students.
+     *
+     * @param question_attempt $qa the question attempt to display.
+     * @return string HTML fragment.
+     */
+    protected function sub_general_feedback(question_attempt $qa, $question) {
+        return $question->format_generalfeedback($qa);
+    }
+
+    public function sub_correct_response(question_attempt $qa, $question, $type) {
+		if($type == "gapselect" || $type == "ddwtos" || $type == "thddwtos") {
+			$correctanswer = '';
+			foreach ($question->textfragments as $i => $fragment) {
+				if ($i > 0) {
+					$group = $question->places[$i];
+					$choice = $question->choices[$group][$question->rightchoices[$i]];
+					$correctanswer .= '[' . str_replace('-', '&#x2011;',
+							$choice->text) . ']';
+				}
+				$correctanswer .= $fragment;
+			}
+
+			if (!empty($correctanswer)) {
+				return get_string('correctansweris', 'qtype_gapselect',
+						$question->format_text($correctanswer, $question->questiontextformat,
+								$qa, 'question', 'questiontext', $question->id));
+			}
+		} else if ($type == "match") {
+			$stemorder = $question->get_stem_order();
+			$choices = $this->format_choices($qa, $question);
+			$right = array();
+
+			foreach ($stemorder as $key => $stemid) {
+				if (!isset($choices[$question->get_right_choice_for($stemid)])) {
+					continue;
+				}
+				$right[] = $question->make_html_inline($this->format_stem_text($qa, $question, $stemid)) . ' &#x2192; ' .
+						$choices[$question->get_right_choice_for($stemid)];
+			}
+
+			if (!empty($right)) {
+				return get_string('correctansweris', 'qtype_match', implode(', ', $right));
+			}
+		}
+        return "";        
+    }
+
+	protected function sub_combined_feedback(question_attempt $qa, $question) {
+        $state = $qa->get_state();
+
+        if (!$state->is_finished()) {
+            $response = $qa->get_last_qt_data();
+            if (!$question->is_gradable_response($response)) {
+                return '';
+            }
+            list($notused, $state) = $question->grade_response($response);
+        }
+
+        $feedback = '';
+        $field = $state->get_feedback_class() . 'feedback';
+        $format = $state->get_feedback_class() . 'feedbackformat';
+        if ($question->$field) {
+            $feedback .= $question->format_text($question->$field, $question->$format,
+                    $qa, 'question', $field, $question->id);
+        }
+        return $feedback;
+    }
+
+	/**
+     * Gereate the specific feedback. This is feedback that varies according to
+     * the response the student gave.
+     * @param question_attempt $qa the question attempt to display.
+     * @return string HTML fragment.
+     */
+    protected function sub_hint(question_attempt $qa, question_hint $hint, $question) {
+        return html_writer::nonempty_tag('div',
+                $question->format_hint($hint, $qa), array('class' => 'hint'));
+    }
+
+	/**
+     * Gereate a brief statement of how many sub-parts of this question the
+     * student got right.
+     * @param question_attempt $qa the question attempt to display.
+     * @return string HTML fragment.
+     */
+    protected function sub_num_parts_correct(question_attempt $qa, $question, $key, $type) {
+        $a = new stdClass();
+        list($a->num, $a->outof) = $this->get_sub_num_parts_right(
+                $qa->get_last_qt_data(), $question, $key, $type);
+        if (is_null($a->outof) || $a->num == $a->outof) {
+            return '';
         } else {
-        	return $qa->get_question()->format_generalfeedback($qa);
+            return get_string('yougotnright', 'question', $a);
         }
     }
-	 protected function recursive_str_replace($search, $replace, $data) {
-        if (is_string($data)) {
-            return str_replace($search, $replace, $data);
-        }
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $data[$key] = $this->recursive_str_replace($search, $replace, $value);
-            }
-            return $data;
-        }
-        if (is_object($data)) {
-            foreach ($data as $key => $value) {
-                $data->{$key} = $this->recursive_str_replace($search, $replace, $value);
-            }
-            return $data;
-        }
-        return $data;
+
+	public function get_sub_num_parts_right(array $response, $question, $key, $type) {
+        $numright = 0;
+        if($type == "gapselect" || $type == "ddwtos" || $type == "thddwtos") {
+			foreach ($question->places as $place => $notused) {
+				$fieldname = "answer{$key}_{$question->field($place)}";
+				if (!array_key_exists($fieldname, $response)) {
+					continue;
+				}
+				if ($response[$fieldname] == $question->get_right_choice_for($place)) {
+					$numright += 1;
+				}
+			}
+			return array($numright, count($question->places));
+		} else if ($type == "match") {
+			$stemorder = $question->get_stem_order();
+			$choiceorder = $question->get_choice_order();
+			$i = 1;
+			foreach ($stemorder as $index => $stemid) {
+				$fieldname = "answer{$key}_{$i}";
+				if (!array_key_exists($fieldname, $response)) {
+					continue;
+				}
+				
+				$choice = $response[$fieldname];
+				if ($choice && $choiceorder[$choice] == $question->right[$stemid]) {
+					$numright += 1;
+				}
+				$i++;
+			}
+			return array($numright, count($stemorder));
+		}
+
+		return array($numright, 0);
     }
 }

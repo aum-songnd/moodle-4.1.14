@@ -204,7 +204,8 @@ $viewobj->infomessages = $viewobj->accessmanager->describe_rules();
 // Determine wheter a start attempt button should be displayed.
 $viewobj->preventmessages = array();
 
-if(!$thquiz->seb_requiresafeexambrowser){
+// if(!$thquiz->seb_requiresafeexambrowser){
+if (isset($quiz->seb_requiresafeexambrowser) && $quiz->seb_requiresafeexambrowser) {
     $viewobj->buttontext = get_string('attemptthquiz', 'thquiz');
 } else {
     if ($unfinished) {
@@ -258,33 +259,50 @@ if (isguestuser()) {
     // If they are not enrolled in this course in a good enough role, tell them to enrol.
     echo $output->view_page_notenrolled($course, $thquiz, $cm, $context, $viewobj->infomessages, $viewobj);
 } else {
-    // echo $output->view_page_cluster($course, $thquiz, $cm, $context, $viewobj);
-    echo '
+    $html_content = '
         <div class="exam-detail">
             <div class="practice-list__card">
                 <h5 class="practice-list__title">'.$thquiz->name.'</h5>
-                <div class="practice-list__items flex-grid">
+                <div class="practice-list__items flex-grid">';
+
+    if (!empty($thquiz->quiz_listening)) {
+        $html_content .= '
                     <div class="practice-item -blue">
                         <span class="practice-item__icon -listening"></span>
                         <h6 class="practice-item__title">Listening</h6>
-                    </div>
+                    </div>';
+    }
+
+    if (!empty($thquiz->quiz_reading)) {
+        $html_content .= '
                     <div class="practice-item -blue">
                         <span class="practice-item__icon -reading"></span>
                         <h6 class="practice-item__title">Reading</h6>
-                    </div>
+                    </div>';
+    }
+
+    if (!empty($thquiz->quiz_writing)) {
+        $html_content .= '
                     <div class="practice-item -blue">
                         <span class="practice-item__icon -writing"></span>
                         <h6 class="practice-item__title">Writing</h6>
-                    </div>
+                    </div>';
+    }
+
+    if (!empty($thquiz->quiz_speaking)) {
+        $html_content .= '
                     <div class="practice-item -blue">
                         <span class="practice-item__icon -speaking"></span>
                         <h6 class="practice-item__title">Speaking</h6>
-                    </div>
+                    </div>';
+    }
+
+    $html_content .= '
                 </div>
                 '.$output->view_page_cluster($course, $thquiz, $cm, $context, $viewobj).'
             </div>
-        </div>
-    ';
-}
+        </div>';
 
+    echo $html_content;
+}
 echo $OUTPUT->footer();

@@ -88,7 +88,7 @@ class qtype_thvstepcluster_edit_form extends question_edit_form {
                     on ctx.id = qc.contextid
                     where ctx.instanceid = $COURSE->id and ctx.contextlevel = 50) as d
                    on d.id = a.questionbankentryid
-                where a.status = 'ready' and c.parent = 0 and c.qtype in ('recordrtc', 'essay', 'multichoice', 'description', 'truefalse', 'shortanswer', 'multianswer')
+                where a.status = 'ready' and c.parent = 0 and c.qtype in ('recordrtc', 'essay', 'multichoice', 'description', 'truefalse', 'shortanswer', 'multianswer', 'match', 'gapselect', 'ddwtos', 'thddwtos')
                 ";
 
 		$records = $DB->get_records_sql($sql);

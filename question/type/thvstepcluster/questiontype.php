@@ -36,8 +36,43 @@ require_once $CFG->libdir . '/questionlib.php';
  */
 class qtype_thvstepcluster extends question_type {
 
-	// Override functions as necessary from the parent class located at
-	// /question/type/questiontype.php.
+	public function is_manual_graded() {
+		return true;
+	}
+
+	public function is_question_manual_graded($question, $otherquestionsinuse) {
+		if (!empty($question->question_items_instance)) {
+			foreach ($question->question_items_instance as $subq) {
+				if ($subq && in_array($subq->get_type_name(), ['recordrtc', 'essay'])) {
+					return true;
+				}
+			}
+		}
+
+		if (!empty($question->id)) {
+			global $DB;
+			$entries = $DB->get_field('qtype_thvstepcluster', 'question_entries_id', ['question' => $question->id]);
+			if ($entries) {
+				$data = json_decode($entries, true);
+				if (!empty($data['questionids'])) {
+					$ids = [];
+					foreach ($data['questionids'] as $item) {
+						if (!empty($item['questionid'])) {
+							$ids[] = (int)$item['questionid'];
+						}
+					}
+					if (!empty($ids)) {
+						list($insql, $inparams) = $DB->get_in_or_equal($ids);
+						$count = $DB->count_records_select('question', "id $insql AND qtype IN ('recordrtc', 'essay')", $inparams);
+						if ($count > 0) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
 
 	public function save_question_options($questionform) {
 		// mform_element
@@ -135,6 +170,9 @@ class qtype_thvstepcluster extends question_type {
 
 		$question_items_instance = [];
 		foreach ($question_items as $key => $value) {
+			if ($value === null) {
+				continue;
+			}
 			$questionitemid = $value['questionid'];
 			if ($DB->record_exists('question', array('id' => $questionitemid))) {
 				$questionitem = question_bank::load_question($questionitemid);

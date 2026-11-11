@@ -177,6 +177,15 @@ class quiz_cluster_attempt extends quiz_attempt {
 		return $this->page_and_question_cluster_url('attempt', $slot, $page, false, $thispage, $cm_cluster_id);
 	}
 
+    public function start_attempt_cluster_url($cm_cluster_id, $slot = null, $page = -1) {
+        if ($page == -1 && !is_null($slot)) {
+            $page = $this->get_question_page($slot);
+        } else {
+            $page = 0;
+        }
+        return $this->quizobj->start_attempt_url_cluster($cm_cluster_id, $page);
+    }
+
 	protected function page_and_question_url($script, $slot, $page, $showall, $thispage) {
 
 		$defaultshowall = $this->get_default_show_all($script);

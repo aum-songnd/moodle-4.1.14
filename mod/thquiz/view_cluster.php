@@ -72,270 +72,78 @@ $quiz_reading = $moduleinstance->quiz_reading;
 $quiz_writing = $moduleinstance->quiz_writing;
 $quiz_speaking = $moduleinstance->quiz_speaking;
 
-if($quiz_listening && $quiz_reading && $quiz_writing && $quiz_speaking){
-    $cmid_quiz = array($quiz_listening, $quiz_reading, $quiz_writing, $quiz_speaking);
+if ($quiz_listening || $quiz_reading || $quiz_writing || $quiz_speaking) {
+    
+    // Tạo mảng, loại bỏ các giá trị bị rỗng
+    $cmid_quiz_raw = array($quiz_listening, $quiz_reading, $quiz_writing, $quiz_speaking);
+    $cmid_quiz = array_filter($cmid_quiz_raw); 
+    
     echo $OUTPUT->header();
-    $i=0;
+    $i = 0;
+    
     foreach($cmid_quiz as $cmid){
         $i++;
         if ($cmid) {
             if (!$cm = get_coursemodule_from_id('quiz', $cmid)) {
                 print_error('invalidcoursemodule');
             }
-            if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-                print_error('coursemisconf');
-            }
-        } else {
-            if (!$quiz = $DB->get_record('quiz', array('id' => $q))) {
-                print_error('invalidquizid', 'quiz');
-            }
-            if (!$course = $DB->get_record('course', array('id' => $quiz->course))) {
-                print_error('invalidcourseid');
-            }
-            if (!$cm = get_coursemodule_from_instance("quiz", $quiz->id, $course->id)) {
-                print_error('invalidcoursemodule');
-            }
         }
 
-        // Check login and get context.
-        // require_login($course, false, $cm);
-        $context = context_module::instance($cm->id);
-        require_capability('mod/quiz:view', $context);
-
-        // Cache some other capabilities we use several times.
-        $canattempt    = has_capability('mod/quiz:attempt', $context);
-        $canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);
-        $canpreview    = has_capability('mod/quiz:preview', $context);
-
-        // Create an object to manage all the other (non-roles) access rules.
-        $timenow       = time();
-        $quizobj       = quiz_cluster::create($cm->instance, $USER->id);
-
-        $accessmanager = new quiz_access_manager($quizobj, $timenow,
-            has_capability('mod/quiz:ignoretimelimits', $context, null, false));
-        $quiz = $quizobj->get_quiz();
-
-        // Trigger course_module_viewed event and completion.
-        // quiz_view($quiz, $course, $cm, $context);
-
-        // Initialize $PAGE, compute blocks.
-        $PAGE->set_url('/mod/thquiz/view_cluster.php', array('id' => $cm->id));
-
-        // Create view object which collects all the information the renderer will need.
-        $viewobj                = new mod_thquiz_view_object();
-        $viewobj->accessmanager = $accessmanager;
-        $viewobj->canreviewmine = $canreviewmine || $canpreview;
-
-        // Get this user's attempts.
-        $attempts            = quiz_get_user_attempts($quiz->id, $USER->id, 'finished', true);
-        $lastfinishedattempt = end($attempts);
-        $unfinished          = false;
-        $unfinishedattemptid = null;
-        if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
-            $attempts[] = $unfinishedattempt;
-
-            // If the attempt is now overdue, deal with that - and pass isonline = false.
-            // We want the student notified in this case.
-            $quizobj->create_attempt_object($unfinishedattempt)->handle_if_time_expired(time(), false);
-
-            $unfinished = $unfinishedattempt->state == quiz_cluster_attempt::IN_PROGRESS ||
-            $unfinishedattempt->state == quiz_cluster_attempt::OVERDUE;
-            if (!$unfinished) {
-                $lastfinishedattempt = $unfinishedattempt;
-            }
-            $unfinishedattemptid = $unfinishedattempt->id;
-            $unfinishedattempt   = null;// To make it clear we do not use this again.
-        }
-
-        $numattempts = count($attempts);
-
-        $viewobj->attempts    = $attempts;
-        $viewobj->attemptobjs = array();
-        foreach ($attempts as $attempt) {
-            $viewobj->attemptobjs[] = new quiz_cluster_attempt($attempt, $quiz, $cm, $course, false);
-        }
-
-        // Work out the final grade, checking whether it was overridden in the gradebook.
-        if (!$canpreview) {
-            $mygrade = quiz_get_best_grade($quiz, $USER->id);
-        } else if ($lastfinishedattempt) {
-            // Users who can preview the quiz don't get a proper grade, so work out a
-            // plausible value to display instead, so the page looks right.
-            $mygrade = quiz_rescale_grade($lastfinishedattempt->sumgrades, $quiz, false);
-        } else {
-            $mygrade = null;
-        }
-
-        $mygradeoverridden = false;
-        $gradebookfeedback = '';
-
-        $grading_info = grade_get_grades($course->id, 'mod', 'quiz', $quiz->id, $USER->id);
-        if (!empty($grading_info->items)) {
-            $item = $grading_info->items[0];
-            if (isset($item->grades[$USER->id])) {
-                $grade = $item->grades[$USER->id];
-
-                if ($grade->overridden) {
-                    $mygrade           = $grade->grade+0;// Convert to number.
-                    $mygradeoverridden = true;
-                }
-                if (!empty($grade->str_feedback)) {
-                    $gradebookfeedback = $grade->str_feedback;
-                }
-            }
-        }
-
-        $title = $course->shortname.': '.format_string($quiz->name);
-        $PAGE->set_title($title);
-        $PAGE->set_heading($course->fullname);
-
-        $output = $PAGE->get_renderer('mod_thquiz');
-
-        // Print table with existing attempts.
-        if ($attempts) {
-            // Work out which columns we need, taking account what data is available in each attempt.
-            list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quiz, $attempts);
-
-            $viewobj->attemptcolumn = $quiz->attempts != 1;
-
-            $viewobj->gradecolumn = $someoptions->marks >= question_display_options::MARK_AND_MAX &&
-            quiz_has_grades($quiz);
-            $viewobj->markcolumn   = $viewobj->gradecolumn && ($quiz->grade != $quiz->sumgrades);
-            $viewobj->overallstats = $lastfinishedattempt && $alloptions->marks >= question_display_options::MARK_AND_MAX;
-
-            $viewobj->feedbackcolumn = quiz_has_feedback($quiz) && $alloptions->overallfeedback;
-        }
-
-        $viewobj->timenow      = $timenow;
-        $viewobj->numattempts  = $numattempts;
-        $viewobj->mygrade      = $mygrade;
-        $viewobj->moreattempts = $unfinished ||
-        !$accessmanager->is_finished($numattempts, $lastfinishedattempt);
-        $viewobj->mygradeoverridden   = $mygradeoverridden;
-        $viewobj->gradebookfeedback   = $gradebookfeedback;
-        $viewobj->lastfinishedattempt = $lastfinishedattempt;
-        $viewobj->canedit             = has_capability('mod/quiz:manage', $context);
-        $viewobj->editurl             = new moodle_url('/mod/quiz/edit.php', array('cmid' => $cm->id));
-        $viewobj->backtocourseurl     = new moodle_url('/course/view.php', array('id'     => $course->id));
-        $viewobj->startattempturl     = $quizobj->start_attempt_url_cluster($cm_cluster_id);
-
-        //Check acessmanager hien thi popup
-        // if ($accessmanager->is_preflight_check_required($unfinishedattemptid)) {
-        //     $viewobj->preflightcheckform = $accessmanager->get_preflight_check_form(
-        //         $viewobj->startattempturl, $unfinishedattemptid);
-        // }
-
-        $viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
-        $viewobj->popupoptions  = $accessmanager->get_popup_options();
-
-        // Display information about this quiz.
-        $viewobj->infomessages = $viewobj->accessmanager->describe_rules();
-        if ($quiz->attempts != 1) {
-            $viewobj->infomessages[] = get_string('gradingmethod', 'quiz',
-                quiz_get_grading_option_name($quiz->grademethod));
-        }
-
-        // Determine wheter a start attempt button should be displayed.
-        $viewobj->quizhasquestions = $quizobj->has_questions();
-        $viewobj->preventmessages  = array();
-        if (!$viewobj->quizhasquestions) {
-            $viewobj->buttontext = '';
-
-        } else {
-            if ($unfinished) {
-                if ($canpreview) {
-                    $viewobj->buttontext = 'Bạn đang xem trước bài thi ' . format_string($quiz->name) . ', Tiếp tục xem trước';
-                } else if ($canattempt) {
-                    // $viewobj->buttontext = get_string('continueattemptquiz', 'quiz') . ' bài thi ' . format_string($quiz->name);
-                    $viewobj->buttontext = 'Bạn đang làm bài thi ' . format_string($quiz->name) . ', Tiếp tục làm';
-                }
-
-            } else {
-                if ($canpreview) {
-                    $viewobj->buttontext = 'Bắt đầu xem trước bài thi ' . format_string($quiz->name);
-                } else if ($canattempt) {
-                    $viewobj->preventmessages = $viewobj->accessmanager->prevent_new_attempt(
-                        $viewobj->numattempts, $viewobj->lastfinishedattempt);
-                    if ($viewobj->preventmessages) {
-                        $viewobj->buttontext = '';
-                    } else if ($viewobj->numattempts == 0) {
-                        // $viewobj->buttontext = get_string('attemptquiznow', 'quiz') . ' bài thi ' . format_string($quiz->name);
-                        $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
-                    } else {
-                        // $viewobj->buttontext = get_string('reattemptquiz', 'quiz') . ' bài thi ' . format_string($quiz->name);
-                        $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
-                    }
-                } 
-            }
-
-            if ($canpreview) {
-                $viewobj->preventmessages = $viewobj->accessmanager->prevent_access();
-            } else if ($viewobj->buttontext) {
-                // If, so far, we think a button should be printed, so check if they will be
-                // allowed to access it.
-                if (!$viewobj->moreattempts) {
-                    $viewobj->buttontext = '';
-                } else if ($canattempt
-                    && $viewobj->preventmessages = $viewobj->accessmanager->prevent_access()) {
-                    $viewobj->buttontext = '';
-                }
-            }
-        }
-
-        $viewobj->showbacktocourse = ($viewobj->buttontext === '' &&
-            course_get_format($course)->has_view_page());
-
-        if (isguestuser()) {
-            // Guests can't do a quiz, so offer them a choice of logging in or going back.
-            echo '<div id="modal'.$i.'" class="modal-quizcluster" data-modal>
-                    <div class="modal-quizcluster-content"> 
-                        <span class="close" data-close>&times;</span>
-                        '.$output->view_page_guest($course, $quiz, $cm, $context, $viewobj->infomessages).'
-                    </div>
-                </div>';
-        } else if (!isguestuser() && !($canattempt || $canpreview
-                 || $viewobj->canreviewmine)) {
-            // If they are not enrolled in this course in a good enough role, tell them to enrol.
-            echo '<div id="modal'.$i.'" class="modal-quizcluster" data-modal>
-                    <div class="modal-quizcluster-content">
-                        <span class="close" data-close>&times;</span>
-                        '.$output->view_page_notenrolled($course, $quiz, $cm, $context, $viewobj->infomessages).'
-                    </div>
-                </div>';
-        } else {
-            echo '<div id="modal'.$i.'" class="modal-quizcluster" data-modal>
-                    <div class="modal-quizcluster-content">
-                        <span class="close" data-close>&times;</span>
-                        '.$output->view_page_quiz($course, $quiz, $cm, $context, $viewobj, $cm_cluster_id).'
-                    </div>
-                </div>';
-        }
-    }
-
-    echo '<div class="exam-detail">
-            <div class="practice-list__card">
-                <div class="practice-list__items flex-grid">
-                    <div class="practice-item -blue">
-                        <span class="practice-item__icon -listening"></span>
-                        <h6 class="practice-item__title">Listening</h6>
-                        <button data-modal-target="#modal1" data-mode="listening" class="practice-item__btn iot-gribt -blue -listening"><i class="fa-solid fa-bolt"></i> Làm bài</button>
-                    </div>
-                    <div class="practice-item -blue">
-                        <span class="practice-item__icon -reading"></span>
-                        <h6 class="practice-item__title">Reading</h6>
-                        <button data-modal-target="#modal2" data-mode="reading" class="practice-item__btn iot-gribt -green -reading"><i class="fa-solid fa-bolt"></i> Làm bài</button>
-                    </div>
-                    <div class="practice-item -blue">
-                        <span class="practice-item__icon -writing"></span>
-                        <h6 class="practice-item__title">Writing</h6>
-                        <button data-modal-target="#modal3" data-mode="writing" class="practice-item__btn iot-gribt -orange -writing"><i class="fa-solid fa-bolt"></i> Làm bài</button>
-                    </div>
-                    <div class="practice-item -blue">
-                        <span class="practice-item__icon -speaking"></span>
-                        <h6 class="practice-item__title">Speaking</h6>
-                        <button data-modal-target="#modal4" data-mode="speaking" class="practice-item__btn iot-gribt -pink -speaking"><i class="fa-solid fa-bolt"></i> Làm bài</button>
+        echo '<div id="modal'.$i.'" class="modal-quizcluster" data-modal style="display:none;">
+                <div class="modal-quizcluster-content">
+                    <span class="close" data-close>&times;</span>
+                    <div class="modal-cluster-dynamic-body" 
+                         data-cmid="'.$cm->id.'" 
+                         data-cmclusterid="'.$cm_cluster_id.'" 
+                         data-contextid="'.$modulecontext->id.'">
                     </div>
                 </div>
+            </div>';
+    }
+
+    // ĐOẠN HTML VẼ CÁC NÚT NGUYÊN BẢN
+    echo '<div class="exam-detail">
+            <div class="practice-list__card">
+                <div class="practice-list__items flex-grid">';
+                
+    $j = 1; 
+
+    if ($quiz_listening) {
+        echo '      <div class="practice-item -blue">
+                        <span class="practice-item__icon -listening"></span>
+                        <h6 class="practice-item__title">Listening</h6>
+                        <button data-modal-target="#modal'.$j.'" class="practice-item__btn iot-gribt -blue -listening"><i class="fa-solid fa-bolt"></i> Làm bài</button>
+                    </div>';
+        $j++;
+    }
+
+    if ($quiz_reading) {
+        echo '      <div class="practice-item -blue">
+                        <span class="practice-item__icon -reading"></span>
+                        <h6 class="practice-item__title">Reading</h6>
+                        <button data-modal-target="#modal'.$j.'" class="practice-item__btn iot-gribt -green -reading"><i class="fa-solid fa-bolt"></i> Làm bài</button>
+                    </div>';
+        $j++;
+    }
+
+    if ($quiz_writing) {
+        echo '      <div class="practice-item -blue">
+                        <span class="practice-item__icon -writing"></span>
+                        <h6 class="practice-item__title">Writing</h6>
+                        <button data-modal-target="#modal'.$j.'" class="practice-item__btn iot-gribt -orange -writing"><i class="fa-solid fa-bolt"></i> Làm bài</button>
+                    </div>';
+        $j++;
+    }
+
+    if ($quiz_speaking) {
+        echo '      <div class="practice-item -blue">
+                        <span class="practice-item__icon -speaking"></span>
+                        <h6 class="practice-item__title">Speaking</h6>
+                        <button data-modal-target="#modal'.$j.'" class="practice-item__btn iot-gribt -pink -speaking"><i class="fa-solid fa-bolt"></i> Làm bài</button>
+                    </div>';
+    }
+
+    echo '      </div>
             </div>
         </div>';
     echo $OUTPUT->footer();
@@ -348,42 +156,68 @@ if($quiz_listening && $quiz_reading && $quiz_writing && $quiz_speaking){
 ?>
 
 <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', (event) => {
-      // Mở modal
-      document.querySelectorAll('[data-modal-target]').forEach(button => {
-        button.addEventListener('click', () => {
-          const modal = document.querySelector(button.dataset.modalTarget);
-          openModal(modal);
+require([
+    'jquery', 
+    'core/fragment', 
+    'core/templates'
+], function($, Fragment, Templates) {
+    $(document).ready(function() {
+        
+        function closeModalAndRestoreScroll(modal) {
+            modal.css('display', 'none');
+            modal.find('.modal-cluster-dynamic-body').html('');
+            $('.moodle-dialogue-base').remove();
+            
+            $('body').css('overflow', '');
+        }
+
+        $('[data-modal-target]').on('click', function(e) {
+            e.preventDefault();
+            var targetId = $(this).attr('data-modal-target');
+            var modal = $(targetId);
+            
+            if (modal.length > 0) {
+                modal.css('display', 'block');
+                $('body').css('overflow', 'hidden');
+                
+                modal.find('.modal-quizcluster-content').css({
+                    'max-height': '70vh',
+                    'overflow-y': 'auto'
+                });
+                
+                var bodyContainer = modal.find('.modal-cluster-dynamic-body');
+                var cmid = bodyContainer.data('cmid');
+                var cmclusterid = bodyContainer.data('cmclusterid');
+                var contextId = bodyContainer.data('contextid');
+                
+                $('.moodle-dialogue-base').remove();
+                
+                bodyContainer.html('<div style="text-align:center; padding: 50px;"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i><p class="mt-3">Đang tải dữ liệu bài thi...</p></div>');
+                
+                Fragment.loadFragment('mod_thquiz', 'quiz_view', contextId, { cmid: cmid, cm_cluster_id: cmclusterid })
+                    .done(function(html, js) {
+                        Templates.replaceNodeContents(bodyContainer, html, js);
+                    })
+                    .fail(function() {
+                        bodyContainer.html('<div class="alert alert-danger">Đã xảy ra lỗi khi tải cấu hình bài thi.</div>');
+                    });
+            }
         });
-      });
 
-      // Đóng modal khi nhấn nút đóng
-      document.querySelectorAll('[data-close]').forEach(button => {
-        button.addEventListener('click', () => {
-          const modal = button.closest('.modal-quizcluster');
-          closeModal(modal);
+        // SỰ KIỆN ĐÓNG MODAL KHI BẤM NÚT DẤU X
+        $(document).on('click', '[data-close]', function() {
+            var modal = $(this).closest('.modal-quizcluster');
+            closeModalAndRestoreScroll(modal);
         });
-      });
 
-      // Đóng modal khi nhấn ra ngoài khu vực modal
-      document.querySelectorAll('.modal-quizcluster').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-          if (e.currentTarget === e.target) {
-            closeModal(modal);
-          }
+        // SỰ KIỆN ĐÓNG KHI NHẤN RA NGOÀI KHU VỰC NỀN
+        $('.modal-quizcluster').on('click', function(e) {
+            if (e.currentTarget === e.target) {
+                closeModalAndRestoreScroll($(this));
+            }
         });
-      });
-
-      function openModal(modal) {
-        if (modal == null) return;
-        modal.style.display = 'block';
-      }
-
-      function closeModal(modal) {
-        if (modal == null) return;
-        modal.style.display = 'none';
-      }
     });
+});
 </script>
 
 

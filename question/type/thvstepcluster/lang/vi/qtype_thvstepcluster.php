@@ -57,3 +57,5 @@ $string['question_cluster'] = 'Câu hỏi Cluster';
 $string['note'] = 'Ghi chú';
 $string['missing_question'] = 'Thiếu câu hỏi con';
 $string['no_question'] = 'Không có câu hỏi con';
+$string['correctanswersare'] = 'Các đáp án đúng là:';
+$string['youhavecorrectlyselected'] = 'You have correctly selected {$a}.';

@@ -1,6 +1,7 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/question/engine/bank.php');
 
 function qtype_thvstepcluster_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
 
@@ -214,7 +215,23 @@ function qtype_thvstepcluster_delete_tags($id) {
         $tagid = array_keys($tags);
         core_tag_tag::delete_tags($tagid);
 
-    }  
+    }
+
+    $sql = "SELECT q.id,q.name,c.id as courseid,c.fullname,c.shortname, th.question_entries_id
+        FROM {question_versions} qv
+        JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
+        JOIN {question} q ON q.id = qv.questionid
+        JOIN {qtype_thvstepcluster} th ON th.question = qv.questionid
+        JOIN {question_categories} qc ON qc.id = qbe.questioncategoryid
+        JOIN {context} ctx ON ctx.id = qc.contextid and ctx.contextlevel = 50
+        JOIN {course} c ON c.id = ctx.instanceid and ctx.contextlevel = 50 AND c.id = $id
+        WHERE qv.status = 'ready' AND q.qtype = 'thvstepcluster' order by q.id";
+
+    $records = $DB->get_records_sql($sql);
+
+    foreach ($records as $key => $record) {
+        question_bank::notify_question_edited($record->id);
+    }
 
     return true;
 }

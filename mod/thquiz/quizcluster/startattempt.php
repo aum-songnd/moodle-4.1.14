@@ -119,6 +119,7 @@ list($currentattemptid, $attemptnumber, $lastattempt, $messages, $page) =
 
 if(!$canpreview){
     $record = $DB->get_record('thquiz_attempt', ['thquiz_id' => $cm_cluster_id, 'userid' => $USER->id]);
+
     if($record) {
 
         if ($record->state == 'inprogress' && $currentattemptid != $record->current_quizattempt_id){
@@ -173,7 +174,6 @@ if(!$canpreview){
         redirect($quizobj->attempt_url_cluster($attempt->id, $cm_cluster_id, $page));
     }
 } else {
-
     if ($currentattemptid) {
         if ($lastattempt->state == quiz_cluster_attempt::OVERDUE) {
             redirect($quizobj->summary_url_cluster($lastattempt->id, $cm_cluster_id));
@@ -181,7 +181,6 @@ if(!$canpreview){
             redirect($quizobj->attempt_url_cluster($currentattemptid, $cm_cluster_id, $page));
         }
     }
-
     $attempt = quiz_prepare_and_start_new_attempt($quizobj, $attemptnumber, $lastattempt);
     // Redirect to the attempt page.
     redirect($quizobj->attempt_url_cluster($attempt->id, $cm_cluster_id, $page));

@@ -39,4 +39,16 @@ $observers = array(
         'priority' => 1000,
         'internal' => false,
     ),
+    array(
+        'eventname' => '\mod_quiz\event\question_manually_graded',
+        'callback' => 'qtype_thvstepcluster_observer::question_manually_graded',
+        'priority' => 1000,
+        'internal' => false,
+    ),
+    array(
+        'eventname' => '\mod_thquiz\event\question_manually_graded',
+        'callback' => 'qtype_thvstepcluster_observer::question_manually_graded',
+        'priority' => 1000,
+        'internal' => false,
+    ),
 );

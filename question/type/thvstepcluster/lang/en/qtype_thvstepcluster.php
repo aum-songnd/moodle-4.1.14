@@ -56,3 +56,5 @@ $string['question_cluster'] = 'Question Cluster';
 $string['note'] = 'Note';
 $string['missing_question'] = 'Missing question';
 $string['no_question'] = 'No question';
+$string['correctanswersare'] = 'The correct answers are:';
+$string['youhavecorrectlyselected'] = 'You have correctly selected {$a}.';

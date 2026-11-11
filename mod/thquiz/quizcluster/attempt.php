@@ -51,7 +51,7 @@ if (!$attemptobj->is_preview_user()) {
 	}
 
 } else {
-	navigation_node::override_active_url($attemptobj->start_attempt_url());
+	navigation_node::override_active_url($attemptobj->start_attempt_cluster_url($cm_cluster_id));
 }
 
 // If the attempt is already closed, send them to the review page.
@@ -74,7 +74,9 @@ if (!$attemptobj->is_preview_user() && $messages) {
 		$output->access_messages($messages));
 }
 if ($accessmanager->is_preflight_check_required($attemptobj->get_attemptid())) {
-	redirect($attemptobj->start_attempt_url(null, $page));
+	print_object($accessmanager->is_preflight_check_required($attemptobj->get_attemptid()));
+	
+	redirect($attemptobj->start_attempt_cluster_url($cm_cluster_id, null, $page));
 }
 
 // Set up auto-save if required.
@@ -96,7 +98,7 @@ if (empty($slots)) {
 
 // Update attempt page, redirecting the user if $page is not valid.
 if (!$attemptobj->set_currentpage($page)) {
-	redirect($attemptobj->start_attempt_url(null, $attemptobj->get_currentpage()));
+	redirect($attemptobj->start_attempt_cluster_url($cm_cluster_id, null, $attemptobj->get_currentpage()));
 }
 
 // Initialise the JavaScript.

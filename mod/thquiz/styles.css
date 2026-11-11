@@ -1768,3 +1768,37 @@ table#categoryquestions {
     height: 100%;
 }
 
+
+    body .modal.thquiz-large-modal .modal-dialog {
+        max-width: 800px !important; 
+        width: 90vw !important;
+        margin-top: 5vh;
+    }
+    body .modal.thquiz-large-modal .modal-content {
+        min-height: 50vh;
+        padding: 15px;
+    }
+
+    body .moodle-dialogue-base .moodle-dialogue-wrap {
+        width: 750px !important; 
+        max-width: 95vw !important;
+        height: auto !important;
+    }
+    body .moodle-dialogue-base .moodle-dialogue-bd {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+
+.modal-cluster-dynamic-body .quizattemptcounts {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    margin-left: 0 !important;
+}
+
+.modal-cluster-dynamic-body .singlebutton {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto;
+    width: 100%;
+}

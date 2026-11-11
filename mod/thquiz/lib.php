@@ -1763,6 +1763,20 @@ function thquiz_extend_settings_navigation(settings_navigation $settings, naviga
                     null, 'thquiz_report_' . $report, new pix_icon('i/item', '')));
         }
     }
+
+    // Thêm node quản lý làm bài
+    if (has_capability('mod/thquiz:viewtracking', $settings->get_page()->cm->context)) {
+        $url = new moodle_url('/mod/thquiz/tracking.php', array('cmid' => $settings->get_page()->cm->id));
+        $node = navigation_node::create(
+            get_string('trackingmanager', 'mod_thquiz'),
+            $url,
+            navigation_node::TYPE_SETTING,
+            null,
+            'mod_thquiz_tracking',
+            new pix_icon('i/report', '')
+        );
+        $thquiznode->add_node($node);
+    }
 }
 
 /**
@@ -2491,4 +2505,95 @@ function mod_thquiz_calculate_question_stats(context $context): ?all_calculated_
     $cm = get_coursemodule_from_id('thquiz', $context->instanceid);
     $report = new thquiz_statistics_report();
     return $report->calculate_questions_stats_for_question_bank($cm->instance, false, false);
+}
+
+
+function mod_thquiz_output_fragment_quiz_view($args) {
+    global $DB, $USER, $PAGE, $CFG;
+
+    require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+    require_once($CFG->libdir . '/gradelib.php');
+    require_once($CFG->libdir . '/completionlib.php');
+    require_once($CFG->dirroot . '/course/format/lib.php');
+    require_once($CFG->dirroot . '/mod/thquiz/quizcluster/attemptlib.php');
+    require_once($CFG->dirroot . '/mod/thquiz/renderer.php');
+    require_once($CFG->dirroot . '/mod/thquiz/quizcluster/locallib.php');
+
+    $cmid = $args['cmid'];
+    $cm_cluster_id = $args['cm_cluster_id'];
+
+    $cm = get_coursemodule_from_id('quiz', $cmid, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    $quiz = $DB->get_record('quiz', array('id' => $cm->instance), '*', MUST_EXIST);
+
+    $context = context_module::instance($cm->id);
+
+    $PAGE->set_context($context);
+    $PAGE->set_url(new moodle_url('/mod/quiz/view.php', array('id' => $cm->id)));
+    $PAGE->set_pagelayout('incourse'); // Ép layout chuẩn để tránh bị plugin chặn
+
+    $timenow = time();
+    $quizobj = quiz_cluster::create($cm->instance, $USER->id);
+    $accessmanager = new quiz_access_manager($quizobj, $timenow, has_capability('mod/quiz:ignoretimelimits', $context, null, false));
+    
+    $viewobj = new mod_thquiz_view_object();
+    $viewobj->accessmanager = $accessmanager;
+    $viewobj->canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context) || has_capability('mod/quiz:preview', $context);
+
+    $unfinishedattemptid = null;
+    
+    $attempts = quiz_get_user_attempts($quiz->id, $USER->id, 'finished', true);
+    $lastfinishedattempt = end($attempts);
+    $unfinished = false;
+    
+    if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
+        $attempts[] = $unfinishedattempt;
+        $quizobj->create_attempt_object($unfinishedattempt)->handle_if_time_expired(time(), false);
+        $unfinished = ($unfinishedattempt->state == quiz_cluster_attempt::IN_PROGRESS || $unfinishedattempt->state == quiz_cluster_attempt::OVERDUE);
+        if (!$unfinished) {
+            $lastfinishedattempt = $unfinishedattempt;
+        }
+        $unfinishedattemptid = $unfinishedattempt->id; 
+    }
+
+    $viewobj->attempts = $attempts;
+    $viewobj->attemptobjs = array();
+    foreach ($attempts as $attempt) {
+        $viewobj->attemptobjs[] = new quiz_cluster_attempt($attempt, $quiz, $cm, $course, false);
+    }
+
+    $viewobj->numattempts = count($attempts);
+    $viewobj->moreattempts = $unfinished || !$accessmanager->is_finished($viewobj->numattempts, $lastfinishedattempt);
+    $viewobj->lastfinishedattempt = $lastfinishedattempt;
+    $viewobj->startattempturl = $quizobj->start_attempt_url_cluster($cm_cluster_id);
+    $viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
+    $viewobj->popupoptions  = $accessmanager->get_popup_options();
+    $viewobj->infomessages = $viewobj->accessmanager->describe_rules();
+    $viewobj->quizhasquestions = $quizobj->has_questions();
+    
+    $canattempt = has_capability('mod/quiz:attempt', $context);
+    $canpreview = has_capability('mod/quiz:preview', $context);
+    
+    if (!$viewobj->quizhasquestions) {
+        $viewobj->buttontext = '';
+    } else {
+        if ($unfinished) {
+            $viewobj->buttontext = ($canpreview ? 'Bạn đang xem trước bài thi ' : 'Bạn đang làm bài thi ') . format_string($quiz->name) . ', Tiếp tục ' . ($canpreview ? 'xem trước' : 'làm');
+        } else {
+            $viewobj->buttontext = ($canpreview ? 'Bắt đầu xem trước bài thi ' : 'Bắt đầu bài thi ') . format_string($quiz->name);
+            if ($canattempt && !$canpreview) {
+                $viewobj->preventmessages = $viewobj->accessmanager->prevent_new_attempt($viewobj->numattempts, $viewobj->lastfinishedattempt);
+                if ($viewobj->preventmessages) {
+                    $viewobj->buttontext = '';
+                }
+            }
+        }
+    }
+    if ($accessmanager->is_preflight_check_required($unfinishedattemptid)) {
+        $viewobj->preflightcheckform = $accessmanager->get_preflight_check_form($viewobj->startattempturl, $unfinishedattemptid);
+    } else {
+        $viewobj->preflightcheckform = null;
+    }
+    $output = $PAGE->get_renderer('mod_thquiz');
+    return $output->view_page_quiz($course, $quiz, $cm, $context, $viewobj, $cm_cluster_id);
 }

@@ -24,6 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2025071200;
+$plugin->version   = 2026111100;
 $plugin->requires  = 2022111800;
 $plugin->component = 'mod_thquiz';

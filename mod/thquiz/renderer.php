@@ -160,7 +160,7 @@ class mod_thquiz_renderer extends mod_quiz_renderer {
 
     public function view_page_cluster($course, $quiz, $cm, $context, $viewobj) {
         $output = '';
-        $output .= $this->view_information($quiz, $cm, $context, $viewobj->infomessages);
+        // $output .= $this->view_information($quiz, $cm, $context, $viewobj->infomessages);
 		$output .= $this->view_table($quiz, $context, $viewobj);
 		$output .= $this->view_result_info($quiz, $context, $cm, $viewobj);
         $output .= $this->view_page_cluster_tertiary_nav($viewobj);
@@ -227,7 +227,7 @@ class mod_thquiz_renderer extends mod_quiz_renderer {
 				$output .= 'Bạn đã hoàn thành bài kiểm tra này !';
 			}
 		} else {
-            $output .= $this->view_information($quiz, $cm, $context, $viewobj->infomessages);
+            // $output .= $this->view_information($quiz, $cm, $context, $viewobj->infomessages);
             $output .= $this->view_table_cluster($quiz, $context, $viewobj, $cm_cluster_id);
             $output .= $this->view_result_info($quiz, $context, $cm, $viewobj);
             $output .= $this->view_page_cluster_tertiary_nav($viewobj);
@@ -835,279 +835,256 @@ class mod_thquiz_renderer extends mod_quiz_renderer {
 	}
 
 	public function navigation_panel_cluster(quiz_nav_panel_base $panel, $cm_cluster_id) {
-		global $DB;
-		$quiz_id = $this->th_get_panel_quiz_id($panel);
+        global $DB, $PAGE, $USER;
+        $quiz_id = $this->th_get_panel_quiz_id($panel);
 
-		$cm_cluster = get_coursemodule_from_id('thquiz', $cm_cluster_id, 0, false, MUST_EXIST);
-		$course = $DB->get_record('course', array('id' => $cm_cluster->course), '*', MUST_EXIST);
-		$module_cluster = $DB->get_record('thquiz', array('id' => $cm_cluster->instance), '*', MUST_EXIST);
+        $cm_cluster = get_coursemodule_from_id('thquiz', $cm_cluster_id, 0, false, MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $cm_cluster->course), '*', MUST_EXIST);
+        $module_cluster = $DB->get_record('thquiz', array('id' => $cm_cluster->instance), '*', MUST_EXIST);
 
-		$quiz_listening = $module_cluster->quiz_listening;
-		$quiz_reading = $module_cluster->quiz_reading;
-		$quiz_writing = $module_cluster->quiz_writing;
-		$quiz_speaking = $module_cluster->quiz_speaking;
+        $quiz_listening = $module_cluster->quiz_listening;
+        $quiz_reading = $module_cluster->quiz_reading;
+        $quiz_writing = $module_cluster->quiz_writing;
+        $quiz_speaking = $module_cluster->quiz_speaking;
 
-		if($quiz_listening && $quiz_reading && $quiz_writing && $quiz_speaking){
-			$quiz_module = array($quiz_listening, $quiz_reading, $quiz_writing, $quiz_speaking);
-			$list_quiz = implode(",", $quiz_module);
-			global $DB, $PAGE, $USER;
-			$regions = $PAGE->blocks->get_regions();
-			$query = "select {course_modules}.id, {quiz}.name
-				from {course_modules}
-				inner join {quiz}
-				on {course_modules}.instance = {quiz}.id and
-				{course_modules}.id in ($list_quiz)";
+        // ======================================================================
+        // FIX LỖI: LỌC CÁC BÀI THI ĐƯỢC CHỌN THAY VÌ BẮT BUỘC PHẢI ĐỦ 4 BÀI
+        // ======================================================================
+        $raw_modules = array($quiz_listening, $quiz_reading, $quiz_writing, $quiz_speaking);
+        $quiz_module = array_filter($raw_modules); // Loại bỏ những cái rỗng (0)
 
-			$records = $DB->get_records_sql($query);
+        // CHỈ CHẠY NẾU CÓ ÍT NHẤT 1 BÀI ĐƯỢC CHỌN
+        if (!empty($quiz_module)) {
+            $list_quiz = implode(",", $quiz_module);
+            $regions = $PAGE->blocks->get_regions();
+            
+            $query = "select {course_modules}.id, {quiz}.name
+                from {course_modules}
+                inner join {quiz}
+                on {course_modules}.instance = {quiz}.id and
+                {course_modules}.id in ($list_quiz)";
 
-			foreach ($quiz_module as $id) {
+            $records = $DB->get_records_sql($query);
 
-				$quiz_name = $records[$id]->name;
+            foreach ($quiz_module as $id) {
+                // Kiểm tra xem ID có tồn tại trong kết quả trả về không để tránh lỗi
+                if (!isset($records[$id])) {
+                    continue; 
+                }
+                
+                $quiz_name = $records[$id]->name;
 
-				if ($id != $quiz_id) {
-					if ($id) {
-						if (!$cm = get_coursemodule_from_id('quiz', $id)) {
-							throw new \moodle_exception('invalidcoursemodule');
-						}
-						if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-							throw new \moodle_exception('coursemisconf');
-						}
-					} else {
-						if (!$quiz = $DB->get_record('quiz', array('id' => $q))) {
-							throw new \moodle_exception('invalidquizid', 'quiz');
-						}
-						if (!$course = $DB->get_record('course', array('id' => $quiz->course))) {
-							throw new \moodle_exception('invalidcourseid');
-						}
-						if (!$cm = get_coursemodule_from_instance("quiz", $quiz->id, $course->id)) {
-							throw new \moodle_exception('invalidcoursemodule');
-						}
-					}
+                if ($id != $quiz_id) {
+                    if ($id) {
+                        if (!$cm = get_coursemodule_from_id('quiz', $id)) {
+                            throw new \moodle_exception('invalidcoursemodule');
+                        }
+                        if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
+                            throw new \moodle_exception('coursemisconf');
+                        }
+                    } else {
+                        if (!$quiz = $DB->get_record('quiz', array('id' => $q))) {
+                            throw new \moodle_exception('invalidquizid', 'quiz');
+                        }
+                        if (!$course = $DB->get_record('course', array('id' => $quiz->course))) {
+                            throw new \moodle_exception('invalidcourseid');
+                        }
+                        if (!$cm = get_coursemodule_from_instance("quiz", $quiz->id, $course->id)) {
+                            throw new \moodle_exception('invalidcoursemodule');
+                        }
+                    }
 
-					$context = context_module::instance($cm->id);
-					require_capability('mod/quiz:view', $context);
+                    $context = context_module::instance($cm->id);
+                    require_capability('mod/quiz:view', $context);
 
-					// Cache some other capabilities we use several times.
-					$canattempt = has_capability('mod/quiz:attempt', $context);
-					$canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);
-					$canpreview = has_capability('mod/quiz:preview', $context);
+                    $canattempt = has_capability('mod/quiz:attempt', $context);
+                    $canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);
+                    $canpreview = has_capability('mod/quiz:preview', $context);
 
-					// Create an object to manage all the other (non-roles) access rules.
-					$timenow = time();
-					$quizobj = quiz_cluster::create($cm->instance, $USER->id);
-					$accessmanager = new quiz_access_manager($quizobj, $timenow,
-						has_capability('mod/quiz:ignoretimelimits', $context, null, false));
-					$quiz = $quizobj->get_quiz();
+                    $timenow = time();
+                    $quizobj = quiz_cluster::create($cm->instance, $USER->id);
+                    $accessmanager = new quiz_access_manager($quizobj, $timenow,
+                        has_capability('mod/quiz:ignoretimelimits', $context, null, false));
+                    $quiz = $quizobj->get_quiz();
 
-					// Create view object which collects all the information the renderer will need.
-					$viewobj = new mod_thquiz_view_object();
-					$viewobj->accessmanager = $accessmanager;
-					$viewobj->canreviewmine = $canreviewmine || $canpreview;
+                    $viewobj = new mod_thquiz_view_object();
+                    $viewobj->accessmanager = $accessmanager;
+                    $viewobj->canreviewmine = $canreviewmine || $canpreview;
 
-					// Get this user's attempts.
-					$attempts = quiz_get_user_attempts($quiz->id, $USER->id, 'finished', true);
-					$lastfinishedattempt = end($attempts);
-					$unfinished = false;
-					$unfinishedattemptid = null;
-					if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
-						$attempts[] = $unfinishedattempt;
+                    $attempts = quiz_get_user_attempts($quiz->id, $USER->id, 'finished', true);
+                    $lastfinishedattempt = end($attempts);
+                    $unfinished = false;
+                    $unfinishedattemptid = null;
+                    if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $USER->id)) {
+                        $attempts[] = $unfinishedattempt;
+                        $quizobj->create_attempt_object($unfinishedattempt)->handle_if_time_expired(time(), false);
 
-						// If the attempt is now overdue, deal with that - and pass isonline = false.
-						// We want the student notified in this case.
-						$quizobj->create_attempt_object($unfinishedattempt)->handle_if_time_expired(time(), false);
+                        $unfinished = $unfinishedattempt->state == quiz_cluster_attempt::IN_PROGRESS ||
+                        $unfinishedattempt->state == quiz_cluster_attempt::OVERDUE;
+                        if (!$unfinished) {
+                            $lastfinishedattempt = $unfinishedattempt;
+                        }
+                        $unfinishedattemptid = $unfinishedattempt->id;
+                        $unfinishedattempt = null; 
+                    }
+                    $numattempts = count($attempts);
 
-						$unfinished = $unfinishedattempt->state == quiz_cluster_attempt::IN_PROGRESS ||
-						$unfinishedattempt->state == quiz_cluster_attempt::OVERDUE;
-						if (!$unfinished) {
-							$lastfinishedattempt = $unfinishedattempt;
-						}
-						$unfinishedattemptid = $unfinishedattempt->id;
-						$unfinishedattempt = null; // To make it clear we do not use this again.
-					}
-					$numattempts = count($attempts);
+                    $viewobj->attempts = $attempts;
+                    $viewobj->attemptobjs = array();
+                    foreach ($attempts as $attempt) {
+                        $viewobj->attemptobjs[] = new quiz_cluster_attempt($attempt, $quiz, $cm, $course, false);
+                    }
 
-					$viewobj->attempts = $attempts;
-					$viewobj->attemptobjs = array();
-					foreach ($attempts as $attempt) {
-						$viewobj->attemptobjs[] = new quiz_cluster_attempt($attempt, $quiz, $cm, $course, false);
-					}
+                    if (!$canpreview) {
+                        $mygrade = quiz_get_best_grade($quiz, $USER->id);
+                    } else if ($lastfinishedattempt) {
+                        $mygrade = quiz_rescale_grade($lastfinishedattempt->sumgrades, $quiz, false);
+                    } else {
+                        $mygrade = null;
+                    }
 
-					// Work out the final grade, checking whether it was overridden in the gradebook.
-					if (!$canpreview) {
-						$mygrade = quiz_get_best_grade($quiz, $USER->id);
-					} else if ($lastfinishedattempt) {
-						// Users who can preview the quiz don't get a proper grade, so work out a
-						// plausible value to display instead, so the page looks right.
-						$mygrade = quiz_rescale_grade($lastfinishedattempt->sumgrades, $quiz, false);
-					} else {
-						$mygrade = null;
-					}
+                    $mygradeoverridden = false;
+                    $gradebookfeedback = '';
+                    $item = null;
 
-					$mygradeoverridden = false;
-					$gradebookfeedback = '';
+                    $grading_info = grade_get_grades($course->id, 'mod', 'quiz', $quiz->id, $USER->id);
+                    if (!empty($grading_info->items)) {
+                        $item = $grading_info->items[0];
+                        if (isset($item->grades[$USER->id])) {
+                            $grade = $item->grades[$USER->id];
 
-					$item = null;
+                            if ($grade->overridden) {
+                                $mygrade = $grade->grade + 0; 
+                                $mygradeoverridden = true;
+                            }
+                            if (!empty($grade->str_feedback)) {
+                                $gradebookfeedback = $grade->str_feedback;
+                            }
+                        }
+                    }
 
-					$grading_info = grade_get_grades($course->id, 'mod', 'quiz', $quiz->id, $USER->id);
-					if (!empty($grading_info->items)) {
-						$item = $grading_info->items[0];
-						if (isset($item->grades[$USER->id])) {
-							$grade = $item->grades[$USER->id];
+                    $output = $PAGE->get_renderer('mod_thquiz');
 
-							if ($grade->overridden) {
-								$mygrade = $grade->grade + 0; // Convert to number.
-								$mygradeoverridden = true;
-							}
-							if (!empty($grade->str_feedback)) {
-								$gradebookfeedback = $grade->str_feedback;
-							}
-						}
-					}
+                    if ($attempts) {
+                        list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quiz, $attempts);
 
-					$output = $PAGE->get_renderer('mod_thquiz');
+                        $viewobj->attemptcolumn = $quiz->attempts != 1;
+                        $viewobj->gradecolumn = $someoptions->marks >= question_display_options::MARK_AND_MAX && quiz_has_grades($quiz);
+                        $viewobj->markcolumn = $viewobj->gradecolumn && ($quiz->grade != $quiz->sumgrades);
+                        $viewobj->overallstats = $lastfinishedattempt && $alloptions->marks >= question_display_options::MARK_AND_MAX;
+                        $viewobj->feedbackcolumn = quiz_has_feedback($quiz) && $alloptions->overallfeedback;
+                    }
 
-					if ($attempts) {
-						// Work out which columns we need, taking account what data is available in each attempt.
-						list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quiz, $attempts);
+                    $viewobj->timenow = $timenow;
+                    $viewobj->numattempts = $numattempts;
+                    $viewobj->mygrade = $mygrade;
+                    $viewobj->moreattempts = $unfinished || !$accessmanager->is_finished($numattempts, $lastfinishedattempt);
+                    $viewobj->mygradeoverridden = $mygradeoverridden;
+                    $viewobj->gradebookfeedback = $gradebookfeedback;
+                    $viewobj->lastfinishedattempt = $lastfinishedattempt;
+                    $viewobj->canedit = has_capability('mod/quiz:manage', $context);
+                    $viewobj->editurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $cm->id));
+                    $viewobj->backtocourseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+                    $viewobj->startattempturl = $quizobj->start_attempt_url_cluster1($cm_cluster_id, $quiz_id);
 
-						$viewobj->attemptcolumn = $quiz->attempts != 1;
+                    $viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
+                    $viewobj->popupoptions = $accessmanager->get_popup_options();
 
-						$viewobj->gradecolumn = $someoptions->marks >= question_display_options::MARK_AND_MAX &&
-						quiz_has_grades($quiz);
-						$viewobj->markcolumn = $viewobj->gradecolumn && ($quiz->grade != $quiz->sumgrades);
-						$viewobj->overallstats = $lastfinishedattempt && $alloptions->marks >= question_display_options::MARK_AND_MAX;
+                    $viewobj->infomessages = $viewobj->accessmanager->describe_rules();
+                    if ($quiz->attempts != 1) {
+                        $viewobj->infomessages[] = get_string('gradingmethod', 'quiz',
+                            quiz_get_grading_option_name($quiz->grademethod));
+                    }
 
-						$viewobj->feedbackcolumn = quiz_has_feedback($quiz) && $alloptions->overallfeedback;
-					}
+                    if ($item && grade_floats_different($item->gradepass, 0)) {
+                        $a = new \stdClass();
+                        $a->grade = quiz_format_grade($quiz, $item->gradepass);
+                        $a->maxgrade = quiz_format_grade($quiz, $quiz->grade);
+                        $viewobj->infomessages[] = get_string('gradetopassoutof', 'quiz', $a);
+                    }
 
-					$viewobj->timenow = $timenow;
-					$viewobj->numattempts = $numattempts;
-					$viewobj->mygrade = $mygrade;
-					$viewobj->moreattempts = $unfinished ||
-					!$accessmanager->is_finished($numattempts, $lastfinishedattempt);
-					$viewobj->mygradeoverridden = $mygradeoverridden;
-					$viewobj->gradebookfeedback = $gradebookfeedback;
-					$viewobj->lastfinishedattempt = $lastfinishedattempt;
-					$viewobj->canedit = has_capability('mod/quiz:manage', $context);
-					$viewobj->editurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $cm->id));
-					$viewobj->backtocourseurl = new moodle_url('/course/view.php', array('id' => $course->id));
-					$viewobj->startattempturl = $quizobj->start_attempt_url_cluster1($cm_cluster_id, $quiz_id);
+                    $viewobj->quizhasquestions = $quizobj->has_questions();
+                    $viewobj->preventmessages = array();
+                    if (!$viewobj->quizhasquestions) {
+                        $viewobj->buttontext = '';
+                    } else {
+                        if ($unfinished) {
+                            if ($canpreview) {
+                                $viewobj->buttontext = 'Bạn đang xem trước bài thi ' . format_string($quiz->name) . ', Tiếp tục xem trước';
+                            } else if ($canattempt) {
+                                $viewobj->buttontext = 'Bạn đang làm bài thi ' . format_string($quiz->name) . ', Tiếp tục làm';
+                            } 
+                        } else {
+                            if ($canpreview) {
+                                $viewobj->buttontext = 'Bắt đầu xem trước bài thi ' . format_string($quiz->name);
+                            } else if ($canattempt) {
+                                $viewobj->preventmessages = $viewobj->accessmanager->prevent_new_attempt(
+                                    $viewobj->numattempts, $viewobj->lastfinishedattempt);
+                                if ($viewobj->preventmessages) {
+                                    $viewobj->buttontext = '';
+                                } else if ($viewobj->numattempts == 0) {
+                                    $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
+                                } else {
+                                    $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
+                                }
+                            } 
+                        }
 
-                    //Check acessmanager hien thi popup
-					// if ($accessmanager->is_preflight_check_required($unfinishedattemptid)) {
-					// 	$viewobj->preflightcheckform = $accessmanager->get_preflight_check_form(
-					// 		$viewobj->startattempturl, $unfinishedattemptid);
-					// }
-					$viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
-					$viewobj->popupoptions = $accessmanager->get_popup_options();
+                        if ($canpreview) {
+                            $viewobj->preventmessages = $viewobj->accessmanager->prevent_access();
+                        } else if ($viewobj->buttontext) {
+                            if (!$viewobj->moreattempts) {
+                                $viewobj->buttontext = '';
+                            } else if ($canattempt) {
+                                $viewobj->preventmessages = $viewobj->accessmanager->prevent_access();
+                                if ($viewobj->preventmessages) {
+                                    $viewobj->buttontext = '';
+                                }
+                            }
+                        }
+                    }
 
-					// Display information about this quiz.
-					$viewobj->infomessages = $viewobj->accessmanager->describe_rules();
-					if ($quiz->attempts != 1) {
-						$viewobj->infomessages[] = get_string('gradingmethod', 'quiz',
-							quiz_get_grading_option_name($quiz->grademethod));
-					}
+                    $viewobj->showbacktocourse = ($viewobj->buttontext === '' &&
+                        course_get_format($course)->has_view_page());
 
-					// Inform user of the grade to pass if non-zero.
-					if ($item && grade_floats_different($item->gradepass, 0)) {
-						$a = new stdClass();
-						$a->grade = quiz_format_grade($quiz, $item->gradepass);
-						$a->maxgrade = quiz_format_grade($quiz, $quiz->grade);
-						$viewobj->infomessages[] = get_string('gradetopassoutof', 'quiz', $a);
-					}
+                    if (isguestuser()) {
+                        echo $output->view_page_guest($course, $quiz, $cm, $context, $viewobj->infomessages, $viewobj);
+                    } else if (!isguestuser() && !($canattempt || $canpreview || $viewobj->canreviewmine)) {
+                        echo $output->view_page_notenrolled($course, $quiz, $cm, $context, $viewobj->infomessages, $viewobj);
+                    } else {
 
-					// Determine wheter a start attempt button should be displayed.
-					$viewobj->quizhasquestions = $quizobj->has_questions();
-					$viewobj->preventmessages = array();
-					if (!$viewobj->quizhasquestions) {
-						$viewobj->buttontext = '';
+                        $block_content = $output->view_page_quiz1($course, $quiz, $cm, $context, $viewobj, $cm_cluster_id);
 
-					} else {
-						if ($unfinished) {
-							if ($canpreview) {
-			                    $viewobj->buttontext = 'Bạn đang xem trước bài thi ' . format_string($quiz->name) . ', Tiếp tục xem trước';
-			                } else if ($canattempt) {
-			                    // $viewobj->buttontext = get_string('continueattemptquiz', 'quiz') . ' bài thi ' . format_string($quiz->name);
-			                    $viewobj->buttontext = 'Bạn đang làm bài thi ' . format_string($quiz->name) . ', Tiếp tục làm';
-			                } 
-			            } else {
-							if ($canpreview) {
-			                    $viewobj->buttontext = 'Bắt đầu xem trước bài thi ' . format_string($quiz->name);
-			                } else if ($canattempt) {
-			                    $viewobj->preventmessages = $viewobj->accessmanager->prevent_new_attempt(
-			                        $viewobj->numattempts, $viewobj->lastfinishedattempt);
-			                    if ($viewobj->preventmessages) {
-			                        $viewobj->buttontext = '';
-			                    } else if ($viewobj->numattempts == 0) {
-			                        // $viewobj->buttontext = get_string('attemptquiznow', 'quiz') . ' bài thi ' . format_string($quiz->name);
-			                        $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
-			                    } else {
-			                        // $viewobj->buttontext = get_string('reattemptquiz', 'quiz') . ' bài thi ' . format_string($quiz->name);
-			                        $viewobj->buttontext = 'Bắt đầu bài thi ' . format_string($quiz->name);
-			                    }
-			                } 
-			            }
+                        $bc = new block_contents();
+                        $bc->attributes['id'] = 'mod_quiz_navblock quizcluster';
+                        $bc->attributes['role'] = 'navigation';
+                        $bc->attributes['aria-labelledby'] = 'mod_quiz_navblock_title';
+                        $bc->title = \html_writer::span($quiz_name, '', array('id' => 'mod_quiz_navblock_title'));
+                        $bc->content = $block_content;
 
-						// Users who can preview the quiz should be able to see all messages for not being able to access the quiz.
-						if ($canpreview) {
-							$viewobj->preventmessages = $viewobj->accessmanager->prevent_access();
-						} else if ($viewobj->buttontext) {
-							// If, so far, we think a button should be printed, so check if they will be allowed to access it.
-							if (!$viewobj->moreattempts) {
-								$viewobj->buttontext = '';
-							} else if ($canattempt) {
-								$viewobj->preventmessages = $viewobj->accessmanager->prevent_access();
-								if ($viewobj->preventmessages) {
-									$viewobj->buttontext = '';
-								}
-							}
-						}
-					}
+                        $PAGE->blocks->add_fake_block($bc, reset($regions));
+                    }
 
-					$viewobj->showbacktocourse = ($viewobj->buttontext === '' &&
-						course_get_format($course)->has_view_page());
+                    $quizobj = quiz::create($cm->instance, $USER->id);
 
-					if (isguestuser()) {
-						// Guests can't do a quiz, so offer them a choice of logging in or going back.
-						echo $output->view_page_guest($course, $quiz, $cm, $context, $viewobj->infomessages, $viewobj);
-					} else if (!isguestuser() && !($canattempt || $canpreview
-						|| $viewobj->canreviewmine)) {
-						// If they are not enrolled in this course in a good enough role, tell them to enrol.
-						echo $output->view_page_notenrolled($course, $quiz, $cm, $context, $viewobj->infomessages, $viewobj);
-					} else {
+                    $timenow = time();
+                    $accessmanager = $quizobj->get_access_manager($timenow);
+                    list($currentattemptid, $attemptnumber, $lastattempt, $messages, $page) =
+                        quiz_validate_new_attempt($quizobj, $accessmanager, false, -1, true);
 
-						$block_content = $output->view_page_quiz1($course, $quiz, $cm, $context, $viewobj, $cm_cluster_id);
-
-						$bc = new block_contents();
-						$bc->attributes['id'] = 'mod_quiz_navblock quizcluster';
-						$bc->attributes['role'] = 'navigation';
-						$bc->attributes['aria-labelledby'] = 'mod_quiz_navblock_title';
-						$bc->title = html_writer::span($quiz_name, '', array('id' => 'mod_quiz_navblock_title'));
-						$bc->content = $block_content;
-
-						$PAGE->blocks->add_fake_block($bc, reset($regions));
-					}
-
-					$quizobj = quiz::create($cm->instance, $USER->id);
-
-					$timenow = time();
-					$accessmanager = $quizobj->get_access_manager($timenow);
-					list($currentattemptid, $attemptnumber, $lastattempt, $messages, $page) =
-						quiz_validate_new_attempt($quizobj, $accessmanager, false, -1, true);
-
-				} else {
-					$this_navigation_block = $this->navigation_panel_cluster1($panel, $cm_cluster_id);
-					$bc = new block_contents();
-					$bc->attributes['id'] = 'mod_quiz_navblock';
-					$bc->attributes['role'] = 'navigation';
-					$bc->attributes['aria-labelledby'] = 'mod_quiz_navblock_title';
-					$bc->title = html_writer::span($quiz_name, '', array('id' => 'mod_quiz_navblock_title'));
-					$bc->content = $this_navigation_block;
-					$PAGE->blocks->add_fake_block($bc, reset($regions));
-				}
-			}
-		}
-	}
+                } else {
+                    $this_navigation_block = $this->navigation_panel_cluster1($panel, $cm_cluster_id);
+                    $bc = new block_contents();
+                    $bc->attributes['id'] = 'mod_quiz_navblock';
+                    $bc->attributes['role'] = 'navigation';
+                    $bc->attributes['aria-labelledby'] = 'mod_quiz_navblock_title';
+                    $bc->title = \html_writer::span($quiz_name, '', array('id' => 'mod_quiz_navblock_title'));
+                    $bc->content = $this_navigation_block;
+                    $PAGE->blocks->add_fake_block($bc, reset($regions));
+                }
+            }
+        }
+    }
 
 	public function th_get_panel_quiz_id($panel) {
 		$reflector = new ReflectionObject($panel);
@@ -1216,12 +1193,15 @@ class mod_thquiz_renderer extends mod_quiz_renderer {
 					$button = new quiz_nav_question_button();
 					$button->id = 'quiznavbutton' . $slot;
 					$button->number = $attemptobj->get_question_number($slot) . ".$key";
-					$button->stateclass = $qa->get_state_class($showcorrectness);
-					$button->navmethod = $attemptobj->get_navigation_method();
-					if (!$showcorrectness && $button->stateclass === 'notanswered') {
-						$button->stateclass = 'complete';
+					if (method_exists($question, 'get_subquestion_state_class')) {
+						$button->stateclass = $question->get_subquestion_state_class($qa, $key, $showcorrectness);
+						$substate = $question->get_subquestion_state($qa, $key);
+						$button->statestring = $substate->default_string($showcorrectness);
+					} else {
+						$button->stateclass = $qa->get_state_class($showcorrectness);
+						$button->statestring = $this->get_state_string($qa, $showcorrectness);
 					}
-					$button->statestring = $this->get_state_string($qa, $showcorrectness);
+					$button->navmethod = $attemptobj->get_navigation_method();
 					$button->page = $attemptobj->get_question_page($slot);
 					$button->currentpage = $this_showall || $button->page == $this_page;
 					$button->flagged = $qa->is_flagged();

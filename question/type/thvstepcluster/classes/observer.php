@@ -178,4 +178,118 @@ class qtype_thvstepcluster_observer {
     //     // $DB->execute($sql, $params);
 
     // }
+
+    /**
+     * Listener for question_manually_graded event to persist submarks and subcomments.
+     *
+     * @param \core\event\base $event
+     */
+    public static function question_manually_graded($event) {
+        global $DB;
+
+        $questionid = $event->objectid ?? null;
+        if (empty($questionid)) {
+            return;
+        }
+
+        $qtype = $DB->get_field('question', 'qtype', ['id' => $questionid]);
+        if ($qtype !== 'thvstepcluster') {
+            return;
+        }
+
+        $slot = $event->other['slot'] ?? null;
+        $attemptid = $event->other['attemptid'] ?? null;
+        if (empty($slot) || empty($attemptid)) {
+            return;
+        }
+
+        $is_thquiz = (strpos(get_class($event), 'mod_thquiz') !== false) || !empty($event->other['thquizid']);
+        if ($is_thquiz) {
+            $uniqueid = $DB->get_field('thquiz_attempts', 'uniqueid', ['id' => $attemptid]);
+        } else {
+            $uniqueid = $DB->get_field('quiz_attempts', 'uniqueid', ['id' => $attemptid]);
+        }
+
+        if (empty($uniqueid)) {
+            return;
+        }
+
+        $qa = $DB->get_record('question_attempts', ['questionusageid' => $uniqueid, 'slot' => $slot]);
+        if (empty($qa)) {
+            return;
+        }
+
+        $step = $DB->get_record_sql(
+            'SELECT id FROM {question_attempt_steps} WHERE questionattemptid = ? ORDER BY sequencenumber DESC, id DESC LIMIT 1',
+            [$qa->id]
+        );
+        if (empty($step)) {
+            return;
+        }
+
+        $postdata = !empty($_POST) ? $_POST : [];
+        $submarks = [];
+        $subcomments = [];
+        $subcommentformats = [];
+
+        foreach ($postdata as $key => $val) {
+            if (preg_match('/submark_(\d+)$/', $key, $m)) {
+                $idx = (int)$m[1];
+                if ($val !== '' && $val !== null) {
+                    $submarks[$idx] = (float)$val;
+                }
+            } else if (preg_match('/subcomment_(\d+)$/', $key, $m)) {
+                $idx = (int)$m[1];
+                $subcomments[$idx] = (string)$val;
+            } else if (preg_match('/subcommentformat_(\d+)$/', $key, $m)) {
+                $idx = (int)$m[1];
+                $subcommentformats[$idx] = (int)$val;
+            }
+        }
+
+        // Also check if step has comment with JSON metadata
+        $existingcomment = $DB->get_field('question_attempt_step_data', 'value', [
+            'attemptstepid' => $step->id,
+            'name' => '-comment'
+        ]);
+        if ($existingcomment && preg_match('/<!--TH_CLUSTER_SUBGRADES:(.*?)-->/s', $existingcomment, $m)) {
+            $subdata = json_decode($m[1], true);
+            if (is_array($subdata)) {
+                foreach ($subdata as $idx => $item) {
+                    $idx = (int)$idx;
+                    if (!isset($submarks[$idx]) && isset($item['mark']) && $item['mark'] !== '' && $item['mark'] !== null) {
+                        $submarks[$idx] = (float)$item['mark'];
+                    }
+                    if (!isset($subcomments[$idx]) && isset($item['comment'])) {
+                        $subcomments[$idx] = (string)$item['comment'];
+                    }
+                }
+            }
+        }
+
+        // Save into question_attempt_step_data
+        foreach ($submarks as $idx => $markval) {
+            self::save_step_data($step->id, "submark_$idx", (string)$markval);
+        }
+        foreach ($subcomments as $idx => $commentval) {
+            self::save_step_data($step->id, "subcomment_$idx", $commentval);
+            $fmt = $subcommentformats[$idx] ?? FORMAT_HTML;
+            self::save_step_data($step->id, "subcommentformat_$idx", (string)$fmt);
+        }
+    }
+
+    protected static function save_step_data($stepid, $name, $value) {
+        global $DB;
+        $rec = $DB->get_record('question_attempt_step_data', ['attemptstepid' => $stepid, 'name' => $name]);
+        if ($rec) {
+            $rec->value = $value;
+            $DB->update_record('question_attempt_step_data', $rec);
+        } else {
+            $newrec = new stdClass();
+            $newrec->attemptstepid = $stepid;
+            $newrec->name = $name;
+            $newrec->value = $value;
+            $DB->insert_record('question_attempt_step_data', $newrec);
+        }
+    }
 }

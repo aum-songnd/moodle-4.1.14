@@ -9,18 +9,43 @@
                 <legend class="prompt h6 font-weight-normal sr-only"><span class="sr-only">Question 1</span> Answer</legend>
                 <div class="answer">
                     {{#answers}}
-                    {{>qtype_thvstepcluster/multichoice_answer}}
+                        {{>qtype_thvstepcluster/multichoice_answer}}
                     {{/answers}}
                 </div>
                 {{^correctness}}
-                    {{#checked_radio}}
-                        <div id="{{clearchoicefieldname}}" class="qtype_multichoice_clearchoice" aria-hidden="true">
-                        <input type="radio" name="{{inputname}}" id="{{inputname}}-{{answervalue}}-1" value="-1" class="sr-only" aria-hidden="true" ><label for="{{inputname}}-{{answervalue}}-1"><a tabindex="-1" role="button" class="btn btn-link ml-3 mt-n1" href="#">{{#str}} clearmychoice, qtype_thvstepcluster{{/str}}</a></label></div>
-                    {{/checked_radio}}
-                     {{^checked_radio}}
-                        <div id="{{clearchoicefieldname}}" class="qtype_multichoice_clearchoice sr-only" aria-hidden="true">
-                        <input type="radio" name="{{inputname}}" id="{{inputname}}-{{answervalue}}-1" value="-1" class="sr-only" aria-hidden="true" ><label for="{{inputname}}-{{answervalue}}-1"><a tabindex="-1" role="button" class="btn btn-link ml-3 mt-n1" href="#">{{#str}} clearmychoice, qtype_thvstepcluster{{/str}}</a></label></div>
-                    {{/checked_radio}}
+                    {{^ismultiple}}
+                        {{#checked_radio}}
+                            <div id="{{clearchoicefieldname}}" class="qtype_multichoice_clearchoice" aria-hidden="true">
+                                <input type="radio"
+                                       name="{{inputname}}"
+                                       id="{{inputname}}-clearchoice"
+                                       value="-1"
+                                       class="sr-only"
+                                       aria-hidden="true">
+                                <label for="{{inputname}}-clearchoice">
+                                    <a tabindex="-1" role="button" class="btn btn-link ml-3 mt-n1" href="#">
+                                        {{#str}} clearmychoice, qtype_thvstepcluster{{/str}}
+                                    </a>
+                                </label>
+                            </div>
+                        {{/checked_radio}}
+
+                        {{^checked_radio}}
+                            <div id="{{clearchoicefieldname}}" class="qtype_multichoice_clearchoice sr-only" aria-hidden="true">
+                                <input type="radio"
+                                       name="{{inputname}}"
+                                       id="{{inputname}}-clearchoice"
+                                       value="-1"
+                                       class="sr-only"
+                                       aria-hidden="true">
+                                <label for="{{inputname}}-clearchoice">
+                                    <a tabindex="-1" role="button" class="btn btn-link ml-3 mt-n1" href="#">
+                                        {{#str}} clearmychoice, qtype_thvstepcluster{{/str}}
+                                    </a>
+                                </label>
+                            </div>
+                        {{/checked_radio}}
+                    {{/ismultiple}}
                 {{/correctness}}
             </fieldset>
         </div>
@@ -33,8 +58,22 @@
                 {{#generalfeedback}}
                     {{{generalfeedbacktext}}}
                 {{/generalfeedback}}
+                {{#haspartialcorrect}}
+                    <div class="partialcorrectinfo">
+                        {{#str}} youhavecorrectlyselected, qtype_thvstepcluster, {{correctselectedcount}} {{/str}}
+                    </div>
+                {{/haspartialcorrect}}
                 {{#rightanswer}}
-                    <div class="rightanswer">{{#str}} correctansweris, qtype_multichoice{{/str}} {{{answer}}}</div>
+                    <div class="rightanswer">
+                        {{#hasmultiplecorrect}}
+                            {{#str}} correctanswersare, qtype_thvstepcluster{{/str}}
+                        {{/hasmultiplecorrect}}
+                        {{^hasmultiplecorrect}}
+                            {{#str}} correctansweris, qtype_multichoice{{/str}}
+                        {{/hasmultiplecorrect}}
+                        <br>
+                        {{{answer}}}
+                    </div>
                 {{/rightanswer}}
             </div>
         {{/correctness}}
