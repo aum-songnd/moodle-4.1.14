@@ -52,6 +52,18 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 	}
 
 	/**
+	 * Check whether the current request is serving the mobile/Ionic app.
+	 *
+	 * @return bool
+	 */
+	protected function is_mobile_app_request(): bool {
+		if (defined('WS_SERVER') && WS_SERVER) {
+			return true;
+		}
+		return class_exists('core_useragent') && core_useragent::is_moodle_app();
+	}
+
+	/**
 	 * Generates the display of the formulation part of the question. This is the
 	 * area that contains the quetsion text, and the controls for students to
 	 * input their answers. Some question types also embed bits of feedback, for
@@ -511,6 +523,12 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				array('class' => 'validationerror'));
 		}
 
+		// Hide cluster summary table and whole-question comment block in the mobile app.
+		if ($this->is_mobile_app_request()) {
+			$options->manualcomment = question_display_options::HIDDEN;
+			$options->manualcommentlink = null;
+		}
+
 		return $html;
 	}
 
@@ -577,6 +595,9 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 	 * @return string HTML fragment
 	 */
 	public function manual_comment(question_attempt $qa, question_display_options $options) {
+		if ($this->is_mobile_app_request()) {
+			return '';
+		}
 		$question = $qa->get_question();
 		if (!method_exists($question, 'get_subquestions_grade_summary')) {
 			return '';
