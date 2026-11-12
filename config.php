@@ -18,7 +18,15 @@ $CFG->dboptions = array (
   'dbcollation' => 'utf8mb4_general_ci',
 );
 
-$CFG->wwwroot   = 'http://192.168.0.201:202';
+if (!empty($_SERVER['HTTP_HOST'])) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+               || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+               || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+    $protocol = $isHttps ? 'https://' : 'http://';
+    $CFG->wwwroot = $protocol . $_SERVER['HTTP_HOST'];
+} else {
+    $CFG->wwwroot = 'http://192.168.0.202:202';
+}
 $CFG->dataroot  = '/var/www/moodledata4.1.14';
 $CFG->admin     = 'admin';
 

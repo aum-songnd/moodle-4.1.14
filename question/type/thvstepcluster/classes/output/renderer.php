@@ -551,7 +551,7 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			$formattedcomment = format_text($subcomment, $subcommentformat, ['context' => $options->context]);
 			$commenthtml .= html_writer::div(
 				html_writer::tag('strong', get_string('comment', 'question') . ': ', ['class' => 'd-block mb-1']) . $formattedcomment,
-				['class' => 'subq-teacher-comment alert alert-secondary p-2 mt-2 mb-0']
+				'subq-teacher-comment alert alert-secondary p-2 mt-2 mb-0'
 			);
 		}
 
