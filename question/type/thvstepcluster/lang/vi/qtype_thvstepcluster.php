@@ -59,3 +59,6 @@ $string['missing_question'] = 'Thiếu câu hỏi con';
 $string['no_question'] = 'Không có câu hỏi con';
 $string['correctanswersare'] = 'Các đáp án đúng là:';
 $string['youhavecorrectlyselected'] = 'You have correctly selected {$a}.';
+$string['subq_needsgrading'] = 'Chờ chấm';
+$string['subq_notanswered'] = 'Chưa làm';
+

@@ -9,3 +9,10 @@ form[data-qtype='thvstepcluster'] #fitem_id_question_entry_items ul.form-autocom
 input#id_defaultmark {
 	height: auto;
 }
+
+.que .subq-outcome-box,
+.que .subq-outcome-box.outcome {
+	border: none !important;
+	background-color: #f8f9fa !important;
+	color: inherit !important;
+}

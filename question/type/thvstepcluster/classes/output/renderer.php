@@ -550,8 +550,16 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		$subcommentformat = $question_original->get_subquestion_comment_format($qa, $key);
 
 		$gradehtml = '';
+		$isneedsgrading = false;
+
 		if ($options->marks && $qa->get_state()->is_finished()) {
-			if ($submark !== null) {
+			$has_response = $question_original->has_subquestion_response($qa, $key);
+			if (!$has_response) {
+				$statusstr = get_string('subq_notanswered', 'qtype_thvstepcluster');
+				// $marktext = get_string('mark', 'question') . ': 0,00 / ' . format_float($submaxmark, 2);
+				$gradehtml .= html_writer::tag('span', $statusstr, ['class' => 'badge badge-secondary mr-2 py-1 px-2']);
+				$gradehtml .= html_writer::tag('span', $marktext, ['class' => 'subq-mark-badge font-weight-bold text-muted']);
+			} else if ($submark !== null) {
 				$icon = '';
 				if ($options->correctness) {
 					$fraction = $submaxmark > 0 ? min(max(0.0, $submark / $submaxmark), 1.0) : 0.0;
@@ -560,7 +568,10 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$marktext = get_string('mark', 'question') . ': ' . format_float($submark, 2) . ' / ' . format_float($submaxmark, 2);
 				$gradehtml .= html_writer::tag('span', $icon . ' ' . $marktext, ['class' => 'subq-mark-badge font-weight-bold mr-2']);
 			} else if ($substate == question_state::$needsgrading) {
-				$gradehtml .= html_writer::tag('span', get_string('needsgrading', 'question') . ' (' . format_float($submaxmark, 2) . ' ' . get_string('points', 'question') . ')', ['class' => 'badge badge-secondary py-1 px-2']);
+				$isneedsgrading = true;
+				$statusstr = get_string('subq_needsgrading', 'qtype_thvstepcluster');
+				$gradehtml .= html_writer::tag('span', $statusstr, ['class' => 'badge badge-secondary mr-2 py-1 px-2']);
+				$gradehtml .= html_writer::tag('span', $maxmarkstr, ['class' => 'subq-mark-badge font-weight-bold text-muted']);
 			}
 		}
 
@@ -574,9 +585,11 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		}
 
 		if ($gradehtml || $commenthtml) {
-			$output .= html_writer::start_div('subq-outcome-box outcome clearfix p-2 mt-2 border rounded bg-light');
+			$boxclass = 'subq-outcome-box clearfix p-2 mt-2 rounded bg-light';
+
+			$output .= html_writer::start_div($boxclass);
 			if ($gradehtml) {
-				$output .= html_writer::div($gradehtml, 'subq-grade-line mb-1');
+				$output .= html_writer::div($gradehtml, 'subq-grade-line d-flex align-items-center' . ($commenthtml ? ' mb-2' : ''));
 			}
 			if ($commenthtml) {
 				$output .= $commenthtml;
@@ -626,11 +639,8 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			);
 			$output .= html_writer::start_div('card-body p-3');
 
-			$output .= html_writer::tag('p',
-				'Vui lòng nhập điểm và nhận xét cho từng câu hỏi tự luận / ghi âm dưới đây. ' .
-				'Tổng điểm sẽ tự động được cập nhật vào ô điểm chung bên dưới.',
-				['class' => 'text-muted small mb-3']
-			);
+
+			$output .= html_writer::div('', 'cluster-grading-status-msg mb-3');
 
 			foreach ($summary as $key => $item) {
 				$subq_num = $key + 1;
@@ -640,52 +650,66 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 
 				$output .= html_writer::start_div('subq-grading-item border rounded p-2 mb-3 bg-light');
 				$output .= html_writer::tag('div',
-					html_writer::tag('strong', "Câu $subq_num: $subq_name") .
-					html_writer::span(" [Loại: $type_label - Tối đa: $maxmark_formatted điểm]", 'text-muted small ml-2'),
-					['class' => 'subq-title mb-2 pb-1 border-bottom']
+					html_writer::tag('strong', "Câu $subq_num: $subq_name")
 				);
 
 				if ($item['is_manual']) {
-					$markfield = $qa->get_qt_field_name("submark_$key");
-					$commentfield = $qa->get_qt_field_name("subcomment_$key");
-					$cur_mark = ($item['mark'] !== null) ? format_float($item['mark'], 2) : '';
-					$cur_comment = $item['comment'];
+					$has_response = !empty($item['has_response']);
+					if (!$has_response) {
+						$markfield = $qa->get_qt_field_name("submark_$key");
+						$output .= html_writer::tag('div',
+							html_writer::tag('span', 'Chưa làm', ['class' => 'badge badge-secondary py-1 px-2 mr-2']) 
+						);
+						// Hidden input so 0 is passed to submark
+						$output .= html_writer::empty_tag('input', [
+							'type' => 'hidden',
+							'class' => 'cluster-automark-val cluster-submark-unanswered',
+							'name' => $markfield,
+							'value' => '0',
+							'data-subq' => $key,
+						]);
+					} else {
+						$markfield = $qa->get_qt_field_name("submark_$key");
+						$commentfield = $qa->get_qt_field_name("subcomment_$key");
+						$cur_mark = ($item['mark'] !== null) ? format_float($item['mark'], 2) : '';
+						$cur_comment = $item['comment'];
 
-					// Mark input
-					$output .= html_writer::start_div('form-group row align-items-center mb-2');
-					$output .= html_writer::tag('label', 'Điểm số câu này:', ['class' => 'col-sm-3 col-form-label font-weight-bold', 'for' => $markfield]);
-					$output .= html_writer::start_div('col-sm-9 d-flex align-items-center');
-					$output .= html_writer::empty_tag('input', [
-						'type' => 'number',
-						'step' => '0.01',
-						'min' => '0',
-						'max' => $item['maxmark'],
-						'class' => 'form-control d-inline-block cluster-submark-input mr-2',
-						'style' => 'width: 110px;',
-						'name' => $markfield,
-						'id' => $markfield,
-						'value' => $cur_mark,
-						'data-subq' => $key,
-						'data-maxmark' => $item['maxmark'],
-					]);
-					$output .= html_writer::tag('span', "/ $maxmark_formatted điểm", ['class' => 'text-muted font-weight-bold']);
-					$output .= html_writer::end_div();
-					$output .= html_writer::end_div();
+						// Mark input
+						$output .= html_writer::start_div('form-group row align-items-center mb-2');
+						$output .= html_writer::tag('label', 'Điểm số câu này:', ['class' => 'col-sm-3 col-form-label font-weight-bold', 'for' => $markfield]);
+						$output .= html_writer::start_div('col-sm-9 d-flex align-items-center');
+						$output .= html_writer::empty_tag('input', [
+							'type' => 'number',
+							'step' => '0.01',
+							'min' => '0',
+							'max' => $item['maxmark'],
+							'class' => 'form-control d-inline-block cluster-submark-input mr-2',
+							'style' => 'width: 110px;',
+							'name' => $markfield,
+							'id' => $markfield,
+							'value' => $cur_mark,
+							'data-subq' => $key,
+							'data-maxmark' => $item['maxmark'],
+						]);
+						$output .= html_writer::tag('span', "/ $maxmark_formatted điểm", ['class' => 'text-muted font-weight-bold']);
+						$output .= html_writer::end_div();
+						$output .= html_writer::end_div();
 
-					// Comment textarea
-					$output .= html_writer::start_div('form-group row mb-1');
-					$output .= html_writer::tag('label', 'Nhận xét câu này:', ['class' => 'col-sm-3 col-form-label', 'for' => $commentfield]);
-					$output .= html_writer::start_div('col-sm-9');
-					$output .= html_writer::tag('textarea', s($cur_comment), [
-						'class' => 'form-control cluster-subcomment-input',
-						'rows' => 2,
-						'name' => $commentfield,
-						'id' => $commentfield,
-						'data-subq' => $key,
-						'placeholder' => 'Nhập lời phê / nhận xét riêng cho câu này (nếu có)...'
-					]);
-					$output .= html_writer::end_div();
-					$output .= html_writer::end_div();
+						// Comment textarea
+						$output .= html_writer::start_div('form-group row mb-1');
+						$output .= html_writer::tag('label', 'Nhận xét câu này:', ['class' => 'col-sm-3 col-form-label', 'for' => $commentfield]);
+						$output .= html_writer::start_div('col-sm-9');
+						$output .= html_writer::tag('textarea', s($cur_comment), [
+							'class' => 'form-control cluster-subcomment-input',
+							'rows' => 2,
+							'name' => $commentfield,
+							'id' => $commentfield,
+							'data-subq' => $key,
+							'placeholder' => 'Nhập lời phê / nhận xét riêng cho câu này (nếu có)...'
+						]);
+						$output .= html_writer::end_div();
+						$output .= html_writer::end_div();
+					}
 				} else {
 					// Auto graded question
 					$automark_formatted = ($item['mark'] !== null) ? format_float($item['mark'], 2) : '0.00';
@@ -717,26 +741,42 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 					var submarkInputs = container.querySelectorAll('.cluster-submark-input');
 					var autoMarks = container.querySelectorAll('.cluster-automark-val');
 					var subcommentInputs = container.querySelectorAll('.cluster-subcomment-input');
+					var statusEl = container.querySelector('.cluster-grading-status-msg');
+
+					if (overallMarkInput) {
+						overallMarkInput.readOnly = true;
+					}
 
 					function recalc() {
-						var total = 0;
-						var hasAnyManual = false;
+						var totalManual = 0;
+						var allManualFilled = true;
+						var manualCount = submarkInputs.length;
+
 						submarkInputs.forEach(function(inp) {
-							var v = parseFloat(inp.value);
-							if (!isNaN(v) && v >= 0) {
-								total += v;
-								hasAnyManual = true;
+							var rawVal = inp.value.trim();
+							if (rawVal === '') {
+								allManualFilled = false;
+							} else {
+								var v = parseFloat(rawVal);
+								if (!isNaN(v) && v >= 0) {
+									totalManual += v;
+								} else {
+									allManualFilled = false;
+								}
 							}
 						});
+
+						var totalAuto = 0;
 						autoMarks.forEach(function(inp) {
 							var v = parseFloat(inp.value);
 							if (!isNaN(v)) {
-								total += v;
+								totalAuto += v;
 							}
 						});
-						if (overallMarkInput && hasAnyManual) {
-							overallMarkInput.value = total.toFixed(2);
-						}
+
+						var grandTotal = totalManual + totalAuto;
+
+						
 						syncPayload();
 					}
 
@@ -750,6 +790,13 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 								payload[subq].mark = parseFloat(inp.value);
 								hasAny = true;
 							}
+						});
+						var unansweredInputs = container.querySelectorAll('.cluster-submark-unanswered');
+						unansweredInputs.forEach(function(inp) {
+							var subq = inp.getAttribute('data-subq');
+							if (!payload[subq]) payload[subq] = {};
+							payload[subq].mark = 0;
+							hasAny = true;
 						});
 						subcommentInputs.forEach(function(cinp) {
 							var subq = cinp.getAttribute('data-subq');
@@ -782,6 +829,8 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 						recalc();
 						syncPayload();
 					});
+
+					recalc();
 				}
 				if (document.readyState === 'loading') {
 					document.addEventListener('DOMContentLoaded', initClusterGradingAutoSum);

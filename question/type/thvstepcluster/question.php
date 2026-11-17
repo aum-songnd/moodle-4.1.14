@@ -1038,7 +1038,7 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 		$fraction = min(max(0.0, $fraction), 1.0);
 
 		if ($has_unmanually_graded) {
-			return array($fraction, question_state::$needsgrading);
+			return array(null, question_state::$needsgrading);
 		}
 
 		return array($fraction, question_state::graded_state_for_fraction($fraction));
@@ -1089,6 +1089,11 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 				}
 			}
 
+			// If student did not answer this subquestion and attempt is finished, default to 0.0.
+			if ($qa->get_state()->is_finished() && !$this->has_subquestion_response($qa, $key)) {
+				return 0.0;
+			}
+
 			// Fallback for single manual subquestion legacy attempts
 			$manual_count = 0;
 			foreach ($this->question_items_instance as $item) {
@@ -1113,9 +1118,12 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 		}
 
 		// For auto-graded questions
+		if ($qa->get_state()->is_finished() && !$this->has_subquestion_response($qa, $key)) {
+			return 0.0;
+		}
 		$fraction = $this->get_subquestion_fraction($qa, $key);
 		if ($fraction === null) {
-			return null;
+			return $qa->get_state()->is_finished() ? 0.0 : null;
 		}
 		return $fraction * (float)$subq->defaultmark;
 	}
@@ -1156,6 +1164,57 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 	}
 
 	/**
+	 * Check whether the student submitted an answer for subquestion $key.
+	 *
+	 * @param question_attempt $qa
+	 * @param int $key
+	 * @return bool
+	 */
+	public function has_subquestion_response(question_attempt $qa, int $key): bool {
+		if (!isset($this->question_items_instance[$key])) {
+			return false;
+		}
+
+		$subq = $this->question_items_instance[$key];
+		$type = $subq->get_type_name();
+		if ($type === 'description') {
+			return false;
+		}
+
+		$response = $this->get_student_response_data($qa);
+
+		if ($type === 'recordrtc') {
+			$val = $qa->get_last_qt_var("answer$key");
+			$respval = $response["answer$key"] ?? null;
+			$files = $qa->get_last_qt_files("answer$key", 0);
+			return (!empty($val) && (string)$val !== '0')
+				|| (!empty($respval) && (string)$respval !== '0')
+				|| !empty($files);
+		}
+
+		if ($type === 'essay') {
+			$val = $qa->get_last_qt_var("answer$key");
+			$respval = $response["answer$key"] ?? null;
+			$attachments = $qa->get_last_qt_var("attachments");
+			return (is_string($val) && trim($val) !== '')
+				|| (is_string($respval) && trim($respval) !== '')
+				|| !empty($attachments);
+		}
+
+		// Auto-graded question types
+		$keyresponse = "answer$key";
+		if (isset($response[$keyresponse]) && $response[$keyresponse] !== '' && $response[$keyresponse] !== -1 && $response[$keyresponse] !== '-1') {
+			return true;
+		}
+		foreach ($response as $rk => $rv) {
+			if (strpos($rk, "answer{$key}_") === 0 && $rv !== '' && $rv !== null && $rv !== 0 && $rv !== '0') {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Get fraction (0.0 to 1.0) for subquestion $key.
 	 *
 	 * @param question_attempt $qa
@@ -1173,6 +1232,10 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 
 		if ($type === 'description') {
 			return null;
+		}
+
+		if ($qa->get_state()->is_finished() && !$this->has_subquestion_response($qa, $key)) {
+			return 0.0;
 		}
 
 		if ($type === 'recordrtc' || $type === 'essay') {
@@ -1212,9 +1275,11 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 
 		$response = $this->get_student_response_data($qa);
 
+		$has_answer = $this->has_subquestion_response($qa, $key);
+
 		if ($type === 'recordrtc' || $type === 'essay') {
 			$mark = $this->get_subquestion_mark($qa, $key);
-			if ($mark !== null) {
+			if ($mark !== null && ($has_answer || $mark > 0)) {
 				$maxmark = (float)$subq->defaultmark;
 				if ($maxmark <= 0) {
 					return question_state::$mangrright;
@@ -1223,40 +1288,10 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 				return question_state::manually_graded_state_for_fraction($fraction);
 			}
 
-			$has_answer = false;
-			if ($type === 'recordrtc') {
-				$val = $qa->get_last_qt_var("answer$key");
-				$respval = $response["answer$key"] ?? null;
-				$files = $qa->get_last_qt_files("answer$key", 0);
-				$has_answer = (!empty($val) && (string)$val !== '0')
-					|| (!empty($respval) && (string)$respval !== '0')
-					|| !empty($files);
-			} else { // essay
-				$val = $qa->get_last_qt_var("answer$key");
-				$respval = $response["answer$key"] ?? null;
-				$attachments = $qa->get_last_qt_var("attachments");
-				$has_answer = (is_string($val) && trim($val) !== '')
-					|| (is_string($respval) && trim($respval) !== '')
-					|| !empty($attachments);
-			}
-
 			if ($has_answer) {
 				return question_state::$needsgrading;
 			}
 			return $defaultnotanswered;
-		}
-
-		$has_answer = false;
-		$keyresponse = "answer$key";
-		if (isset($response[$keyresponse]) && $response[$keyresponse] !== '' && $response[$keyresponse] !== -1 && $response[$keyresponse] !== '-1') {
-			$has_answer = true;
-		} else {
-			foreach ($response as $rk => $rv) {
-				if (strpos($rk, "answer{$key}_") === 0 && $rv !== '' && $rv !== null && $rv !== 0 && $rv !== '0') {
-					$has_answer = true;
-					break;
-				}
-			}
 		}
 
 		if (!$has_answer) {
@@ -1347,6 +1382,7 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 				continue;
 			}
 
+			$has_response = $this->has_subquestion_response($qa, $key);
 			$state = $this->get_subquestion_state($qa, $key);
 			$mark = $this->get_subquestion_mark($qa, $key);
 			$maxmark = (float)$subq->defaultmark;
@@ -1355,12 +1391,18 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 			$commentformat = $this->get_subquestion_comment_format($qa, $key);
 			$ismanual = in_array($type, ['recordrtc', 'essay']);
 
+			if (!$has_response && $qa->get_state()->is_finished()) {
+				$mark = ($mark !== null) ? $mark : 0.0;
+				$fraction = ($fraction !== null) ? $fraction : 0.0;
+			}
+
 			$summary[$key] = [
 				'index' => $key,
 				'questionid' => $subq->id,
 				'name' => $subq->name,
 				'qtype' => $type,
 				'is_manual' => $ismanual,
+				'has_response' => $has_response,
 				'mark' => $mark,
 				'maxmark' => $maxmark,
 				'fraction' => $fraction,

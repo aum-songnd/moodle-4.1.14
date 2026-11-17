@@ -58,3 +58,6 @@ $string['missing_question'] = 'Missing question';
 $string['no_question'] = 'No question';
 $string['correctanswersare'] = 'The correct answers are:';
 $string['youhavecorrectlyselected'] = 'You have correctly selected {$a}.';
+$string['subq_needsgrading'] = 'Awaiting grading';
+$string['subq_notanswered'] = 'Not answered';
+

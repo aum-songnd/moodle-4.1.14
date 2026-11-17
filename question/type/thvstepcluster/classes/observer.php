@@ -276,6 +276,88 @@ class qtype_thvstepcluster_observer {
             $fmt = $subcommentformats[$idx] ?? FORMAT_HTML;
             self::save_step_data($step->id, "subcommentformat_$idx", (string)$fmt);
         }
+
+        // Enforce cluster grading completeness:
+        // If there are manual subquestions and NOT all of them are graded yet,
+        // the attempt step and question attempt state must remain needsgrading,
+        // and the total mark / fraction must be null (not finalized).
+        try {
+            $question = question_bank::load_question($questionid);
+            if ($question && !empty($question->question_items_instance)) {
+                $has_manual = false;
+                $all_manual_graded = true;
+                $quba = question_engine::load_questions_usage_by_activity($uniqueid);
+                $qa_obj = $quba->get_question_attempt($slot);
+
+                foreach ($question->question_items_instance as $idx => $subq) {
+                    if ($subq === null || $subq->get_type_name() === 'description') {
+                        continue;
+                    }
+                    $type = $subq->get_type_name();
+                    if ($type === 'recordrtc' || $type === 'essay') {
+                        // If student did not answer this subquestion, default to 0 and do not require manual grading.
+                        if (!$question->has_subquestion_response($qa_obj, $idx)) {
+                            if (!isset($submarks[$idx])) {
+                                $submarks[$idx] = 0.0;
+                                self::save_step_data($step->id, "submark_$idx", "0");
+                            }
+                            continue;
+                        }
+
+                        $has_manual = true;
+                        if (!isset($submarks[$idx]) || $submarks[$idx] === '' || $submarks[$idx] === null) {
+                            $all_manual_graded = false;
+                            break;
+                        }
+                    }
+                }
+
+                $table = $is_thquiz ? 'thquiz_attempts' : 'quiz_attempts';
+
+                if ($has_manual && !$all_manual_graded) {
+                    // Still waiting for remaining answered subquestions to be graded.
+                    $DB->set_field('question_attempt_steps', 'state', 'needsgrading', ['id' => $step->id]);
+                    $DB->set_field('question_attempt_steps', 'fraction', null, ['id' => $step->id]);
+                    $DB->set_field('question_attempts', 'fraction', null, ['id' => $qa->id]);
+                    $DB->set_field($table, 'sumgrades', null, ['id' => $attemptid]);
+                } else if ($has_manual && $all_manual_graded) {
+                    // All answered manual subquestions are graded. Ensure total fraction and sumgrades are set.
+                    $cur_fraction = $DB->get_field('question_attempt_steps', 'fraction', ['id' => $step->id]);
+                    if ($cur_fraction === null) {
+                        $total_mark = 0;
+                        $max_mark = (float)$question->defaultmark;
+
+                        foreach ($question->question_items_instance as $idx => $subq) {
+                            if ($subq === null || $subq->get_type_name() === 'description') {
+                                continue;
+                            }
+                            $type = $subq->get_type_name();
+                            if ($type === 'recordrtc' || $type === 'essay') {
+                                $total_mark += (float)($submarks[$idx] ?? 0);
+                            } else {
+                                $subfrac = $question->get_subquestion_fraction($qa_obj, $idx);
+                                if ($subfrac !== null) {
+                                    $total_mark += $subfrac * (float)$subq->defaultmark;
+                                }
+                            }
+                        }
+
+                        $frac = $max_mark > 0 ? min(max(0.0, $total_mark / $max_mark), 1.0) : 0.0;
+                        $state = question_state::manually_graded_state_for_fraction($frac);
+
+                        $DB->set_field('question_attempt_steps', 'state', (string)$state, ['id' => $step->id]);
+                        $DB->set_field('question_attempt_steps', 'fraction', $frac, ['id' => $step->id]);
+                        $DB->set_field('question_attempts', 'fraction', $frac, ['id' => $qa->id]);
+
+                        $quba = question_engine::load_questions_usage_by_activity($uniqueid);
+                        $tot = $quba->get_total_mark();
+                        $DB->set_field($table, 'sumgrades', $tot, ['id' => $attemptid]);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            debugging('Error checking cluster manual grading status: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
     }
 
     protected static function save_step_data($stepid, $name, $value) {
