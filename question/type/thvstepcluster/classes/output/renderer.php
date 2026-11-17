@@ -556,9 +556,7 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			$has_response = $question_original->has_subquestion_response($qa, $key);
 			if (!$has_response) {
 				$statusstr = get_string('subq_notanswered', 'qtype_thvstepcluster');
-				// $marktext = get_string('mark', 'question') . ': 0,00 / ' . format_float($submaxmark, 2);
 				$gradehtml .= html_writer::tag('span', $statusstr, ['class' => 'badge badge-secondary mr-2 py-1 px-2']);
-				$gradehtml .= html_writer::tag('span', $marktext, ['class' => 'subq-mark-badge font-weight-bold text-muted']);
 			} else if ($submark !== null) {
 				$icon = '';
 				if ($options->correctness) {
@@ -570,6 +568,7 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			} else if ($substate == question_state::$needsgrading) {
 				$isneedsgrading = true;
 				$statusstr = get_string('subq_needsgrading', 'qtype_thvstepcluster');
+				$maxmarkstr = get_string('subq_maxmark', 'qtype_thvstepcluster', format_float($submaxmark, 2));
 				$gradehtml .= html_writer::tag('span', $statusstr, ['class' => 'badge badge-secondary mr-2 py-1 px-2']);
 				$gradehtml .= html_writer::tag('span', $maxmarkstr, ['class' => 'subq-mark-badge font-weight-bold text-muted']);
 			}
@@ -632,10 +631,10 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		$output = '';
 
 		if ($options->manualcomment == question_display_options::EDITABLE) {
-			$output .= html_writer::start_div('cluster-subquestions-grading card mb-3 border-info');
+			$output .= html_writer::start_div('cluster-subquestions-grading card mb-3');
 			$output .= html_writer::tag('div',
-				html_writer::tag('h5', 'Chấm điểm chi tiết từng câu hỏi trong cụm', ['class' => 'm-0 font-weight-bold']),
-				['class' => 'card-header bg-info text-white py-2']
+				html_writer::tag('h6', 'Chấm điểm chi tiết từng câu hỏi trong cụm', ['class' => 'm-0 font-weight-bold text-dark']),
+				['class' => 'card-header bg-light py-2']
 			);
 			$output .= html_writer::start_div('card-body p-3');
 
@@ -776,7 +775,6 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 
 						var grandTotal = totalManual + totalAuto;
 
-						
 						syncPayload();
 					}
 

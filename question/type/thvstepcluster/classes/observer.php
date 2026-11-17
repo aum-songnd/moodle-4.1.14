@@ -236,7 +236,9 @@ class qtype_thvstepcluster_observer {
             if (preg_match('/submark_(\d+)$/', $key, $m)) {
                 $idx = (int)$m[1];
                 if ($val !== '' && $val !== null) {
-                    $submarks[$idx] = (float)$val;
+                    $submarks[$idx] = (float)str_replace(',', '.', (string)$val);
+                } else {
+                    $submarks[$idx] = null;
                 }
             } else if (preg_match('/subcomment_(\d+)$/', $key, $m)) {
                 $idx = (int)$m[1];
@@ -257,10 +259,10 @@ class qtype_thvstepcluster_observer {
             if (is_array($subdata)) {
                 foreach ($subdata as $idx => $item) {
                     $idx = (int)$idx;
-                    if (!isset($submarks[$idx]) && isset($item['mark']) && $item['mark'] !== '' && $item['mark'] !== null) {
+                    if (!array_key_exists($idx, $submarks) && isset($item['mark']) && $item['mark'] !== '' && $item['mark'] !== null) {
                         $submarks[$idx] = (float)$item['mark'];
                     }
-                    if (!isset($subcomments[$idx]) && isset($item['comment'])) {
+                    if (!array_key_exists($idx, $subcomments) && isset($item['comment'])) {
                         $subcomments[$idx] = (string)$item['comment'];
                     }
                 }
@@ -269,7 +271,7 @@ class qtype_thvstepcluster_observer {
 
         // Save into question_attempt_step_data
         foreach ($submarks as $idx => $markval) {
-            self::save_step_data($step->id, "submark_$idx", (string)$markval);
+            self::save_step_data($step->id, "submark_$idx", ($markval !== null && $markval !== '') ? (string)$markval : '');
         }
         foreach ($subcomments as $idx => $commentval) {
             self::save_step_data($step->id, "subcomment_$idx", $commentval);
@@ -282,6 +284,8 @@ class qtype_thvstepcluster_observer {
         // the attempt step and question attempt state must remain needsgrading,
         // and the total mark / fraction must be null (not finalized).
         try {
+            global $CFG;
+            require_once($CFG->libdir . '/questionlib.php');
             $question = question_bank::load_question($questionid);
             if ($question && !empty($question->question_items_instance)) {
                 $has_manual = false;
@@ -307,7 +311,6 @@ class qtype_thvstepcluster_observer {
                         $has_manual = true;
                         if (!isset($submarks[$idx]) || $submarks[$idx] === '' || $submarks[$idx] === null) {
                             $all_manual_graded = false;
-                            break;
                         }
                     }
                 }
@@ -318,40 +321,73 @@ class qtype_thvstepcluster_observer {
                     // Still waiting for remaining answered subquestions to be graded.
                     $DB->set_field('question_attempt_steps', 'state', 'needsgrading', ['id' => $step->id]);
                     $DB->set_field('question_attempt_steps', 'fraction', null, ['id' => $step->id]);
-                    $DB->set_field('question_attempts', 'fraction', null, ['id' => $qa->id]);
+                    self::save_step_data($step->id, '-mark', '');
                     $DB->set_field($table, 'sumgrades', null, ['id' => $attemptid]);
-                } else if ($has_manual && $all_manual_graded) {
-                    // All answered manual subquestions are graded. Ensure total fraction and sumgrades are set.
-                    $cur_fraction = $DB->get_field('question_attempt_steps', 'fraction', ['id' => $step->id]);
-                    if ($cur_fraction === null) {
-                        $total_mark = 0;
-                        $max_mark = (float)$question->defaultmark;
 
-                        foreach ($question->question_items_instance as $idx => $subq) {
-                            if ($subq === null || $subq->get_type_name() === 'description') {
-                                continue;
+                    $attemptrec = $DB->get_record($table, ['id' => $attemptid]);
+                    if ($attemptrec) {
+                        global $CFG;
+                        if ($is_thquiz) {
+                            require_once($CFG->dirroot . '/mod/thquiz/locallib.php');
+                            $quiz = $DB->get_record('thquiz', ['id' => $attemptrec->thquiz]);
+                            if ($quiz) {
+                                thquiz_save_best_grade($quiz, $attemptrec->userid);
                             }
-                            $type = $subq->get_type_name();
-                            if ($type === 'recordrtc' || $type === 'essay') {
-                                $total_mark += (float)($submarks[$idx] ?? 0);
-                            } else {
-                                $subfrac = $question->get_subquestion_fraction($qa_obj, $idx);
-                                if ($subfrac !== null) {
-                                    $total_mark += $subfrac * (float)$subq->defaultmark;
-                                }
+                        } else {
+                            require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+                            $quiz = $DB->get_record('quiz', ['id' => $attemptrec->quiz]);
+                            if ($quiz) {
+                                quiz_save_best_grade($quiz, $attemptrec->userid);
                             }
                         }
+                    }
+                } else if ($has_manual && $all_manual_graded) {
+                    // All answered manual subquestions are graded. Ensure total fraction and sumgrades are set.
+                    $total_mark = 0;
+                    $max_mark = (float)$question->defaultmark;
 
-                        $frac = $max_mark > 0 ? min(max(0.0, $total_mark / $max_mark), 1.0) : 0.0;
-                        $state = question_state::manually_graded_state_for_fraction($frac);
+                    foreach ($question->question_items_instance as $idx => $subq) {
+                        if ($subq === null || $subq->get_type_name() === 'description') {
+                            continue;
+                        }
+                        $type = $subq->get_type_name();
+                        if ($type === 'recordrtc' || $type === 'essay') {
+                            $total_mark += (float)($submarks[$idx] ?? 0);
+                        } else {
+                            $subfrac = $question->get_subquestion_fraction($qa_obj, $idx);
+                            if ($subfrac !== null) {
+                                $total_mark += $subfrac * (float)$subq->defaultmark;
+                            }
+                        }
+                    }
 
-                        $DB->set_field('question_attempt_steps', 'state', (string)$state, ['id' => $step->id]);
-                        $DB->set_field('question_attempt_steps', 'fraction', $frac, ['id' => $step->id]);
-                        $DB->set_field('question_attempts', 'fraction', $frac, ['id' => $qa->id]);
+                    $frac = $max_mark > 0 ? min(max(0.0, $total_mark / $max_mark), 1.0) : 0.0;
+                    $state = question_state::manually_graded_state_for_fraction($frac);
 
-                        $quba = question_engine::load_questions_usage_by_activity($uniqueid);
-                        $tot = $quba->get_total_mark();
-                        $DB->set_field($table, 'sumgrades', $tot, ['id' => $attemptid]);
+                    $DB->set_field('question_attempt_steps', 'state', (string)$state, ['id' => $step->id]);
+                    $DB->set_field('question_attempt_steps', 'fraction', $frac, ['id' => $step->id]);
+                    self::save_step_data($step->id, '-mark', format_float($total_mark, 2));
+
+                    $quba = question_engine::load_questions_usage_by_activity($uniqueid);
+                    $tot = $quba->get_total_mark();
+                    $DB->set_field($table, 'sumgrades', $tot, ['id' => $attemptid]);
+
+                    $attemptrec = $DB->get_record($table, ['id' => $attemptid]);
+                    if ($attemptrec) {
+                        global $CFG;
+                        if ($is_thquiz) {
+                            require_once($CFG->dirroot . '/mod/thquiz/locallib.php');
+                            $quiz = $DB->get_record('thquiz', ['id' => $attemptrec->thquiz]);
+                            if ($quiz) {
+                                thquiz_save_best_grade($quiz, $attemptrec->userid);
+                            }
+                        } else {
+                            require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+                            $quiz = $DB->get_record('quiz', ['id' => $attemptrec->quiz]);
+                            if ($quiz) {
+                                quiz_save_best_grade($quiz, $attemptrec->userid);
+                            }
+                        }
                     }
                 }
             }

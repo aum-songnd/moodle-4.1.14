@@ -1071,19 +1071,24 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 					if ($val !== '' && $val !== null) {
 						return (float)$val;
 					}
+					return null;
 				}
 				if ($step->has_behaviour_var("submark_$key")) {
 					$val = $step->get_behaviour_var("submark_$key");
 					if ($val !== '' && $val !== null) {
 						return (float)$val;
 					}
+					return null;
 				}
 				if ($step->has_behaviour_var('comment')) {
 					$c = (string)$step->get_behaviour_var('comment');
 					if (preg_match('/<!--TH_CLUSTER_SUBGRADES:(.*?)-->/s', $c, $m)) {
 						$subdata = json_decode($m[1], true);
-						if (isset($subdata[$key]['mark']) && $subdata[$key]['mark'] !== '' && $subdata[$key]['mark'] !== null) {
-							return (float)$subdata[$key]['mark'];
+						if (is_array($subdata) && array_key_exists($key, $subdata)) {
+							if (isset($subdata[$key]['mark']) && $subdata[$key]['mark'] !== '' && $subdata[$key]['mark'] !== null) {
+								return (float)$subdata[$key]['mark'];
+							}
+							return null;
 						}
 					}
 				}
@@ -1337,8 +1342,8 @@ class qtype_thvstepcluster_question extends question_graded_automatically {
 				$c = (string)$step->get_behaviour_var('comment');
 				if (preg_match('/<!--TH_CLUSTER_SUBGRADES:(.*?)-->/s', $c, $m)) {
 					$subdata = json_decode($m[1], true);
-					if (isset($subdata[$key]['comment'])) {
-						return (string)$subdata[$key]['comment'];
+					if (is_array($subdata) && array_key_exists($key, $subdata)) {
+						return isset($subdata[$key]['comment']) ? (string)$subdata[$key]['comment'] : '';
 					}
 				}
 			}
