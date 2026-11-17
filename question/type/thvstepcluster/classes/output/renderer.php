@@ -568,9 +568,7 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 			} else if ($substate == question_state::$needsgrading) {
 				$isneedsgrading = true;
 				$statusstr = get_string('subq_needsgrading', 'qtype_thvstepcluster');
-				$maxmarkstr = get_string('subq_maxmark', 'qtype_thvstepcluster', format_float($submaxmark, 2));
 				$gradehtml .= html_writer::tag('span', $statusstr, ['class' => 'badge badge-secondary mr-2 py-1 px-2']);
-				$gradehtml .= html_writer::tag('span', $maxmarkstr, ['class' => 'subq-mark-badge font-weight-bold text-muted']);
 			}
 		}
 
@@ -631,15 +629,25 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 		$output = '';
 
 		if ($options->manualcomment == question_display_options::EDITABLE) {
-			$output .= html_writer::start_div('cluster-subquestions-grading card mb-3');
+			$maxmark = (float)$qa->get_max_mark();
+			$maxmark_formatted = format_float($maxmark, 2);
+			$decsep = get_string('decsep', 'langconfig');
+			$sample_obj = (object)['mark' => '{MARK}', 'max' => $maxmark_formatted];
+			$gradetemplate = get_string('markoutofmax', 'question', $sample_obj);
+			$gradetemplate_pending = get_string('markedoutofmax', 'question', $maxmark_formatted);
+
+			$output .= html_writer::start_div('cluster-subquestions-grading card mb-3', [
+				'data-maxmark' => $maxmark,
+				'data-maxmark-formatted' => $maxmark_formatted,
+				'data-decsep' => $decsep,
+				'data-grade-template' => $gradetemplate,
+				'data-grade-pending' => $gradetemplate_pending,
+			]);
 			$output .= html_writer::tag('div',
 				html_writer::tag('h6', 'Chấm điểm chi tiết từng câu hỏi trong cụm', ['class' => 'm-0 font-weight-bold text-dark']),
 				['class' => 'card-header bg-light py-2']
 			);
 			$output .= html_writer::start_div('card-body p-3');
-
-
-			$output .= html_writer::div('', 'cluster-grading-status-msg mb-3');
 
 			foreach ($summary as $key => $item) {
 				$subq_num = $key + 1;
@@ -727,108 +735,149 @@ class qtype_thvstepcluster_renderer extends qtype_renderer {
 				$output .= html_writer::end_div(); // subq-grading-item
 			}
 
-			// Script to auto-calculate sum of submarks into the overall -mark field
+			// Script to auto-calculate sum of submarks into the overall -mark field and header in realtime
 			$script = "
 			<script>
 			(function() {
 				function initClusterGradingAutoSum() {
-					var container = document.querySelector('.cluster-subquestions-grading');
-					if (!container) return;
-					var form = container.closest('form');
-					if (!form) return;
-					var overallMarkInput = form.querySelector('input[name$=\"-mark\"]:not([name*=\"submark\"])');
-					var submarkInputs = container.querySelectorAll('.cluster-submark-input');
-					var autoMarks = container.querySelectorAll('.cluster-automark-val');
-					var subcommentInputs = container.querySelectorAll('.cluster-subcomment-input');
-					var statusEl = container.querySelector('.cluster-grading-status-msg');
+					var containers = document.querySelectorAll('.cluster-subquestions-grading');
+					if (!containers.length) return;
 
-					if (overallMarkInput) {
-						overallMarkInput.readOnly = true;
-					}
+					containers.forEach(function(container) {
+						var form = container.closest('form');
+						if (!form) return;
+						var queEl = container.closest('.que');
+						var gradeEl = queEl ? queEl.querySelector('.info .grade') : null;
+						var overallMarkInput = form.querySelector('input[name$=\"-mark\"]:not([name*=\"submark\"])');
+						var submarkInputs = container.querySelectorAll('.cluster-submark-input');
+						var autoMarks = container.querySelectorAll('.cluster-automark-val');
+						var subcommentInputs = container.querySelectorAll('.cluster-subcomment-input');
 
-					function recalc() {
-						var totalManual = 0;
-						var allManualFilled = true;
-						var manualCount = submarkInputs.length;
+						var maxMarkFormatted = container.getAttribute('data-maxmark-formatted') || '3,00';
+						var gradeTemplate = container.getAttribute('data-grade-template') || ('Đạt điểm {MARK} trên ' + maxMarkFormatted);
+						var gradeTemplatePending = container.getAttribute('data-grade-pending') || ('Đạt điểm ' + maxMarkFormatted);
+						var decsep = container.getAttribute('data-decsep') || ',';
 
-						submarkInputs.forEach(function(inp) {
-							var rawVal = inp.value.trim();
-							if (rawVal === '') {
-								allManualFilled = false;
-							} else {
-								var v = parseFloat(rawVal);
-								if (!isNaN(v) && v >= 0) {
-									totalManual += v;
-								} else {
+						if (overallMarkInput) {
+							overallMarkInput.readOnly = true;
+						}
+
+						// Detect original template in gradeEl if available to preserve exact wording
+						if (gradeEl) {
+							var origText = gradeEl.textContent.trim();
+							var m = origText.match(/^([^\\d]*)([\\d,\\.]+)(\\s+(?:trên|out of)\\s+[\\d,\\.]+.*)$/i);
+							if (m) {
+								gradeTemplate = m[1] + '{MARK}' + m[3];
+							}
+						}
+
+						function formatScore(val) {
+							return val.toFixed(2).replace('.', decsep);
+						}
+
+						function recalc() {
+							var totalManual = 0;
+							var allManualFilled = true;
+							var manualCount = submarkInputs.length;
+
+							submarkInputs.forEach(function(inp) {
+								var rawVal = inp.value.trim().replace(',', '.');
+								if (rawVal === '') {
 									allManualFilled = false;
+								} else {
+									var v = parseFloat(rawVal);
+									if (!isNaN(v) && v >= 0) {
+										totalManual += v;
+									} else {
+										allManualFilled = false;
+									}
+								}
+							});
+
+							var totalAuto = 0;
+							autoMarks.forEach(function(inp) {
+								var v = parseFloat(inp.value);
+								if (!isNaN(v)) {
+									totalAuto += v;
+								}
+							});
+
+							var grandTotal = totalManual + totalAuto;
+
+							if (manualCount === 0 || allManualFilled) {
+								var formattedScore = formatScore(grandTotal);
+								if (overallMarkInput) {
+									overallMarkInput.value = formattedScore;
+								}
+								if (gradeEl) {
+									gradeEl.textContent = gradeTemplate.replace('{MARK}', formattedScore);
+								}
+							} else {
+								if (overallMarkInput) {
+									overallMarkInput.value = '';
+								}
+								if (gradeEl) {
+									gradeEl.textContent = gradeTemplatePending;
 								}
 							}
-						});
 
-						var totalAuto = 0;
-						autoMarks.forEach(function(inp) {
-							var v = parseFloat(inp.value);
-							if (!isNaN(v)) {
-								totalAuto += v;
-							}
-						});
+							syncPayload();
+						}
 
-						var grandTotal = totalManual + totalAuto;
-
-						syncPayload();
-					}
-
-					function syncPayload() {
-						var payload = {};
-						var hasAny = false;
-						submarkInputs.forEach(function(inp) {
-							var subq = inp.getAttribute('data-subq');
-							if (!payload[subq]) payload[subq] = {};
-							if (inp.value !== '') {
-								payload[subq].mark = parseFloat(inp.value);
-								hasAny = true;
-							}
-						});
-						var unansweredInputs = container.querySelectorAll('.cluster-submark-unanswered');
-						unansweredInputs.forEach(function(inp) {
-							var subq = inp.getAttribute('data-subq');
-							if (!payload[subq]) payload[subq] = {};
-							payload[subq].mark = 0;
-							hasAny = true;
-						});
-						subcommentInputs.forEach(function(cinp) {
-							var subq = cinp.getAttribute('data-subq');
-							if (subq !== null && subq !== '') {
+						function syncPayload() {
+							var payload = {};
+							var hasAny = false;
+							submarkInputs.forEach(function(inp) {
+								var subq = inp.getAttribute('data-subq');
 								if (!payload[subq]) payload[subq] = {};
-								if (cinp.value !== '') {
-									payload[subq].comment = cinp.value;
+								var v = inp.value.trim().replace(',', '.');
+								if (v !== '') {
+									payload[subq].mark = parseFloat(v);
 									hasAny = true;
 								}
+							});
+							var unansweredInputs = container.querySelectorAll('.cluster-submark-unanswered');
+							unansweredInputs.forEach(function(inp) {
+								var subq = inp.getAttribute('data-subq');
+								if (!payload[subq]) payload[subq] = {};
+								payload[subq].mark = 0;
+								hasAny = true;
+							});
+							subcommentInputs.forEach(function(cinp) {
+								var subq = cinp.getAttribute('data-subq');
+								if (subq !== null && subq !== '') {
+									if (!payload[subq]) payload[subq] = {};
+									if (cinp.value !== '') {
+										payload[subq].comment = cinp.value;
+										hasAny = true;
+									}
+								}
+							});
+
+							var commentTextarea = form.querySelector('textarea[name$=\"-comment\"]');
+							if (commentTextarea && hasAny) {
+								var curVal = commentTextarea.value.replace(/<!--TH_CLUSTER_SUBGRADES:.*?-->/s, '').trim();
+								var tag = '<!--TH_CLUSTER_SUBGRADES:' + JSON.stringify(payload) + '-->';
+								commentTextarea.value = curVal ? (curVal + ' ' + tag) : tag;
 							}
+						}
+
+						submarkInputs.forEach(function(inp) {
+							inp.addEventListener('input', recalc);
+							inp.addEventListener('change', recalc);
+							inp.addEventListener('keyup', recalc);
+						});
+						subcommentInputs.forEach(function(inp) {
+							inp.addEventListener('input', syncPayload);
+							inp.addEventListener('change', syncPayload);
+						});
+						form.addEventListener('submit', function() {
+							recalc();
+							syncPayload();
 						});
 
-						var commentTextarea = form.querySelector('textarea[name$=\"-comment\"]');
-						if (commentTextarea && hasAny) {
-							var curVal = commentTextarea.value.replace(/<!--TH_CLUSTER_SUBGRADES:.*?-->/s, '').trim();
-							var tag = '<!--TH_CLUSTER_SUBGRADES:' + JSON.stringify(payload) + '-->';
-							commentTextarea.value = curVal ? (curVal + ' ' + tag) : tag;
-						}
-					}
-
-					submarkInputs.forEach(function(inp) {
-						inp.addEventListener('input', recalc);
-						inp.addEventListener('change', recalc);
-					});
-					subcommentInputs.forEach(function(inp) {
-						inp.addEventListener('input', syncPayload);
-						inp.addEventListener('change', syncPayload);
-					});
-					form.addEventListener('submit', function() {
 						recalc();
-						syncPayload();
 					});
-
-					recalc();
 				}
 				if (document.readyState === 'loading') {
 					document.addEventListener('DOMContentLoaded', initClusterGradingAutoSum);

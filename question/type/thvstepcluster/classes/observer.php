@@ -322,6 +322,7 @@ class qtype_thvstepcluster_observer {
                     $DB->set_field('question_attempt_steps', 'state', 'needsgrading', ['id' => $step->id]);
                     $DB->set_field('question_attempt_steps', 'fraction', null, ['id' => $step->id]);
                     self::save_step_data($step->id, '-mark', '');
+                    self::save_step_data($step->id, '-maxmark', (string)$question->defaultmark);
                     $DB->set_field($table, 'sumgrades', null, ['id' => $attemptid]);
 
                     $attemptrec = $DB->get_record($table, ['id' => $attemptid]);
@@ -367,6 +368,7 @@ class qtype_thvstepcluster_observer {
                     $DB->set_field('question_attempt_steps', 'state', (string)$state, ['id' => $step->id]);
                     $DB->set_field('question_attempt_steps', 'fraction', $frac, ['id' => $step->id]);
                     self::save_step_data($step->id, '-mark', format_float($total_mark, 2));
+                    self::save_step_data($step->id, '-maxmark', (string)$max_mark);
 
                     $quba = question_engine::load_questions_usage_by_activity($uniqueid);
                     $tot = $quba->get_total_mark();
