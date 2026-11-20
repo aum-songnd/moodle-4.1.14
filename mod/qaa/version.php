@@ -28,7 +28,7 @@ $plugin->component = 'mod_qaa';
 $plugin->release = '1.98.9';
 // $plugin->incompatible = 36;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->version = 2026112000; // YYYYMMDDXX (year, month, day, 24-hr time)
+$plugin->version = 2026112001; // YYYYMMDDXX (year, month, day, 24-hr time)
 $plugin->dependencies = array(
 	// 'local_thlib' => '2021100000',
 );
