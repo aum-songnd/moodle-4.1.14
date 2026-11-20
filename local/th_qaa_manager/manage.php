@@ -216,6 +216,7 @@ if ((int)$status === STATUS_QAA_MANAGE) {
             'incomplete' => get_string('filter_status_incomplete', 'local_th_qaa_manager'),
             'answered' => get_string('status_unapproved_short', 'local_th_qaa_manager'),
             'assigned' => get_string('status_assigned', 'local_th_qaa_manager'),
+            'rejected' => get_string('approval_status_rejected', 'local_th_qaa_manager'),
             'recalled' => get_string('status_recalled', 'local_th_qaa_manager'),
         ],
     ]);
@@ -745,6 +746,9 @@ if ($download === 'excel') {
         } else if ($filter_status === 'assigned') {
             $whereclauses[] = 't.status = :status_assigned';
             $params['status_assigned'] = ticket_service::STATUS_ASSIGNED;
+        } else if ($filter_status === 'rejected') {
+            $whereclauses[] = 't.status = :status_rejected';
+            $params['status_rejected'] = ticket_service::STATUS_ANSWER_REJECTED;
         } else if ($filter_status === 'recalled') {
             $whereclauses[] = '(t.status = :status_recalled OR t.id IN (SELECT ticketid FROM {local_th_qaa_assign_history} WHERE recalltype IN (1, 2)))';
             $params['status_recalled'] = ticket_service::STATUS_RECALLED;
@@ -1486,6 +1490,9 @@ if ((int)$status === ticket_service::STATUS_NEW) {
         } else if ($filter_status === 'assigned') {
             $whereclauses[] = 't.status = :status_assigned';
             $params['status_assigned'] = ticket_service::STATUS_ASSIGNED;
+        } else if ($filter_status === 'rejected') {
+            $whereclauses[] = 't.status = :status_rejected';
+            $params['status_rejected'] = ticket_service::STATUS_ANSWER_REJECTED;
         } else if ($filter_status === 'recalled') {
             $whereclauses[] = '(t.status = :status_recalled OR t.id IN (SELECT ticketid FROM {local_th_qaa_assign_history} WHERE recalltype IN (1, 2)))';
             $params['status_recalled'] = ticket_service::STATUS_RECALLED;

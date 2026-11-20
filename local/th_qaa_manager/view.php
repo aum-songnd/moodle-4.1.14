@@ -269,14 +269,28 @@ if ($ismanager) {
          WHERE t.qaapairid = :qaapairid
       ORDER BY a.id ASC", ['qaapairid' => $ticket->qaapairid]);
 
+    $answercount = count($answers);
+    $idx = 1;
     foreach ($answers as $ans) {
         $ctvuser = local_th_qaa_manager_get_user_from_prefix($ans, 'ctv_');
         $ctvname = fullname($ctvuser);
 
-        echo $OUTPUT->heading(
-            get_string('answercolumn', 'local_th_qaa_manager') . ' ' . get_string('from_ctv', 'local_th_qaa_manager', s($ctvname)),
-            4
-        );
+        $badgehtml = '';
+        if ((int)$ans->status === answer_service::STATUS_REJECTED) {
+            $badgehtml = ' ' . html_writer::span(get_string('approval_status_rejected', 'local_th_qaa_manager'), 'badge badge-danger');
+        } else if ((int)$ans->status === answer_service::STATUS_APPROVED) {
+            $badgehtml = ' ' . html_writer::span(get_string('status_approved_short', 'local_th_qaa_manager'), 'badge badge-success');
+        } else if ((int)$ans->status === answer_service::STATUS_SUBMITTED) {
+            $badgehtml = ' ' . html_writer::span(get_string('status_unapproved_short', 'local_th_qaa_manager'), 'badge badge-warning text-dark');
+        }
+
+        $headingtitle = get_string('answercolumn', 'local_th_qaa_manager') . ' ' . get_string('from_ctv', 'local_th_qaa_manager', s($ctvname));
+        if ($answercount > 1) {
+            $headingtitle .= " (Lần {$idx})";
+        }
+        $headingtitle .= $badgehtml;
+
+        echo $OUTPUT->heading($headingtitle, 4);
 
         if ((int)$ans->status === answer_service::STATUS_REJECTED && !empty($ans->rejectreason)) {
             echo $OUTPUT->notification(
@@ -309,8 +323,17 @@ if ($ismanager) {
             ),
             'qaa-manager-answer mb-3'
         );
+        $idx++;
     }
 } else {
+    $ctvanswers = $DB->get_records_sql("
+        SELECT a.*
+          FROM {local_th_qaa_answer} a
+          JOIN {local_th_qaa_ticket} t ON t.id = a.ticketid
+         WHERE t.qaapairid = :qaapairid
+           AND a.userid = :userid
+      ORDER BY a.id ASC", ['qaapairid' => $ticket->qaapairid, 'userid' => $USER->id]);
+
     $shownrejectreason = '';
     if ($latestanswer && (int)$latestanswer->status === answer_service::STATUS_REJECTED && !empty($latestanswer->rejectreason)) {
         $shownrejectreason = $latestanswer->rejectreason;
@@ -322,7 +345,7 @@ if ($ismanager) {
         $shownrejectreason = $previousticket->rejectreason;
     }
 
-    if (!empty($shownrejectreason)) {
+    if (!empty($shownrejectreason) && empty($ctvanswers)) {
         echo $OUTPUT->notification(
             get_string(
                 'answerrejectreason',
@@ -333,32 +356,58 @@ if ($ismanager) {
         );
     }
 
-    if ($latestanswer) {
-        echo $OUTPUT->heading(
-            get_string('answer', 'local_th_qaa_manager'),
-            4
-        );
+    $cidx = 1;
+    $ctvanswercount = count($ctvanswers);
+    foreach ($ctvanswers as $cans) {
+        $badgehtml = '';
+        if ((int)$cans->status === answer_service::STATUS_REJECTED) {
+            $badgehtml = ' ' . html_writer::span(get_string('approval_status_rejected', 'local_th_qaa_manager'), 'badge badge-danger');
+        } else if ((int)$cans->status === answer_service::STATUS_APPROVED) {
+            $badgehtml = ' ' . html_writer::span(get_string('status_approved_short', 'local_th_qaa_manager'), 'badge badge-success');
+        } else if ((int)$cans->status === answer_service::STATUS_SUBMITTED) {
+            $badgehtml = ' ' . html_writer::span(get_string('status_unapproved_short', 'local_th_qaa_manager'), 'badge badge-warning text-dark');
+        }
 
-        $answercontent = file_rewrite_pluginfile_urls(
-            (string)$latestanswer->content,
+        $headingtitle = get_string('answer', 'local_th_qaa_manager');
+        if ($ctvanswercount > 1) {
+            $headingtitle .= " (Lần {$cidx})";
+        }
+        $headingtitle .= $badgehtml;
+
+        echo $OUTPUT->heading($headingtitle, 4);
+
+        if ((int)$cans->status === answer_service::STATUS_REJECTED && !empty($cans->rejectreason)) {
+            echo $OUTPUT->notification(
+                get_string(
+                    'answerrejectreason',
+                    'local_th_qaa_manager',
+                    s($cans->rejectreason)
+                ),
+                \core\output\notification::NOTIFY_WARNING
+            );
+        }
+
+        $canswercontent = file_rewrite_pluginfile_urls(
+            (string)$cans->content,
             'pluginfile.php',
             $context->id,
             'local_th_qaa_manager',
             'answer',
-            $ticket->id
+            $cans->ticketid
         );
 
         echo html_writer::div(
             format_text(
-                $answercontent,
-                (int)$latestanswer->contentformat,
+                $canswercontent,
+                (int)$cans->contentformat,
                 [
                     'context' => $context,
                     'overflowdiv' => true,
                 ]
             ),
-            'qaa-manager-answer'
+            'qaa-manager-answer mb-3'
         );
+        $cidx++;
     }
 }
 
