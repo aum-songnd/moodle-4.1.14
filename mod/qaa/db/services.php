@@ -89,5 +89,20 @@ $functions = array(
 		'capabilities' => 'mod/qaa:deletequest',
 		'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
 	),
-	
+	'mod_qaa_count_questions' => array(
+    'classname' => 'mod_qaa_external',
+    'methodname' => 'count_questions',
+    'description' => 'Count questions in QAA',
+    'type' => 'read',
+    'capabilities' => 'mod/qaa:makequest',
+    'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
+),
+'mod_qaa_view_qaa' => array(
+    'classname' => 'mod_qaa_external',
+    'methodname' => 'view_qaa',
+    'description' => 'Trigger the course module viewed event.',
+    'type' => 'write',
+    'capabilities' => 'mod/qaa:view',
+	'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'),
+),
 );

@@ -157,3 +157,4 @@ $string['edit'] = 'Edit';
 $string['delete'] = 'Delete';
 $string['badge_author'] = 'Author';
 $string['question_close_time'] = 'Q&A closing time';
+$string['nocompany'] = 'You are not assign to any company';

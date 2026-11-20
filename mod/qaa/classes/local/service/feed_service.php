@@ -17,12 +17,12 @@ class feed_service {
     /**
      * @return array
      */
-    public function get_feed_tree(int $qaaid, context_module $context) {
+    public function get_feed_tree(int $qaaid, context_module $context, int $companyid = 0) {
         global $USER;
         $ismanager = has_capability('mod/qaa:approval', $context);
         $records = $ismanager
-            ? $this->repo->get_all_for_manager($qaaid)
-            : $this->repo->get_all_for_student($qaaid, $USER->id);
+            ? $this->repo->get_all_for_manager($qaaid, $companyid)
+            : $this->repo->get_all_for_student($qaaid, $USER->id, $companyid);
 
         // Build tree
         $byid = [];

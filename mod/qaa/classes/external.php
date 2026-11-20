@@ -57,10 +57,40 @@ class mod_qaa_external extends external_api {
 	public static function detailqaa($courseid, $userid, $cmid, $questionid) {
 		global $DB, $CFG, $USER;
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/user/lib.php';   // user_get_user_details()
 		require_once $CFG->libdir . '/weblib.php';      // format_time()
-	
+
+		// Lấy companyid theo người được cấp token
+		$companyid = 0;
+		$where = "";
+		$params = [
+			'courseid' => $courseid,
+			'cmid' => $cmid,
+			'qid' => $questionid,
+		];
+		if (class_exists('iomad')) {
+			$companyid = iomad::get_my_companyid(context_system::instance());
+			if ($companyid > 0) {
+				$where = " AND (
+					EXISTS (
+						SELECT 1 FROM {company_users} cu
+						WHERE cu.userid = COALESCE(qp.studentid, qp.teacherid)
+						  AND cu.companyid = :companyid1
+					)
+					OR EXISTS (
+						SELECT 1 FROM {qaapairs} p
+						JOIN {company_users} cu ON cu.userid = COALESCE(p.studentid, p.teacherid)
+						WHERE p.id = qp.parentid AND cu.companyid = :companyid2
+					)
+				)";
+				$params['companyid1'] = $companyid;
+				$params['companyid2'] = $companyid;
+			}
+		}
+
 		// Lấy bản ghi xuất phát (có thể là root hoặc 1 reply bất kỳ) bằng tham số ràng buộc (chống SQL injection).
 		$sql = "SELECT qp.*
 				  FROM {qaa} q
@@ -69,7 +99,7 @@ class mod_qaa_external extends external_api {
 				 WHERE cm.course = :courseid
 				   AND cm.id     = :cmid
 				   AND qp.id     = :qid";
-		$start = $DB->get_record_sql($sql, ['courseid' => $courseid, 'cmid' => $cmid, 'qid' => $questionid], IGNORE_MISSING);
+		$start = $DB->get_record_sql($sql . $where, $params, IGNORE_MISSING);
 		if (!$start) {
 			// Không tìm thấy bản ghi phù hợp trong activity này.
 			throw new invalid_parameter_exception('Invalid question id / course-module context');
@@ -620,7 +650,9 @@ class mod_qaa_external extends external_api {
 		global $USER, $DB, $CFG, $PAGE;
 	
 		require_once $CFG->dirroot . '/lib/grade/grade_item.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
 		require_once $CFG->dirroot . '/user/lib.php'; // user_get_user_details()
 	
@@ -635,6 +667,13 @@ class mod_qaa_external extends external_api {
 		// Context & quyền
 		$modulecontext = context_module::instance($cmid);
 		$userid        = $USER->id;
+
+		// Lấy companyid theo người được cấp token
+		$companyid = 0;
+		if (class_exists('iomad')) {
+			$companyid = iomad::get_my_companyid(context_system::instance());
+		}
+
 		$canapproval   = has_capability('mod/qaa:approval', $modulecontext, $userid);
 		$approvedstatus = 1;
 	
@@ -645,6 +684,24 @@ class mod_qaa_external extends external_api {
 		$where  = "qp.qaaid = :qaaid AND qp.parentid IS NULL";
 		$params = ['qaaid' => $qaaid];
 	
+		// Chỉ lọc các qaa của những người cùng đơn vị với user (nếu có đơn vị)
+		if ($companyid > 0) {
+			$where .= " AND (
+				EXISTS (
+					SELECT 1 FROM {company_users} cu
+					WHERE cu.userid = COALESCE(qp.studentid, qp.teacherid)
+					  AND cu.companyid = :companyid1
+				)
+				OR EXISTS (
+					SELECT 1 FROM {qaapairs} p
+					JOIN {company_users} cu ON cu.userid = COALESCE(p.studentid, p.teacherid)
+					WHERE p.id = qp.parentid AND cu.companyid = :companyid2
+				)
+			)";
+			$params['companyid1'] = $companyid;
+			$params['companyid2'] = $companyid;
+		}
+
 		// Nếu KHÔNG có quyền duyệt => chỉ xem được:
 		// - câu đã duyệt, hoặc
 		// - câu của chính mình (studentid/teacherid)
@@ -897,7 +954,9 @@ class mod_qaa_external extends external_api {
 		global $USER, $DB, $CFG;
 
 		require_once $CFG->dirroot . '/lib/grade/grade_item.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
 
 		$question = trim($question);
@@ -1028,7 +1087,9 @@ class mod_qaa_external extends external_api {
 
 		require_once($CFG->libdir . '/gradelib.php');
 		require_once $CFG->dirroot . '/lib/grade/grade_item.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
 
 		$question = trim($question);
@@ -1175,7 +1236,9 @@ class mod_qaa_external extends external_api {
 		global $DB, $CFG;
 
 		require_once $CFG->dirroot . '/lib/grade/grade_item.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
 
 		$cm = get_coursemodule_from_id('qaa', $cmid);
@@ -1253,7 +1316,9 @@ class mod_qaa_external extends external_api {
 		global $DB, $CFG;
 		require_once($CFG->libdir . '/gradelib.php');
 		require_once $CFG->dirroot . '/lib/grade/grade_item.php';
-		require_once $CFG->dirroot . '/local/thlib/lib.php';
+		if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+			require_once $CFG->dirroot . '/local/thlib/lib.php';
+		}
 		require_once $CFG->dirroot . '/mod/qaa/lib.php';
 
 		$cm = get_coursemodule_from_id('qaa', $cmid);
@@ -1382,16 +1447,7 @@ class mod_qaa_external extends external_api {
 		self::validate_context($context);
 		require_capability('mod/qaa:view', $context);
 
-		$event = \mod_qaa\event\course_module_viewed::create(array(
-			'objectid' => $qaa->id,
-			'context' => $context,
-		));
-		$event->add_record_snapshot('course', $course);
-		$event->add_record_snapshot('qaa', $qaa);
-		$event->trigger();
-
-		$completion = new completion_info($course);
-		$completion->set_module_viewed($cm);
+		qaa_view($qaa, $course, $cm, $context);
 
 		$result = array();
 		$result['status'] = true;
@@ -1604,5 +1660,23 @@ class mod_qaa_external extends external_api {
 			)
 		);
 	}
-
+	public static function count_questions_parameters() {
+		return new external_function_parameters([
+			'qaaid' => new external_value(PARAM_INT, 'QAA ID'),
+		]);
+	}
+	
+	public static function count_questions($qaaid) {
+		global $DB;
+	
+		$total = $DB->count_records('qaa_questions', ['qaaid' => $qaaid]);
+	
+		return ['total' => $total];
+	}
+	
+	public static function count_questions_returns() {
+		return new external_single_structure([
+			'total' => new external_value(PARAM_INT, 'Total questions'),
+		]);
+	}
 }

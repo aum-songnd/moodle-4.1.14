@@ -27,11 +27,37 @@ $PAGE->set_context($context);
 $PAGE->navbar->add(get_string('modulename', 'mod_qaa'), new moodle_url('/mod/qaa/view.php', ['id'=>$cm->id]));
 $PAGE->navbar->add(get_string('approval', 'mod_qaa'));
 
+// Lấy companyid của người dùng hiện tại (nếu dùng IOMAD)
+$companyid = 0;
+if (class_exists('iomad')) {
+    $companyid = iomad::get_my_companyid(context_system::instance(), false);
+}
+
 echo $OUTPUT->header();
 
 /** ========= CASE: mở form approve/reject cho 1 câu ========= */
 if ($questionid && in_array($action, ['approve', 'reject'], true)) {
-    $root = $DB->get_record('qaapairs', ['id'=>$questionid, 'qaaid'=>$cm->instance], '*', MUST_EXIST);
+    $compwhere = "";
+    $sqlparams = [
+        'questionid' => $questionid,
+        'qaaid' => $cm->instance,
+    ];
+    if ($companyid > 0) {
+        $compwhere = " AND EXISTS (
+            SELECT 1
+              FROM {company_users} cu
+             WHERE cu.userid = COALESCE(r.studentid, r.teacherid)
+               AND cu.companyid = :companyid
+        )";
+        $sqlparams['companyid'] = $companyid;
+    }
+
+    $sql = "SELECT r.*
+          FROM {qaapairs} r
+         WHERE r.id = :questionid
+           AND r.qaaid = :qaaid
+           {$compwhere}";
+    $root = $DB->get_record_sql($sql, $sqlparams, MUST_EXIST);
 
     $mform = new \mod_qaa\form\approval_form(
         new moodle_url('/mod/qaa/approval.php', ['id'=>$cm->id, 'action'=>$action, 'questionid'=>$questionid]),
@@ -74,10 +100,24 @@ $page    = optional_param('page', 0, PARAM_INT); // Trang hiện tại (0-based)
 $baseurl = new moodle_url('/mod/qaa/approval.php', ['id' => $cm->id]);
 
 // Tổng số bản ghi pending.
-$totalpending = $DB->count_records('qaapairs', [
-    'qaaid'  => $cm->instance,
-    'status' => 0,
-]);
+$compwhere = "";
+$countparams = ['qaaid' => $cm->instance];
+if ($companyid > 0) {
+    $compwhere = " AND EXISTS (
+        SELECT 1
+          FROM {company_users} cu
+         WHERE cu.userid = COALESCE(r.studentid, r.teacherid)
+           AND cu.companyid = :companyid
+    )";
+    $countparams['companyid'] = $companyid;
+}
+
+$countsql = "SELECT COUNT(1)
+               FROM {qaapairs} r
+              WHERE r.qaaid = :qaaid
+                AND r.status = 0
+                {$compwhere}";
+$totalpending = $DB->count_records_sql($countsql, $countparams);
 
 if (!$totalpending) {
     echo $OUTPUT->notification(get_string('nothingtodisplay', 'moodle'), 'notifymessage');
@@ -89,14 +129,15 @@ if (!$totalpending) {
 
 // SQL lấy dữ liệu theo trang.
 $sql = "SELECT r.*
-          FROM {qaapairs} r
-         WHERE r.qaaid = :qaaid
+        FROM {qaapairs} r
+        WHERE r.qaaid = :qaaid
            AND r.status = 0
-      ORDER BY r.id DESC";
+           {$compwhere}
+        ORDER BY r.id DESC";
 
 $pending = $DB->get_records_sql(
     $sql,
-    ['qaaid' => $cm->instance],
+    $countparams,
     $page * $perpage, // limitfrom
     $perpage          // limitnum
 );

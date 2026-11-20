@@ -25,21 +25,21 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'TH Hỏi & Đáp';
-$string['modulename'] = 'Hỏi & Đáp';
-$string['modulenameplural'] = 'Danh sách Hỏi & Đáp';
+$string['pluginname'] = 'TH Hỏi và Đáp';
+$string['modulename'] = 'Hỏi và Đáp';
+$string['modulenameplural'] = 'Danh sách Hỏi và Đáp';
 
-$string['qaa:addinstance'] = 'Thêm một hoạt động Hỏi & Đáp mới';
-$string['qaa:view'] = 'Xem Hỏi & Đáp';
-$string['qaa:deletequest'] = 'Xoá câu hỏi trong Hỏi & Đáp';
-$string['qaa:approval'] = 'Phê duyệt câu hỏi trong Hỏi & Đáp';
+$string['qaa:addinstance'] = 'Thêm một hoạt động Hỏi và Đáp mới';
+$string['qaa:view'] = 'Xem Hỏi và Đáp';
+$string['qaa:deletequest'] = 'Xoá câu hỏi trong Hỏi và Đáp';
+$string['qaa:approval'] = 'Phê duyệt câu hỏi trong Hỏi và Đáp';
 $string['qaa:makequest'] = 'Tạo câu hỏi';
 $string['qaa:manage'] = 'Quản lý hỏi đáp';
 
-$string['pluginadministration'] = 'Quản lý Hỏi & Đáp';
+$string['pluginadministration'] = 'Quản lý Hỏi và Đáp';
 
 $string['qaname'] = 'Tên hoạt động';
-$string['qaname_help'] = 'Tên của hoạt động Hỏi & Đáp.';
+$string['qaname_help'] = 'Tên của hoạt động Hỏi và Đáp.';
 
 $string['addquestion'] = 'Thêm câu hỏi mới';
 $string['addanswer'] = 'Thêm câu trả lời';
@@ -64,11 +64,11 @@ $string['week'] = 'Tuần: {$a->weekbegin_humandate} → {$a->weekend_humandate}
 $string['strftimedaydate'] = '%A, %d/%m/%Y';
 
 $string['choice'] = 'Lựa chọn';
-$string['qaasaved'] = 'Đã lưu Hỏi & Đáp';
+$string['qaasaved'] = 'Đã lưu Hỏi và Đáp';
 $string['members/'] = 'Thành viên';
 $string['members/max'] = 'Thành viên / Sức chứa';
 $string['removemyqaa'] = 'Xoá khỏi danh sách';
-$string['savemyqaa'] = 'Lưu Hỏi & Đáp';
+$string['savemyqaa'] = 'Lưu Hỏi và Đáp';
 $string['postincontext'] = 'Xem bài viết trong ngữ cảnh';
 $string['mailsubject'] = '{$a->coursname}: {$a->type} - {$a->subject}';
 $string['delete_question'] = 'Xoá câu hỏi này';
@@ -85,14 +85,14 @@ $string['event_qaapairs_deleted'] = 'Câu hỏi đã bị xoá';
 $string['event_qaapairs_answered'] = 'Câu hỏi đã được trả lời';
 $string['event_qaapairs_answer_edited'] = 'Câu trả lời đã được chỉnh sửa';
 $string['event_qaapairs_question_edited'] = 'Câu hỏi đã được chỉnh sửa';
-$string['event_qaapairs_viewed'] = 'Đã xem Hỏi & Đáp';
+$string['event_qaapairs_viewed'] = 'Đã xem Hỏi và Đáp';
 
 $string['submitnewquestion'] = 'Gửi câu hỏi mới';
 $string['submitnewanswer'] = 'Gửi câu trả lời mới';
 $string['placeholderquestion'] = 'Nhập câu hỏi mới...';
 $string['placeholderanswer'] = 'Nhập câu trả lời...';
 
-$string['monitoremailaddress'] = 'Địa chỉ email giám sát Hỏi & Đáp';
+$string['monitoremailaddress'] = 'Địa chỉ email giám sát Hỏi và Đáp';
 
 $string['typequestion'] = 'Câu hỏi';
 $string['typequestionedited'] = 'Câu hỏi đã chỉnh sửa';
@@ -108,13 +108,13 @@ $string['limitmaxfilesdesc'] = 'Giới hạn số lượng tệp mà học viên
 $string['limittimecreatequestion'] = 'Giới hạn thời gian tạo câu hỏi';
 $string['des_limittimecreatequestion'] = 'Thời gian giới hạn tạo câu hỏi (giây)';
 
-$string['user_edited_answer'] = 'Người dùng có ID {$a->userid} đã chỉnh sửa câu trả lời có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.';
-$string['user_answered_question'] = 'Người dùng có ID {$a->userid} đã trả lời câu hỏi có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.';
-$string['user_created_question'] = 'Người dùng có ID {$a->userid} đã tạo câu hỏi có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.<br><b>Khác:</b> {$a->other}';
-$string['user_reject_question'] = 'Người dùng có ID {$a->userid} đã từ chối câu hỏi có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.';
-$string['user_deleted_question'] = 'Người dùng có ID {$a->userid} đã xoá câu hỏi có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.';
-$string['user_edited_question'] = 'Người dùng có ID {$a->userid} đã chỉnh sửa câu hỏi có ID {$a->objectid} trong hoạt động Hỏi & Đáp với module ID {$a->contextinstanceid}.';
-$string['user_viewed_qaa'] = 'Người dùng có ID {$a->userid} đã xem hoạt động Hỏi & Đáp có ID {$a->objectid} trong khoá học với module ID {$a->contextinstanceid}.';
+$string['user_edited_answer'] = 'Người dùng có ID {$a->userid} đã chỉnh sửa câu trả lời có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.';
+$string['user_answered_question'] = 'Người dùng có ID {$a->userid} đã trả lời câu hỏi có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.';
+$string['user_created_question'] = 'Người dùng có ID {$a->userid} đã tạo câu hỏi có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.<br><b>Khác:</b> {$a->other}';
+$string['user_reject_question'] = 'Người dùng có ID {$a->userid} đã từ chối câu hỏi có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.';
+$string['user_deleted_question'] = 'Người dùng có ID {$a->userid} đã xoá câu hỏi có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.';
+$string['user_edited_question'] = 'Người dùng có ID {$a->userid} đã chỉnh sửa câu hỏi có ID {$a->objectid} trong hoạt động Hỏi và Đáp với module ID {$a->contextinstanceid}.';
+$string['user_viewed_qaa'] = 'Người dùng có ID {$a->userid} đã xem hoạt động Hỏi và Đáp có ID {$a->objectid} trong khoá học với module ID {$a->contextinstanceid}.';
 
 $string['runtask'] = 'Tác vụ ad-hoc của tôi đã bắt đầu';
 $string['question_not_exist_or_no_teacher'] = 'Câu hỏi không tồn tại hoặc không có giảng viên.';
@@ -159,3 +159,4 @@ $string['edit'] = 'Chỉnh sửa';
 $string['delete'] = 'Xóa';
 $string['badge_author'] = 'Tác giả';
 $string['question_close_time'] = 'Thời hạn kết thúc hỏi đáp';
+$string['nocompany'] = 'Bạn chưa được gán vào bất kỳ công ty nào';

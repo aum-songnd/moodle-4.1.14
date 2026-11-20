@@ -33,8 +33,8 @@ require_course_login($course);
 
 $coursecontext = context_course::instance($course->id);
 
-$event = \mod_qa\event\course_module_instance_list_viewed::create(array(
-	'context' => $modulecontext,
+$event = \mod_qaa\event\course_module_instance_list_viewed::create(array(
+	'context' => $coursecontext,
 ));
 $event->add_record_snapshot('course', $course);
 $event->trigger();
@@ -46,13 +46,13 @@ $PAGE->set_context($coursecontext);
 
 echo $OUTPUT->header();
 
-$modulenameplural = get_string('modulenameplural', 'mod_qa');
+$modulenameplural = get_string('modulenameplural', 'mod_qaa');
 echo $OUTPUT->heading($modulenameplural);
 
 $qas = get_all_instances_in_course('qaa', $course);
 
 if (empty($qas)) {
-	notice(get_string('nonewmodules', 'mod_qa'), new moodle_url('/course/view.php', array('id' => $course->id)));
+	notice(get_string('nonewmodules', 'mod_qaa'), new moodle_url('/course/view.php', array('id' => $course->id)));
 }
 
 $table = new html_table();

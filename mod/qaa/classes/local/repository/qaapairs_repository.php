@@ -8,25 +8,71 @@ class qaapairs_repository {
     private $db;
     public function __construct(\moodle_database $db) { $this->db = $db; }
 
-    public function get_all_for_manager(int $qaaid): array {
+    public function get_all_for_manager(int $qaaid, int $companyid = 0): array {
+        $wherecompany = '';
+        $params = ['qaaid' => $qaaid];
+
+        if ($companyid > 0) {
+            $wherecompany = "
+                AND (
+                    EXISTS (
+                        SELECT 1 FROM {company_users} cu
+                        WHERE cu.userid = COALESCE(m.studentid, m.teacherid)
+                          AND cu.companyid = :companyid1
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM {qaapairs} p
+                        JOIN {company_users} cu ON cu.userid = COALESCE(p.studentid, p.teacherid)
+                        WHERE p.id = m.parentid AND cu.companyid = :companyid2
+                    )
+                )";
+            $params['companyid1'] = $companyid;
+            $params['companyid2'] = $companyid;
+        }
         $sql = "SELECT m.*,
                       CASE WHEN m.parentid IS NULL THEN m.timecreatedquestion ELSE m.timecreatedanswer END AS dispcreated,
                       CASE WHEN m.parentid IS NULL THEN m.timemodifiedquestion ELSE m.timemodifiedanswer END AS dispmodified
-                  FROM {qaapairs} m
-                WHERE m.qaaid = ?
-              ORDER BY dispcreated ASC";
-        return $this->db->get_records_sql($sql, [$qaaid]);
+                FROM {qaapairs} m
+                WHERE m.qaaid = :qaaid
+                {$wherecompany}
+                ORDER BY dispcreated ASC";
+        return $this->db->get_records_sql($sql, $params);
     }
-    
-    public function get_all_for_student(int $qaaid, int $userid): array {
+
+    public function get_all_for_student(int $qaaid, int $userid, int $companyid = 0): array {
+        $wherecompany = '';
+        $params = [
+            'qaaid' => $qaaid,
+            'userid1' => $userid,
+            'userid2' => $userid,
+        ];
+
+        if ($companyid > 0) {
+            $wherecompany = "
+                AND (
+                    EXISTS (
+                        SELECT 1 FROM {company_users} cu
+                        WHERE cu.userid = COALESCE(m.studentid, m.teacherid)
+                          AND cu.companyid = :companyid1
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM {qaapairs} p
+                        JOIN {company_users} cu ON cu.userid = COALESCE(p.studentid, p.teacherid)
+                        WHERE p.id = m.parentid AND cu.companyid = :companyid2
+                    )
+                )";
+            $params['companyid1'] = $companyid;
+            $params['companyid2'] = $companyid;
+        }
         $sql = "SELECT m.*,
                       CASE WHEN m.parentid IS NULL THEN m.timecreatedquestion ELSE m.timecreatedanswer END AS dispcreated,
                       CASE WHEN m.parentid IS NULL THEN m.timemodifiedquestion ELSE m.timemodifiedanswer END AS dispmodified
                   FROM {qaapairs} m
-                WHERE m.qaaid = ?
-                  AND (m.status = 1 OR m.studentid = ? OR m.teacherid = ?)
+                WHERE m.qaaid = :qaaid
+                  AND (m.status = 1 OR m.studentid = :userid1 OR m.teacherid = :userid2)
+                  {$wherecompany}
               ORDER BY dispcreated ASC";
-        return $this->db->get_records_sql($sql, [$qaaid, $userid, $userid]);
+        return $this->db->get_records_sql($sql, $params);
     }
   
 
@@ -120,12 +166,22 @@ class qaapairs_repository {
     //     return $DB->get_records_sql($sql, $params);
     // }
 
-    public function get_threads_summary(int $qaaid, int $userid, bool $ismanager, int $page, int $perpage): array {
+    public function get_threads_summary(int $qaaid, int $userid, bool $ismanager, int $page, int $perpage, int $companyid = 0): array {
         global $DB;
     
         $wherevisible = $ismanager
             ? '1=1'
             : '(r.status = 1 OR r.studentid = :u1 OR r.teacherid = :u2)';
+        $wherecompany = '';
+        if ($companyid > 0) {
+            $wherecompany = "
+              AND EXISTS (
+                  SELECT 1
+                    FROM {company_users} cu
+                   WHERE cu.userid = COALESCE(r.studentid, r.teacherid)
+                     AND cu.companyid = :companyid
+              )";
+        }
     
         $sql = "
             WITH RECURSIVE all_replies AS (
@@ -167,12 +223,16 @@ class qaapairs_repository {
             WHERE r.qaaid = :qaaid
               AND r.parentid IS NULL
               AND {$wherevisible}
+              {$wherecompany}
             ORDER BY COALESCE(lat.maxtime, r.timecreatedquestion) DESC, r.id DESC
         ";
     
         $params = ['qaaid' => $qaaid];
         if (!$ismanager) {
             $params += ['u1' => $userid, 'u2' => $userid];
+        }
+        if ($companyid > 0) {
+            $params['companyid'] = $companyid;
         }
     
         $limitfrom = $page * $perpage;
@@ -181,21 +241,35 @@ class qaapairs_repository {
         return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
     }
 
-    public function count_threads(int $qaaid, int $userid, bool $ismanager): int {
+    public function count_threads(int $qaaid, int $userid, bool $ismanager, int $companyid = 0): int {
         global $DB;
     
         $wherevisible = $ismanager
             ? '1=1'
             : '(r.status = 1 OR r.studentid = :u1 OR r.teacherid = :u2)';
+        $wherecompany = '';
+        if ($companyid > 0) {
+            $wherecompany = "
+                  AND EXISTS (
+                      SELECT 1
+                        FROM {company_users} cu
+                       WHERE cu.userid = COALESCE(r.studentid, r.teacherid)
+                         AND cu.companyid = :companyid
+                  )";
+        }
     
         $sql = "SELECT COUNT(1)
                 FROM {qaapairs} r
                 WHERE r.qaaid = :qaaid
                   AND r.parentid IS NULL
-                  AND {$wherevisible}";
+                  AND {$wherevisible}
+                  {$wherecompany}";
         $params = ['qaaid' => $qaaid];
         if (!$ismanager) {
             $params += ['u1' => $userid, 'u2' => $userid];
+        }
+        if ($companyid > 0) {
+            $params['companyid'] = $companyid;
         }
         return (int)$DB->count_records_sql($sql, $params);
     }

@@ -1,14 +1,6 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Upgrade script for mod_qaa.
- *
- * @package    mod_qaa
- * @copyright  2025
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 function xmldb_qaa_upgrade($oldversion) {
     global $DB;
 
@@ -26,6 +18,21 @@ function xmldb_qaa_upgrade($oldversion) {
         // Savepoint.
         upgrade_mod_savepoint(true, 2025111701, 'qaa');
     }
-    
+
+    if ($oldversion < 2026071700) {
+        $table = new xmldb_table('qaapairs');
+        $field_status = new xmldb_field('status', XMLDB_TYPE_INTEGER, '2');
+        $field_message = new xmldb_field('message', XMLDB_TYPE_TEXT);
+
+        if (!$dbman->field_exists($table, $field_status)) {
+            $dbman->add_field($table, $field_status);
+        }
+
+        if (!$dbman->field_exists($table, $field_message)) {
+            $dbman->add_field($table, $field_message);
+        }
+
+        upgrade_mod_savepoint(true, 2026071700, 'qaa');
+    }
     return true;
 }

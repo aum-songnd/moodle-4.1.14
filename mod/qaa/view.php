@@ -43,6 +43,15 @@ $redirecturl= optional_param('returnurl', '', PARAM_LOCALURL);
 // Lấy tham số phân trang từ URL.
 $page       = optional_param('page', 0, PARAM_INT);
 
+// Lấy companyid của người dùng hiện tại
+$companyid = 0;
+if (class_exists('iomad')) {
+    $companyid = iomad::get_my_companyid(context_system::instance());
+    if (empty($companyid)) {
+        print_error('nocompany', 'mod_qaa');
+    }
+}
+
 /* ---------------- Load course + cm + instance ---------------- */
 if ($id) {
     $cm = get_coursemodule_from_id('qaa', $id, 0, false, MUST_EXIST);
@@ -65,13 +74,7 @@ $layout = 'list';
 $ismanager = has_capability('mod/qaa:approval', $modulecontext);
 
 /* ---------------- Event: viewed ---------------- */
-$event = \mod_qaa\event\course_module_viewed::create([
-    'objectid' => $moduleinstance->id,
-    'context'  => $modulecontext,
-]);
-$event->add_record_snapshot('course', $course);
-$event->add_record_snapshot('qaa', $moduleinstance);
-$event->trigger();
+qaa_view($moduleinstance, $course, $cm, $modulecontext);
 
 /* ---------------- Page setup ---------------- */
 $params = ['id' => $cm->id];
@@ -230,7 +233,9 @@ if ($canmake) {
             echo html_writer::end_div();
         }
 
-        $PAGE->requires->js_call_amd('local/thlib/main', 'scrollIntoView');
+        if (file_exists($CFG->dirroot . '/local/thlib/amd/src/main.js')) {
+            $PAGE->requires->js_call_amd('local/thlib/main', 'scrollIntoView');
+        }
 
     } else {
         // Các action khác (edit_question, ...) hiện nút "Thêm câu hỏi"
@@ -260,10 +265,10 @@ if (empty($questionid) && $layout === 'list') {
     $perpage = 10;
 
     // Tổng số thread (root) để vẽ thanh phân trang.
-    $total = $repo->count_threads($cm->instance, $USER->id, $ismanager);
+    $total = $repo->count_threads($cm->instance, $USER->id, $ismanager, $companyid);
 
     // Lấy dữ liệu theo trang.
-    $summary = $repo->get_threads_summary($cm->instance, $USER->id, $ismanager, $page, $perpage);
+    $summary = $repo->get_threads_summary($cm->instance, $USER->id, $ismanager, $page, $perpage, $companyid);
 
     // Map ra rows cho template
     $rows = \mod_qaa\local\mapper\list_mapper::map_rows($summary, $modulecontext, $cm->id, $pageurl->out_as_local_url(false));
@@ -281,7 +286,7 @@ if (empty($questionid) && $layout === 'list') {
 }
 
 /* ---------------- Feed render (renderer + mustache) ---------------- */
-$roots = $feed->get_feed_tree($cm->instance, $modulecontext);
+$roots = $feed->get_feed_tree($cm->instance, $modulecontext, $companyid);
 // Nếu có questionid => hiển thị đúng thread của root (kể cả khi questionid là id con)
 if (!empty($questionid)) {
     $result = qaa_find_root_for_id($roots, (int)$questionid);

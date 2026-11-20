@@ -1,6 +1,8 @@
 <?php
 
-require_once $CFG->dirroot . '/local/thlib/lib.php';
+if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+	require_once $CFG->dirroot . '/local/thlib/lib.php';
+}
 
 defined('MOODLE_INTERNAL') || die();
 

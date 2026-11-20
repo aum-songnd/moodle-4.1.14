@@ -461,7 +461,24 @@ function prepare_subject($str, $maxlength = 20) {
 
 	return $str;
 }
+function qaa_view($qaa, $course, $cm, $context) {
 
+    // Completion trigger.
+    $completion = new completion_info($course);
+    $completion->set_module_viewed($cm);
+
+    // Trigger the course module viewed event.
+    $event = \mod_qaa\event\course_module_viewed::create([
+        'objectid' => $qaa->id,
+        'context' => $context,
+    ]);
+
+    $event->add_record_snapshot('course', $course);
+    $event->add_record_snapshot('course_modules', $cm);
+    $event->add_record_snapshot('qaa', $qaa);
+
+    $event->trigger();
+}
 /**
  * Return if the plugin supports $feature.
  *
@@ -690,7 +707,9 @@ function qaa_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload
 
 function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
     global $DB, $CFG, $USER;
-    require_once $CFG->dirroot . '/local/thlib/lib.php';
+    if (file_exists($CFG->dirroot . '/local/thlib/lib.php')) {
+        require_once $CFG->dirroot . '/local/thlib/lib.php';
+    }
 
     // Nếu site đang tắt email thì thoát.
     if (!empty($CFG->noemailever)) {
@@ -723,6 +742,18 @@ function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
         return;
     }
 
+	$is_iomad = class_exists('iomad');
+	$rootauthorid = !empty($root->studentid) ? (int)$root->studentid : (int)$root->teacherid;
+	$rootcompanyid = 0;
+	if ($is_iomad && $rootauthorid) {
+		$rootcompanyid = (int)$DB->get_field('company_users', 'companyid', 
+							['userid' => $rootauthorid,], IGNORE_MISSING);
+		if (empty($rootcompanyid)) {
+			mtrace("[mod_qaa] No company found for root author user id={$rootauthorid}");
+			return;
+		}
+	}
+
     // URL tới thread
     $params = ['id' => $cmid, 'questionid' => $root->id, 'embed' => 1];
     if (!is_null($qaap->parentid)) {
@@ -750,9 +781,17 @@ function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
         $teachers = get_role_users($teacherroleids, $ctxcourse, false, 'ra.id,u.*', 'u.lastname,u.firstname');
         foreach ($teachers as $t) {
             if ((int)$t->id !== (int)$userid) {
-                $recipients[] = $t;
-            }
-        }
+				if ($is_iomad && $rootcompanyid > 0) {
+					$samecompany = $DB->record_exists('company_users', 
+						['userid' => (int)$t->id, 'companyid' => $rootcompanyid]);
+					if ($samecompany) {
+						$recipients[] = $t;
+					}
+				} else {
+					$recipients[] = $t;
+				}
+			}
+		}
 
         $typelabel = ($type === 'typequestionedited')
             ? get_string('typequestionedited', 'mod_qaa')
@@ -781,7 +820,8 @@ function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
 		", [$qaap->id]);
 
 		if ($rejectchild && !empty($rejectchild->message)) {
-			$lead .= ': ' . thlib::html2text($rejectchild->message);
+			$cleanmsg = class_exists('thlib') ? thlib::html2text($rejectchild->message) : html_to_text($rejectchild->message, 0, false);
+			$lead .= ': ' . $cleanmsg;
 		}
 
     // (3) GIẢNG VIÊN TRẢ LỜI → GỬI CHO HỌC VIÊN
@@ -804,8 +844,17 @@ function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
         if ($parent) {
             $recipientid = !empty($parent->teacherid) ? (int)$parent->teacherid : (int)$parent->studentid;
             if ($recipientid && $recipientid !== (int)$userid) {
-                $rec = $DB->get_record('user', ['id' => $recipientid], '*', IGNORE_MISSING);
-                if ($rec) $recipients[] = $rec;
+				if ($is_iomad && $rootcompanyid > 0) {
+					$samecompany = $DB->record_exists('company_users', 
+										['userid' => $recipientid,'companyid' => $rootcompanyid]);
+					if ($samecompany) {
+						$rec = $DB->get_record('user', ['id' => $recipientid], '*', IGNORE_MISSING);
+						if ($rec) $recipients[] = $rec;
+					}
+				} else {
+					$rec = $DB->get_record('user', ['id' => $recipientid], '*', IGNORE_MISSING);
+					if ($rec) $recipients[] = $rec;
+				}
             }
         }
         $typelabel = get_string('typereply', 'mod_qaa');
@@ -818,10 +867,11 @@ function mod_qaa_event_send_email($id, $userid, $courseid, $cmid, $type) {
     }
 
     // === SUBJECT + MESSAGE ===
+    $cleansubjectmsg = class_exists('thlib') ? thlib::html2text($qaap->message) : html_to_text($qaap->message, 0, false);
     $subjectctx = (object)[
         'coursname' => $course->shortname,
         'type'      => $typelabel,
-        'subject'   => prepare_subject(thlib::html2text($qaap->message)),
+        'subject'   => prepare_subject($cleansubjectmsg),
     ];
     $subject = get_string('mailsubject', 'mod_qaa', $subjectctx);
 
