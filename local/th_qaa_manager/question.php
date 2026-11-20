@@ -65,7 +65,7 @@ if ($download === 'excel') {
                      )
                  )
                AND t.status IN (:status_assigned, :status_answered, :status_rejected, :status_closed)
-          ORDER BY t.timemodified DESC";
+          ORDER BY t.timemodified DESC, t.id DESC";
 
     $export_tickets = $DB->get_records_sql($sql, $params);
 
@@ -177,7 +177,7 @@ $sql = "SELECT t.*,
                  )
              )
            AND t.status IN (:status_assigned, :status_answered, :status_rejected, :status_closed)
-      ORDER BY t.timemodified DESC";
+      ORDER BY t.timemodified DESC, t.id DESC";
 
 $tickets = $DB->get_records_sql($sql, $params);
 

@@ -348,7 +348,12 @@ class ticket_service {
                      || (int)$ticket->status === self::STATUS_RECALLED
                      || (int)$ticket->status === self::STATUS_ASSIGNED);
 
-        if ($is_reassign && !empty($ticket->assigneduserid) && (int)$ticket->assigneduserid !== $assigneeid) {
+        $has_existing_answer = $DB->record_exists('local_th_qaa_answer', ['ticketid' => $ticketid]);
+        $should_create_new = ((int)$ticket->status === self::STATUS_ANSWER_REJECTED)
+            || $has_existing_answer
+            || ($is_reassign && !empty($ticket->assigneduserid) && (int)$ticket->assigneduserid !== $assigneeid);
+
+        if ($should_create_new) {
             $targetticketid = (int)$DB->insert_record('local_th_qaa_ticket', (object)[
                 'qaapairid' => $ticket->qaapairid,
                 'assigneduserid' => $assigneeid,
@@ -425,7 +430,12 @@ class ticket_service {
                              || $tstatus === self::STATUS_RECALLED
                              || $tstatus === self::STATUS_ASSIGNED);
 
-                if ($is_reassign && !empty($ticket->assigneduserid) && (int)$ticket->assigneduserid !== $assigneeid) {
+                $has_existing_answer = $DB->record_exists('local_th_qaa_answer', ['ticketid' => $ticket->id]);
+                $should_create_new = ($tstatus === self::STATUS_ANSWER_REJECTED)
+                    || $has_existing_answer
+                    || ($is_reassign && !empty($ticket->assigneduserid) && (int)$ticket->assigneduserid !== $assigneeid);
+
+                if ($should_create_new) {
                     $targetticketid = (int)$DB->insert_record('local_th_qaa_ticket', (object)[
                         'qaapairid' => $ticket->qaapairid,
                         'assigneduserid' => $assigneeid,

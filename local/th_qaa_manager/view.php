@@ -67,6 +67,29 @@ if (!$ismanager) {
     $latestanswer = answer_service::get_latest_answer($ticket->id);
 }
 
+// Check if there is a previous rejected ticket / answer for this qaapairid.
+$previousticket = null;
+$previousanswer = null;
+if (!$latestanswer) {
+    $previousticket = $DB->get_record_sql(
+        "SELECT t.*
+           FROM {local_th_qaa_ticket} t
+          WHERE t.qaapairid = :qaapairid
+            AND t.id < :ticketid
+            AND t.status = :status_rejected
+       ORDER BY t.id DESC",
+        [
+            'qaapairid' => $ticket->qaapairid,
+            'ticketid' => $ticket->id,
+            'status_rejected' => ticket_service::STATUS_ANSWER_REJECTED,
+        ],
+        IGNORE_MULTIPLE
+    );
+    if ($previousticket) {
+        $previousanswer = answer_service::get_latest_answer($previousticket->id);
+    }
+}
+
 $cananswer = !$ismanager
     && (int)$ticket->assigneduserid === (int)$USER->id
     && (int)$ticket->status === ticket_service::STATUS_ASSIGNED;
@@ -118,20 +141,26 @@ if ($cananswer) {
 
     $draftitemid = file_get_submitted_draft_itemid('answer');
 
-    $answercontent = $latestanswer
-        ? (string)$latestanswer->content
-        : '';
-
-    $answerformat = $latestanswer
-        ? (int)$latestanswer->contentformat
-        : FORMAT_HTML;
+    if ($latestanswer) {
+        $sourceitemid = $ticket->id;
+        $answercontent = (string)$latestanswer->content;
+        $answerformat = (int)$latestanswer->contentformat;
+    } else if ($previousanswer) {
+        $sourceitemid = $previousticket->id;
+        $answercontent = (string)$previousanswer->content;
+        $answerformat = (int)$previousanswer->contentformat;
+    } else {
+        $sourceitemid = $ticket->id;
+        $answercontent = '';
+        $answerformat = FORMAT_HTML;
+    }
 
     $answercontent = file_prepare_draft_area(
         $draftitemid,
         $context->id,
         'local_th_qaa_manager',
         'answer',
-        $ticket->id,
+        $sourceitemid,
         $editoroptions,
         $answercontent
     );
@@ -236,8 +265,9 @@ if ($ismanager) {
         SELECT a.*, {$ctvuserfields}
           FROM {local_th_qaa_answer} a
           JOIN {user} u ON u.id = a.userid
-         WHERE a.ticketid = :ticketid
-      ORDER BY a.id ASC", ['ticketid' => $ticket->id]);
+          JOIN {local_th_qaa_ticket} t ON t.id = a.ticketid
+         WHERE t.qaapairid = :qaapairid
+      ORDER BY a.id ASC", ['qaapairid' => $ticket->qaapairid]);
 
     foreach ($answers as $ans) {
         $ctvuser = local_th_qaa_manager_get_user_from_prefix($ans, 'ctv_');
@@ -265,7 +295,7 @@ if ($ismanager) {
             $context->id,
             'local_th_qaa_manager',
             'answer',
-            $ticket->id
+            $ans->ticketid
         );
 
         echo html_writer::div(
@@ -281,16 +311,23 @@ if ($ismanager) {
         );
     }
 } else {
-    if (
-        $latestanswer
-        && (int)$latestanswer->status === answer_service::STATUS_REJECTED
-        && !empty($latestanswer->rejectreason)
-    ) {
+    $shownrejectreason = '';
+    if ($latestanswer && (int)$latestanswer->status === answer_service::STATUS_REJECTED && !empty($latestanswer->rejectreason)) {
+        $shownrejectreason = $latestanswer->rejectreason;
+    } else if ($previousanswer && !empty($previousanswer->rejectreason)) {
+        $shownrejectreason = $previousanswer->rejectreason;
+    } else if (!empty($ticket->rejectreason)) {
+        $shownrejectreason = $ticket->rejectreason;
+    } else if ($previousticket && !empty($previousticket->rejectreason)) {
+        $shownrejectreason = $previousticket->rejectreason;
+    }
+
+    if (!empty($shownrejectreason)) {
         echo $OUTPUT->notification(
             get_string(
                 'answerrejectreason',
                 'local_th_qaa_manager',
-                s($latestanswer->rejectreason)
+                s($shownrejectreason)
             ),
             \core\output\notification::NOTIFY_WARNING
         );

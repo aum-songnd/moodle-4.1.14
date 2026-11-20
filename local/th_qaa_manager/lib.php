@@ -87,7 +87,10 @@ function local_th_qaa_manager_pluginfile(
     $cananswer = has_capability(
         'local/th_qaa_manager:answer',
         $context
-    ) && (int)$ticket->assigneduserid === (int)$USER->id;
+    ) && (
+        (int)$ticket->assigneduserid === (int)$USER->id
+        || $DB->record_exists('local_th_qaa_answer', ['ticketid' => $ticket->id, 'userid' => $USER->id])
+    );
 
     $isstudent = (int)$ticket->studentid === (int)$USER->id;
 
